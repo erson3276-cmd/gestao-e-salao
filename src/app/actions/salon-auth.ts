@@ -4,6 +4,15 @@ import { cookies } from 'next/headers'
 import { supabaseAdmin } from '@/lib/supabaseAdmin'
 import { hashPassword, verifyPassword, SALON_COOKIE_NAME, SUPER_ADMIN_COOKIE_NAME, SUPER_ADMIN_EMAIL, SUPER_ADMIN_PASSWORD, type SalonSession } from '@/lib/auth'
 
+async function salonsTableExists(): Promise<boolean> {
+  try {
+    const { error } = await supabaseAdmin.from('salons').select('id', { count: 'exact', head: true })
+    return !error
+  } catch {
+    return false
+  }
+}
+
 export async function salonLogin(email: string, password: string) {
   try {
     if (email === SUPER_ADMIN_EMAIL && password === SUPER_ADMIN_PASSWORD) {
@@ -18,6 +27,11 @@ export async function salonLogin(email: string, password: string) {
       return { success: true, redirect: '/super-admin' }
     }
 
+    const tableExists = await salonsTableExists()
+    if (!tableExists) {
+      return { success: false, error: 'Sistema em manutencao. Tente novamente mais tarde.' }
+    }
+
     const { data: salon, error } = await supabaseAdmin
       .from('salons')
       .select('*')
@@ -29,11 +43,11 @@ export async function salonLogin(email: string, password: string) {
     }
 
     if (salon.status === 'blocked') {
-      return { success: false, error: 'Sua conta está bloqueada. Entre em contato com o suporte.' }
+      return { success: false, error: 'Sua conta esta bloqueada. Entre em contato com o suporte.' }
     }
 
     if (salon.status === 'inactive') {
-      return { success: false, error: 'Sua conta está inativa. Renove sua assinatura.' }
+      return { success: false, error: 'Sua conta esta inativa. Renove sua assinatura.' }
     }
 
     const isValid = verifyPassword(password, salon.owner_password)
@@ -72,6 +86,11 @@ export async function salonRegister(data: {
   ownerPhone?: string
 }) {
   try {
+    const tableExists = await salonsTableExists()
+    if (!tableExists) {
+      return { success: false, error: 'Sistema em manutencao. Tente novamente mais tarde.' }
+    }
+
     const { data: existing } = await supabaseAdmin
       .from('salons')
       .select('id')
@@ -79,7 +98,7 @@ export async function salonRegister(data: {
       .single()
 
     if (existing) {
-      return { success: false, error: 'Este email já está cadastrado' }
+      return { success: false, error: 'Este email ja esta cadastrado' }
     }
 
     const hashedPassword = hashPassword(data.ownerPassword)
