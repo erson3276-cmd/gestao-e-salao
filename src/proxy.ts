@@ -2,24 +2,41 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 export function proxy(request: NextRequest) {
-  const { pathname } = request.nextUrl
-  
-  if (pathname.startsWith('/admin')) {
-    if (pathname.includes('/admin/login')) {
+  const pathname = request.nextUrl.pathname
+  const salonSession = request.cookies.get('salon_session')
+  const superAdminSession = request.cookies.get('super_admin_session')
+
+  const isSuperAdminPath = pathname.startsWith('/super-admin')
+  const isSalonPath = pathname.startsWith('/admin')
+  const isAuthPath = pathname === '/login' || pathname === '/register'
+
+  if (isSuperAdminPath) {
+    if (!superAdminSession || superAdminSession.value !== 'authenticated') {
+      return NextResponse.redirect(new URL('/login', request.url))
+    }
+    return NextResponse.next()
+  }
+
+  if (isSalonPath) {
+    if (pathname === '/admin/login') {
       return NextResponse.next()
     }
-    
-    const adminSession = request.cookies.get('admin_session')
-    
-    if (!adminSession || adminSession.value !== 'true') {
-      const loginUrl = new URL('/admin/login', request.url)
-      return NextResponse.redirect(loginUrl)
+    if (!salonSession && !superAdminSession) {
+      return NextResponse.redirect(new URL('/login', request.url))
     }
+    return NextResponse.next()
   }
-  
+
+  if (isAuthPath && (salonSession || superAdminSession)) {
+    if (superAdminSession) {
+      return NextResponse.redirect(new URL('/super-admin', request.url))
+    }
+    return NextResponse.redirect(new URL('/admin/agenda', request.url))
+  }
+
   return NextResponse.next()
 }
 
 export const config = {
-  matcher: '/admin/:path*'
+  matcher: ['/admin/:path*', '/super-admin/:path*', '/login', '/register']
 }

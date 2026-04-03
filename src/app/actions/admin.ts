@@ -3,7 +3,8 @@
 import { supabaseAdmin as supabase } from '@/lib/supabaseAdmin'
 import { revalidatePath } from 'next/cache'
 import { cookies } from 'next/headers'
-import { getSalonSession, getSuperAdminSession, SALON_COOKIE_NAME, SUPER_ADMIN_COOKIE_NAME } from '@/lib/auth'
+import { SALON_COOKIE_NAME, SUPER_ADMIN_COOKIE_NAME } from '@/lib/auth'
+import { getSalonSession, getSuperAdminSession } from '@/app/actions/salon-auth'
 import { baileys } from '@/lib/baileys'
 
 async function getSalonId(): Promise<string | null> {
@@ -38,8 +39,8 @@ export async function sendWhatsAppMessage(message: string, phone: string) {
 }
 
 async function callBaileysAPI(endpoint: string, method: string = 'GET', body?: any) {
-  const apiUrl = process.env.BAILEYS_API_URL || 'http://167.234.248.199:8080'
-  const apiKey = process.env.BAILEYS_API_KEY || 'salao2024'
+  const apiUrl = process.env.BAILEYS_API_URL || ''
+  const apiKey = process.env.BAILEYS_API_KEY || ''
   
   const url = `${apiUrl}${endpoint}`
   const headers = {
@@ -96,8 +97,8 @@ export async function checkAdminAuth() {
 
 export async function getProfile() {
   const salonId = await getSalonId()
-  let query = supabase.from('profiles').select('*')
-  if (salonId) query = query.eq('salon_id', salonId)
+  const baseQuery = supabase.from('profiles').select('*')
+  const query = salonId ? baseQuery.eq('salon_id', salonId) : baseQuery
   const { data } = await query.limit(1).maybeSingle()
   
   if (!data) {
@@ -170,8 +171,8 @@ export async function processTemplate(templateKey: string, data: any) {
 
 export async function validateVIP(whatsapp: string) {
   const salonId = await getSalonId()
-  let query = supabase.from('customers').select('active').eq('whatsapp', whatsapp)
-  if (salonId) query = query.eq('salon_id', salonId)
+  const baseQuery = supabase.from('customers').select('active').eq('whatsapp', whatsapp)
+  const query = salonId ? baseQuery.eq('salon_id', salonId) : baseQuery
   const { data } = await query.single()
   
   return { 
@@ -191,14 +192,13 @@ export async function sendManagerTalkMessage(phone: string, message: string) {
 
 export async function getAppointments() {
   const salonId = await getSalonId()
-  let query = supabase
+  const baseQuery = supabase
     .from('appointments')
     .select('*, customers:customer_id(name, whatsapp), services:service_id(name, price, duration_minutes)')
     .order('start_time', { ascending: true })
   
-  if (salonId) query = query.eq('salon_id', salonId)
-  
-  const { data, error } = query
+  const query = salonId ? baseQuery.eq('salon_id', salonId) : baseQuery
+  const { data, error } = await query
   if (error) return []
   return data || []
 }
@@ -216,13 +216,13 @@ export async function addAppointment(appointmentData: any) {
     throw new Error('Não é possível agendar em horários passados')
   }
 
-  let conflictQuery = supabase
+  const baseConflictQuery = supabase
     .from('appointments')
     .select('id')
     .neq('status', 'cancelado')
     .or(`and(start_time.lte.${appointmentData.start_time},end_time.gt.${appointmentData.start_time}),and(start_time.lt.${appointmentData.end_time},end_time.gte.${appointmentData.end_time})`)
   
-  if (salonId) conflictQuery = conflictQuery.eq('salon_id', salonId)
+  const conflictQuery = salonId ? baseConflictQuery.eq('salon_id', salonId) : baseConflictQuery
   const { data: conflicts } = await conflictQuery
 
   if (conflicts && conflicts.length > 0) {
@@ -279,8 +279,8 @@ export async function addAppointment(appointmentData: any) {
 
 export async function updateAppointmentStatus(id: string, status: string) {
   const salonId = await getSalonId()
-  let query = supabase.from('appointments').update({ status }).eq('id', id)
-  if (salonId) query = query.eq('salon_id', salonId)
+  const baseQuery = supabase.from('appointments').update({ status }).eq('id', id)
+  const query = salonId ? baseQuery.eq('salon_id', salonId) : baseQuery
   
   const { error } = await query
   if (error) throw new Error('Falha ao atualizar status')
@@ -292,8 +292,8 @@ export async function updateAppointmentStatus(id: string, status: string) {
 
 export async function deleteAppointment(id: string) {
   const salonId = await getSalonId()
-  let query = supabase.from('appointments').delete().eq('id', id)
-  if (salonId) query = query.eq('salon_id', salonId)
+  const baseQuery = supabase.from('appointments').delete().eq('id', id)
+  const query = salonId ? baseQuery.eq('salon_id', salonId) : baseQuery
   
   const { error } = await query
   if (error) throw new Error('Falha ao excluir')
@@ -319,8 +319,8 @@ export async function completeAppointmentCheckout(appointmentId: string, saleDat
 
 export async function getCustomers() {
   const salonId = await getSalonId()
-  let query = supabase.from('customers').select('*').order('name', { ascending: true })
-  if (salonId) query = query.eq('salon_id', salonId)
+  const baseQuery = supabase.from('customers').select('*').order('name', { ascending: true })
+  const query = salonId ? baseQuery.eq('salon_id', salonId) : baseQuery
   
   const { data } = await query
   return data || []
@@ -345,8 +345,8 @@ export async function addCustomer(customerData: any) {
 
 export async function updateCustomer(id: string, customerData: any) {
   const salonId = await getSalonId()
-  let query = supabase.from('customers').update(customerData).eq('id', id)
-  if (salonId) query = query.eq('salon_id', salonId)
+  const baseQuery = supabase.from('customers').update(customerData).eq('id', id)
+  const query = salonId ? baseQuery.eq('salon_id', salonId) : baseQuery
   
   const { data, error } = await query.select().single()
   
@@ -359,8 +359,8 @@ export async function updateCustomer(id: string, customerData: any) {
 
 export async function deleteCustomer(id: string) {
   const salonId = await getSalonId()
-  let query = supabase.from('customers').delete().eq('id', id)
-  if (salonId) query = query.eq('salon_id', salonId)
+  const baseQuery = supabase.from('customers').delete().eq('id', id)
+  const query = salonId ? baseQuery.eq('salon_id', salonId) : baseQuery
   
   const { error } = await query
   if (error) throw new Error('Falha ao excluir cliente')
@@ -372,8 +372,8 @@ export async function deleteCustomer(id: string) {
 
 export async function toggleBlockCustomer(id: string, blocked: boolean) {
   const salonId = await getSalonId()
-  let query = supabase.from('customers').update({ active: !blocked }).eq('id', id)
-  if (salonId) query = query.eq('salon_id', salonId)
+  const baseQuery = supabase.from('customers').update({ active: !blocked }).eq('id', id)
+  const query = salonId ? baseQuery.eq('salon_id', salonId) : baseQuery
   
   const { error } = await query
   if (error) throw new Error('Falha ao atualizar')
@@ -387,8 +387,8 @@ export async function toggleBlockCustomer(id: string, blocked: boolean) {
 
 export async function getServices() {
   const salonId = await getSalonId()
-  let query = supabase.from('services').select('*').order('name', { ascending: true })
-  if (salonId) query = query.eq('salon_id', salonId)
+  const baseQuery = supabase.from('services').select('*').order('name', { ascending: true })
+  const query = salonId ? baseQuery.eq('salon_id', salonId) : baseQuery
   
   const { data } = await query
   return data || []
@@ -413,8 +413,8 @@ export async function addService(serviceData: any) {
 
 export async function updateService(id: string, serviceData: any) {
   const salonId = await getSalonId()
-  let query = supabase.from('services').update(serviceData).eq('id', id)
-  if (salonId) query = query.eq('salon_id', salonId)
+  const baseQuery = supabase.from('services').update(serviceData).eq('id', id)
+  const query = salonId ? baseQuery.eq('salon_id', salonId) : baseQuery
   
   const { data, error } = await query.select().single()
   
@@ -427,8 +427,8 @@ export async function updateService(id: string, serviceData: any) {
 
 export async function deleteService(id: string) {
   const salonId = await getSalonId()
-  let query = supabase.from('services').delete().eq('id', id)
-  if (salonId) query = query.eq('salon_id', salonId)
+  const baseQuery = supabase.from('services').delete().eq('id', id)
+  const query = salonId ? baseQuery.eq('salon_id', salonId) : baseQuery
   
   const { error } = await query
   if (error) throw new Error('Falha ao excluir serviço')
@@ -442,24 +442,24 @@ export async function deleteService(id: string) {
 
 export async function getExpenses(month?: number, year?: number, category?: string, paid?: boolean) {
   const salonId = await getSalonId()
-  let query = supabase.from('despesas').select('*').order('date', { ascending: false })
+  let q: any = supabase.from('despesas').select('*').order('date', { ascending: false })
   
-  if (salonId) query = query.eq('salon_id', salonId)
+  if (salonId) q = q.eq('salon_id', salonId)
   if (month && year) {
     const startDate = `${year}-${String(month).padStart(2, '0')}-01`
     const endDate = new Date(year, month, 0).toISOString().split('T')[0]
-    query = query.gte('date', startDate).lte('date', endDate)
+    q = q.gte('date', startDate).lte('date', endDate)
   }
   
   if (category && category !== 'all') {
-    query = query.eq('category', category)
+    q = q.eq('category', category)
   }
   
   if (paid !== undefined) {
-    query = query.eq('paid', paid)
+    q = q.eq('paid', paid)
   }
   
-  const { data } = await query
+  const { data } = await q
   return data || []
 }
 
@@ -505,8 +505,8 @@ export async function updateExpense(id: string, expenseData: {
     updateData.paid_date = expenseData.paid_date || new Date().toISOString().split('T')[0]
   }
   
-  let query = supabase.from('despesas').update(updateData).eq('id', id)
-  if (salonId) query = query.eq('salon_id', salonId)
+  const baseQuery = supabase.from('despesas').update(updateData).eq('id', id)
+  const query = salonId ? baseQuery.eq('salon_id', salonId) : baseQuery
   
   const { data, error } = await query.select().single()
   
@@ -519,8 +519,8 @@ export async function updateExpense(id: string, expenseData: {
 
 export async function deleteExpense(id: string) {
   const salonId = await getSalonId()
-  let query = supabase.from('despesas').delete().eq('id', id)
-  if (salonId) query = query.eq('salon_id', salonId)
+  const baseQuery = supabase.from('despesas').delete().eq('id', id)
+  const query = salonId ? baseQuery.eq('salon_id', salonId) : baseQuery
   
   const { error } = await query
   if (error) throw new Error('Falha ao excluir despesa: ' + error.message)
@@ -532,11 +532,11 @@ export async function deleteExpense(id: string) {
 
 export async function toggleExpensePaid(id: string, paid: boolean) {
   const salonId = await getSalonId()
-  let query = supabase.from('despesas').update({
+  const baseQuery = supabase.from('despesas').update({
     paid,
     paid_date: paid ? new Date().toISOString().split('T')[0] : null
   }).eq('id', id)
-  if (salonId) query = query.eq('salon_id', salonId)
+  const query = salonId ? baseQuery.eq('salon_id', salonId) : baseQuery
   
   const { error } = await query
   if (error) throw new Error('Falha ao atualizar status: ' + error.message)
@@ -550,8 +550,8 @@ export async function toggleExpensePaid(id: string, paid: boolean) {
 
 export async function getSales() {
   const salonId = await getSalonId()
-  let query = supabase.from('vendas').select('*, customers:customer_id(name), services:service_id(name)').order('created_at', { ascending: false })
-  if (salonId) query = query.eq('salon_id', salonId)
+  const baseQuery = supabase.from('vendas').select('*, customers:customer_id(name), services:service_id(name)').order('created_at', { ascending: false })
+  const query = salonId ? baseQuery.eq('salon_id', salonId) : baseQuery
   
   const { data } = await query
   return data || []
@@ -576,8 +576,8 @@ export async function addSale(saleData: any) {
 
 export async function updateSale(id: string, saleData: any) {
   const salonId = await getSalonId()
-  let query = supabase.from('vendas').update(saleData).eq('id', id)
-  if (salonId) query = query.eq('salon_id', salonId)
+  const baseQuery = supabase.from('vendas').update(saleData).eq('id', id)
+  const query = salonId ? baseQuery.eq('salon_id', salonId) : baseQuery
   
   const { data, error } = await query.select().single()
   
@@ -590,8 +590,8 @@ export async function updateSale(id: string, saleData: any) {
 
 export async function deleteSale(id: string) {
   const salonId = await getSalonId()
-  let query = supabase.from('vendas').delete().eq('id', id)
-  if (salonId) query = query.eq('salon_id', salonId)
+  const baseQuery = supabase.from('vendas').delete().eq('id', id)
+  const query = salonId ? baseQuery.eq('salon_id', salonId) : baseQuery
   
   const { error } = await query
   if (error) throw new Error('Falha ao excluir venda')

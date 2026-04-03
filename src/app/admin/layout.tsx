@@ -29,7 +29,6 @@ import {
 
 import { useRouter } from 'next/navigation'
 import { adminLogout } from '@/app/actions/admin'
-import { getSalonSession } from '@/lib/auth'
 
 const sidebarItems = [
   { name: 'Agenda', icon: Calendar, path: '/admin/agenda' },
@@ -57,8 +56,15 @@ export default function AdminLayout({
 
   React.useEffect(() => {
     async function loadSession() {
-      const session = await getSalonSession()
-      if (session) setSalonSession(session)
+      try {
+        const res = await fetch('/api/session')
+        if (res.ok) {
+          const data = await res.json()
+          if (data.role) setSalonSession(data)
+        }
+      } catch (e) {
+        console.error('Failed to load session:', e)
+      }
     }
     loadSession()
   }, [])
