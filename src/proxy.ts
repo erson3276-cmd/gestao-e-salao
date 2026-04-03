@@ -5,6 +5,7 @@ export function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname
   const salonSession = request.cookies.get('salon_session')
   const superAdminSession = request.cookies.get('super_admin_session')
+  const adminAuth = request.cookies.get('admin_auth')
 
   const isSuperAdminPath = pathname.startsWith('/super-admin')
   const isSalonPath = pathname.startsWith('/admin')
@@ -21,8 +22,8 @@ export function proxy(request: NextRequest) {
     if (pathname === '/admin/login') {
       return NextResponse.next()
     }
-    if (!salonSession && !superAdminSession) {
-      return NextResponse.redirect(new URL('/login', request.url))
+    if (!salonSession && !superAdminSession && !adminAuth) {
+      return NextResponse.redirect(new URL('/admin/login', request.url))
     }
     return NextResponse.next()
   }
