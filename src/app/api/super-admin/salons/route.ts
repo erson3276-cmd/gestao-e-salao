@@ -18,6 +18,35 @@ export async function GET() {
   }
 }
 
+export async function DELETE(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const id = searchParams.get('id')
+
+    if (!id) {
+      return NextResponse.json({ error: 'Missing salon id' }, { status: 400 })
+    }
+
+    const tables = ['appointments', 'customers', 'services', 'vendas', 'despesas', 'comissao', 'whatsapp_messages', 'whatsapp_status', 'blocked_slots', 'working_hours', 'professionals', 'notes']
+    
+    for (const table of tables) {
+      try {
+        await supabaseAdmin.from(table).delete().eq('salon_id', id)
+      } catch { /* table may not exist or have no salon_id */ }
+    }
+
+    const { error } = await supabaseAdmin.from('salons').delete().eq('id', id)
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+
+    return NextResponse.json({ success: true })
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+}
+
 export async function PATCH(request: Request) {
   try {
     const body = await request.json()

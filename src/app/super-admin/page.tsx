@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import {
   Users, TrendingUp, DollarSign, Activity, Search,
   CheckCircle, XCircle, Clock, Eye, LogOut, Building2,
-  Calendar, ArrowUpRight, ArrowDownRight, Shield, CreditCard, Link as LinkIcon, MessageSquare
+  Calendar, ArrowUpRight, ArrowDownRight, Shield, CreditCard, Link as LinkIcon, MessageSquare, Trash2
 } from 'lucide-react'
 import { salonLogout } from '@/app/actions/salon-auth'
 
@@ -32,6 +32,7 @@ export default function SuperAdminPage() {
   const [selectedSalon, setSelectedSalon] = useState<Salon | null>(null)
   const [showModal, setShowModal] = useState(false)
   const [actionLoading, setActionLoading] = useState(false)
+  const [deleteLoading, setDeleteLoading] = useState<string | null>(null)
   const router = useRouter()
 
   useEffect(() => {
@@ -74,6 +75,21 @@ export default function SuperAdminPage() {
       console.error('Error updating salon:', e)
     } finally {
       setActionLoading(false)
+    }
+  }
+
+  async function deleteSalon(id: string) {
+    if (!confirm('Tem certeza que deseja EXCLUIR este salão permanentemente? Esta ação não pode ser desfeita.')) return
+    setDeleteLoading(id)
+    try {
+      await fetch(`/api/super-admin/salons?id=${id}`, { method: 'DELETE' })
+      await loadSalons()
+      setShowModal(false)
+      setSelectedSalon(null)
+    } catch (e) {
+      console.error('Error deleting salon:', e)
+    } finally {
+      setDeleteLoading(null)
     }
   }
 
@@ -309,6 +325,18 @@ export default function SuperAdminPage() {
                             <CheckCircle size={14} className="text-gray-400 hover:text-emerald-500" />
                           </button>
                         )}
+                        <button
+                          onClick={() => deleteSalon(salon.id)}
+                          disabled={deleteLoading === salon.id}
+                          className="p-2 bg-white/5 border border-white/5 rounded-xl hover:bg-red-500/10 hover:border-red-500/30 transition-all disabled:opacity-50"
+                          title="Excluir permanentemente"
+                        >
+                          {deleteLoading === salon.id ? (
+                            <div className="w-3.5 h-3.5 border-2 border-red-500 border-t-transparent rounded-full animate-spin" />
+                          ) : (
+                            <Trash2 size={14} className="text-gray-400 hover:text-red-500" />
+                          )}
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -402,6 +430,17 @@ export default function SuperAdminPage() {
                     Desbloquear
                   </button>
                 )}
+                <button
+                  onClick={() => deleteSalon(selectedSalon.id)}
+                  disabled={deleteLoading === selectedSalon.id}
+                  className="py-3 bg-red-500/20 border border-red-500/30 text-red-500 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-red-500/30 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {deleteLoading === selectedSalon.id ? (
+                    <div className="w-4 h-4 border-2 border-red-500 border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <><Trash2 size={14} /> Excluir</>
+                  )}
+                </button>
               </div>
             </div>
           </div>
