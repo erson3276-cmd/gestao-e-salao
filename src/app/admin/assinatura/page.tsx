@@ -240,9 +240,22 @@ export default function SubscriptionPage() {
           )}
 
           {billingType === 'CREDIT_CARD' && (
-            <div className="p-6 bg-black/40 rounded-2xl text-center">
-              <p className="text-sm text-gray-400 mb-4">O pagamento foi processado no cartão de crédito.</p>
-              <p className="text-lg font-black text-emerald-500">R$ {payment.value.toFixed(2).replace('.', ',')}</p>
+            <div className="space-y-4">
+              {payment.invoiceUrl ? (
+                <a
+                  href={payment.invoiceUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full py-4 bg-[#5E41FF] text-white rounded-2xl font-black uppercase tracking-widest text-sm flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-[0.98] transition-all border-b-4 border-[#3D28B8]"
+                >
+                  <CreditCard size={18} /> Pagar com Cartão de Crédito
+                </a>
+              ) : (
+                <div className="p-6 bg-black/40 rounded-2xl text-center">
+                  <p className="text-sm text-gray-400 mb-4">O link de pagamento será gerado em breve.</p>
+                </div>
+              )}
+              <p className="text-xs text-gray-500 text-center">Clique no botão acima para inserir os dados do cartão com segurança.</p>
             </div>
           )}
 
