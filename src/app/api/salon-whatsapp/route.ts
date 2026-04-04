@@ -148,8 +148,13 @@ export async function POST(request: Request) {
   }
 
   if (action === 'disconnect') {
-    if (salon?.whatsapp_instance_id) {
-      await baileys.disconnect(salon.whatsapp_instance_id)
+    const { data: salonData } = await supabaseAdmin
+      .from('salons')
+      .select('whatsapp_instance_id')
+      .eq('id', session.salonId)
+      .single()
+    if (salonData?.whatsapp_instance_id) {
+      await baileys.disconnect(salonData.whatsapp_instance_id)
     }
     await supabaseAdmin
       .from('salons')
