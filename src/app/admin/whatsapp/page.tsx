@@ -56,7 +56,7 @@ export default function WhatsAppPage() {
 
   async function handlePairingCode() {
     if (!phone || phone.length < 10) {
-      alert('Digite o número com DDD (ex: 21982755539)')
+      alert('Digite o número com DDD (ex: 99 999999999)')
       return
     }
     setPairingLoading(true)
@@ -196,7 +196,7 @@ export default function WhatsAppPage() {
                   type="tel"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
-                  placeholder="Ex: 21982755539"
+                  placeholder="Ex: 99 999999999"
                   className="flex-1 p-3 bg-black/40 border border-white/10 rounded-xl text-sm outline-none focus:border-[#5E41FF]/50"
                 />
                 <button
@@ -239,10 +239,30 @@ export default function WhatsAppPage() {
               {connecting && polling && (
                 <div className="mt-4 text-center">
                   <div className="w-8 h-8 border-2 border-[#5E41FF]/30 border-t-[#5E41FF] rounded-full animate-spin mx-auto mb-3" />
-                  <p className="text-sm text-gray-400">Aguardando leitura do QR Code...</p>
+                  <p className="text-sm text-gray-400">Aguardando resposta do servidor...</p>
                   {qrCode && (
-                    <p className="text-xs text-gray-600 mt-1">Clique no ícone de expandir para ver o QR Code em tela cheia</p>
+                    <p className="text-xs text-gray-600 mt-1">Clique no ícone de expandir para ver o QR Code</p>
                   )}
+                </div>
+              )}
+              {connecting && !polling && !qrCode && (
+                <div className="mt-4 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-center">
+                  <p className="text-sm text-red-400 font-bold">Servidor não respondeu</p>
+                  <p className="text-xs text-gray-500 mt-1">Verifique se o servidor de WhatsApp está online.</p>
+                  <button onClick={handleConnect} className="mt-3 px-4 py-2 bg-red-500/20 text-red-400 rounded-lg text-xs font-bold hover:bg-red-500/30 transition-all">
+                    Tentar novamente
+                  </button>
+                </div>
+              )}
+                </div>
+              )}
+              {connecting && !polling && !qrCode && (
+                <div className="mt-4 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-center">
+                  <p className="text-sm text-red-400 font-bold">Servidor não respondeu</p>
+                  <p className="text-xs text-gray-500 mt-1">Verifique se o servidor de WhatsApp está online.</p>
+                  <button onClick={handleConnect} className="mt-3 px-4 py-2 bg-red-500/20 text-red-400 rounded-lg text-xs font-bold hover:bg-red-500/30 transition-all">
+                    Tentar novamente
+                  </button>
                 </div>
               )}
             </div>
