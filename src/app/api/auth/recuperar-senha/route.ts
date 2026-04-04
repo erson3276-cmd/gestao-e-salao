@@ -3,6 +3,7 @@ import { supabaseAdmin } from '@/lib/supabaseAdmin'
 import { hashPassword } from '@/lib/auth'
 import crypto from 'crypto'
 
+// API route for password recovery
 export async function POST(request: Request) {
   try {
     const { email } = await request.json()
