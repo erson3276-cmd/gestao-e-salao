@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Lock, ShieldCheck, ArrowRight, Mail } from 'lucide-react'
-import { salonLogin } from '@/app/actions/salon-auth'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -19,11 +18,18 @@ export default function LoginPage() {
     setError('')
 
     try {
-      const res = await salonLogin(email, password)
-      if (res.success) {
-        router.push(res.redirect || '/admin/agenda')
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      })
+      const data = await res.json()
+      
+      if (data.success) {
+        router.push(data.redirect || '/admin/agenda')
+        router.refresh()
       } else {
-        setError(res.error || 'Erro ao fazer login')
+        setError(data.error || 'Email ou senha incorretos')
       }
     } catch {
       setError('Erro ao conectar ao servidor')

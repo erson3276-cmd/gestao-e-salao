@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ShieldCheck, ArrowRight, Mail, User, Phone, Building2, Eye, EyeOff, Lock } from 'lucide-react'
-import { salonRegister } from '@/app/actions/salon-auth'
 
 export default function RegisterPage() {
   const [salonName, setSalonName] = useState('')
@@ -29,17 +28,18 @@ export default function RegisterPage() {
     }
 
     try {
-      const res = await salonRegister({
-        salonName,
-        ownerName,
-        ownerEmail,
-        ownerPassword,
-        ownerPhone
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ salonName, ownerName, ownerEmail, ownerPassword, ownerPhone })
       })
-      if (res.success) {
-        router.push(res.redirect || '/admin/gestao')
+      const data = await res.json()
+      
+      if (data.success) {
+        router.push(data.redirect || '/admin/gestao')
+        router.refresh()
       } else {
-        setError(res.error || 'Erro ao criar conta')
+        setError(data.error || 'Erro ao criar conta')
       }
     } catch {
       setError('Erro ao conectar ao servidor')
