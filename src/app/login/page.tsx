@@ -55,7 +55,7 @@ export default function LoginPage() {
         <div className="bg-[#121021]/50 border border-white/5 rounded-[3rem] p-10 shadow-3xl backdrop-blur-xl relative overflow-hidden">
            <div className="absolute -top-24 -right-24 w-48 h-48 bg-[#5E41FF]/10 blur-[80px]" />
            
-           <form onSubmit={handleSubmit} className="space-y-6 relative z-10">
+           <form onSubmit={handleSubmit} className="space-y-6 relative z-10" autoComplete="off">
               <div className="space-y-2">
                  <label className="text-[10px] uppercase font-bold tracking-widest text-gray-400 px-1">Email</label>
                  <div className="relative group">

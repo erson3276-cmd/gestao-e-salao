@@ -65,7 +65,7 @@ export default function RegisterPage() {
         <div className="bg-[#121021]/50 border border-white/5 rounded-[3rem] p-10 shadow-3xl backdrop-blur-xl relative overflow-hidden">
            <div className="absolute -top-24 -right-24 w-48 h-48 bg-[#5E41FF]/10 blur-[80px]" />
            
-           <form onSubmit={handleSubmit} className="space-y-5 relative z-10">
+           <form onSubmit={handleSubmit} className="space-y-5 relative z-10" autoComplete="off">
               <div className="space-y-2">
                  <label className="text-[10px] uppercase font-bold tracking-widest text-gray-400 px-1">Nome do Salão</label>
                  <div className="relative group">
@@ -102,7 +102,7 @@ export default function RegisterPage() {
                  <label className="text-[10px] uppercase font-bold tracking-widest text-gray-400 px-1">Senha</label>
                  <div className="relative group">
                     <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-600 group-focus-within:text-[#5E41FF] transition-colors" size={20} />
-                    <input type={showPassword ? 'text' : 'password'} value={ownerPassword} onChange={(e) => setOwnerPassword(e.target.value)} placeholder="Mínimo 6 caracteres" required className="w-full pl-14 pr-14 py-4 bg-black/40 border border-white/5 rounded-2xl outline-none focus:border-[#5E41FF]/50 focus:ring-1 focus:ring-[#5E41FF]/20 transition-all text-white placeholder:text-gray-800" />
+                    <input type={showPassword ? 'text' : 'password'} value={ownerPassword} onChange={(e) => setOwnerPassword(e.target.value)} placeholder="Mínimo 6 caracteres" required autoComplete="new-password" name="new-salon-password" id="new-salon-password" className="w-full pl-14 pr-14 py-4 bg-black/40 border border-white/5 rounded-2xl outline-none focus:border-[#5E41FF]/50 focus:ring-1 focus:ring-[#5E41FF]/20 transition-all text-white placeholder:text-gray-800" />
                     <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-600 hover:text-gray-400">
                       {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                     </button>
