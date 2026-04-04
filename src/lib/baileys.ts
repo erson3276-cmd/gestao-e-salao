@@ -1,10 +1,10 @@
-const API_URL = process.env.BAILEYS_API_URL || ''
-const API_KEY = process.env.BAILEYS_API_KEY || ''
+const API_URL = process.env.BAILEYS_API_URL || 'http://167.234.248.199:8082'
+const API_KEY = process.env.BAILEYS_API_KEY || 'salao2024'
 
 async function evolutionFetch(endpoint: string, method: string = 'GET', body?: any) {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    'apikey': API_KEY
+    'apikey': process.env.BAILEYS_API_KEY || API_KEY
   }
 
   const options: RequestInit = {

@@ -3,8 +3,8 @@ import { supabaseAdmin } from '@/lib/supabaseAdmin'
 import { getSalonSession } from '@/app/actions/salon-auth'
 import { baileys } from '@/lib/baileys'
 
-const API_URL = process.env.BAILEYS_API_URL || ''
-const API_KEY = process.env.BAILEYS_API_KEY || ''
+const API_URL = process.env.BAILEYS_API_URL || 'http://167.234.248.199:8082'
+const API_KEY = process.env.BAILEYS_API_KEY || 'salao2024'
 
 async function checkBaileysServer() {
   if (!API_URL) return { online: false, error: 'BAILEYS_API_URL não configurada' }
