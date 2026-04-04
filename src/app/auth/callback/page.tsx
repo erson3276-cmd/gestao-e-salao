@@ -58,6 +58,8 @@ export default function AuthCallbackPage() {
         if (result.success) {
           router.push(result.redirect || '/admin/agenda')
           router.refresh()
+        } else if (result.needsRegister) {
+          router.push(`/register/google-setup?email=${encodeURIComponent(email)}`)
         } else {
           setError(result.error || 'Erro ao processar login')
           setTimeout(() => router.push('/login'), 3000)
