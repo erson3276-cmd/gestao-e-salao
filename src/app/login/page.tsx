@@ -162,19 +162,25 @@ function LoginForm() {
                    </div>
                  )}
 
-                 <button 
-                   type="submit"
-                   disabled={loading || !email || !password}
-                   className="w-full py-5 bg-[#5E41FF] text-white rounded-2xl font-black uppercase tracking-widest text-xs flex items-center justify-center gap-3 shadow-xl shadow-[#5E41FF]/20 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 group border-b-4 border-[#3D28B8]"
-                 >
-                    {loading ? <div className="w-5 h-5 border-3 border-white border-t-transparent rounded-full animate-spin" /> : (
-                      <>
-                         Entrar
-                         <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
-                      </>
-                    )}
-                 </button>
-              </form>
+                  <button 
+                    type="submit"
+                    disabled={loading || !email || !password}
+                    className="w-full py-5 bg-[#5E41FF] text-white rounded-2xl font-black uppercase tracking-widest text-xs flex items-center justify-center gap-3 shadow-xl shadow-[#5E41FF]/20 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 group border-b-4 border-[#3D28B8]"
+                  >
+                     {loading ? <div className="w-5 h-5 border-3 border-white border-t-transparent rounded-full animate-spin" /> : (
+                       <>
+                          Entrar
+                          <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                       </>
+                     )}
+                  </button>
+                  
+                  <div className="text-center">
+                    <Link href="/forgot-password" className="text-[10px] text-gray-500 hover:text-[#5E41FF] transition-colors uppercase font-bold tracking-widest">
+                      Esqueci minha senha
+                    </Link>
+                  </div>
+               </form>
            </div>
         </div>
 
