@@ -224,7 +224,8 @@ export default function GestaoPage() {
   }
 
   function copyLink() {
-    navigator.clipboard.writeText('https://salaopro.com.br')
+    const bookingUrl = `${window.location.origin}/book/${profile?.id || ''}`
+    navigator.clipboard.writeText(bookingUrl)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
@@ -346,7 +347,7 @@ export default function GestaoPage() {
       <div className="bg-gray-900 rounded-2xl p-5 mb-5">
         <h2 className="font-bold mb-4">Link de Agendamento</h2>
         <div className="flex items-center gap-2">
-          <input readOnly value="https://salaopro.com.br" className="flex-1 p-3 bg-gray-800 rounded-xl text-sm" />
+          <input readOnly value={`${window.location.origin}/book/${profile?.id || ''}`} className="flex-1 p-3 bg-gray-800 rounded-xl text-sm" />
           <button onClick={copyLink} className="p-3 bg-yellow-500 rounded-xl">
             {copied ? <Check size={20} /> : <Copy size={20} />}
           </button>
