@@ -376,12 +376,16 @@ export default function GestaoPage() {
       {/* Link */}
       <div className="bg-gray-900 rounded-2xl p-5 mb-5">
         <h2 className="font-bold mb-4">Link de Agendamento</h2>
-        <div className="flex items-center gap-2">
-          <input readOnly value={salonId && profile?.name ? `${window.location.origin}/b/${generateSlug(profile.name)}` : 'Carregando...'} className="flex-1 p-3 bg-gray-800 rounded-xl text-sm" />
-          <button onClick={copyLink} disabled={!salonId || !profile?.name} className="p-3 bg-yellow-500 rounded-xl disabled:opacity-50">
-            {copied ? <Check size={20} /> : <Copy size={20} />}
-          </button>
-        </div>
+        {salonId ? (
+          <div className="flex items-center gap-2">
+            <input readOnly value={`${window.location.origin}/b/${profile?.name ? generateSlug(profile.name) : salonId}`} className="flex-1 p-3 bg-gray-800 rounded-xl text-sm" />
+            <button onClick={copyLink} className="p-3 bg-yellow-500 rounded-xl">
+              {copied ? <Check size={20} /> : <Copy size={20} />}
+            </button>
+          </div>
+        ) : (
+          <div className="p-3 bg-gray-800 rounded-xl text-sm text-gray-500">Carregando link...</div>
+        )}
       </div>
 
       {/* WhatsApp */}
