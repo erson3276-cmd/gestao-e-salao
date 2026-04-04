@@ -1,0 +1,84 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { supabaseClient } from '@/lib/supabaseClient'
+import { Loader2 } from 'lucide-react'
+
+export default function AuthCallbackPage() {
+  const [error, setError] = useState('')
+  const router = useRouter()
+
+  useEffect(() => {
+    async function handleCallback() {
+      const hash = window.location.hash
+      if (!hash) {
+        setError('Nenhum token recebido')
+        setTimeout(() => router.push('/login'), 3000)
+        return
+      }
+
+      try {
+        const { data, error: authError } = await supabaseClient.auth.getSession()
+        
+        if (authError || !data.session) {
+          setError('Falha na autenticação')
+          setTimeout(() => router.push('/login'), 3000)
+          return
+        }
+
+        const email = data.session.user.email
+        if (!email) {
+          setError('Email não disponível')
+          setTimeout(() => router.push('/login'), 3000)
+          return
+        }
+
+        const res = await fetch('/api/auth/google-callback', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, name: data.session.user.user_metadata?.full_name || email.split('@')[0] })
+        })
+
+        const result = await res.json()
+
+        if (result.success) {
+          router.push(result.redirect || '/admin/agenda')
+          router.refresh()
+        } else {
+          setError(result.error || 'Erro ao processar login')
+          setTimeout(() => router.push('/login'), 3000)
+        }
+      } catch {
+        setError('Erro ao conectar ao servidor')
+        setTimeout(() => router.push('/login'), 3000)
+      }
+    }
+
+    handleCallback()
+  }, [router])
+
+  return (
+    <main className="min-h-screen bg-[#0A0A0A] flex items-center justify-center p-6">
+      <div className="max-w-md w-full text-center space-y-6">
+        {error ? (
+          <>
+            <div className="w-16 h-16 mx-auto bg-red-500/10 border border-red-500/20 rounded-2xl flex items-center justify-center">
+              <span className="text-2xl">❌</span>
+            </div>
+            <h2 className="text-xl font-black italic uppercase text-white">{error}</h2>
+            <p className="text-gray-500 text-sm">Redirecionando para o login...</p>
+          </>
+        ) : (
+          <>
+            <div className="w-16 h-16 mx-auto bg-[#5E41FF]/10 border border-[#5E41FF]/20 rounded-2xl flex items-center justify-center">
+              <Loader2 size={32} className="text-[#5E41FF] animate-spin" />
+            </div>
+            <h2 className="text-xl font-black italic uppercase text-white">Conectando com Google...</h2>
+            <p className="text-gray-500 text-sm">Aguarde um momento</p>
+          </>
+        )}
+      </div>
+    </main>
+  )
+}
