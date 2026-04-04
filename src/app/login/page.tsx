@@ -176,7 +176,7 @@ function LoginForm() {
                   </button>
                   
                   <div className="text-center">
-                    <Link href="/forgot-password" className="text-[10px] text-gray-500 hover:text-[#5E41FF] transition-colors uppercase font-bold tracking-widest">
+                    <Link href="/recuperar-senha" className="text-[10px] text-gray-500 hover:text-[#5E41FF] transition-colors uppercase font-bold tracking-widest">
                       Esqueci minha senha
                     </Link>
                   </div>
