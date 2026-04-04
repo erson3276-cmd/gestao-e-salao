@@ -1,11 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { ShieldCheck, ArrowRight, Mail, User, Phone, Building2, Eye, EyeOff, Lock, Loader2 } from 'lucide-react'
 
-export default function RegisterPage() {
+function RegisterForm() {
   const [salonName, setSalonName] = useState('')
   const [ownerName, setOwnerName] = useState('')
   const [ownerEmail, setOwnerEmail] = useState('')
@@ -191,5 +191,13 @@ export default function RegisterPage() {
         `}</style>
       </div>
     </main>
+  )
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center"><div className="w-8 h-8 border-2 border-[#5E41FF]/30 border-t-[#5E41FF] rounded-full animate-spin" /></div>}>
+      <RegisterForm />
+    </Suspense>
   )
 }
