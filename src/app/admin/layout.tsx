@@ -36,7 +36,7 @@ const sidebarItems = [
   { name: 'Clientes', icon: Users, path: '/admin/clientes' },
   { name: 'Serviços', icon: Package, path: '/admin/servicos' },
   { name: 'Despesas', icon: DollarSign, path: '/admin/despesas' },
-  { name: 'Conversas', icon: MessageSquare, path: '/admin/managertalk' },
+  { name: 'WhatsApp', icon: MessageSquare, path: '/admin/whatsapp' },
   { name: 'Relatórios', icon: BarChart3, path: '/admin/relatorios' },
   { name: 'Comissão', icon: Calculator, path: '/admin/comissao' },
   { name: 'Gestão do salão', icon: Settings, path: '/admin/gestao' },

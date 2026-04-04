@@ -51,6 +51,16 @@ export async function salonLogin(email: string, password: string) {
       return { success: false, error: 'Sua conta esta inativa. Renove sua assinatura.' }
     }
 
+    const now = new Date()
+    const expiresAt = new Date(salon.subscription_ends_at)
+    if (now > expiresAt && salon.status !== 'blocked') {
+      await supabaseAdmin
+        .from('salons')
+        .update({ status: 'inactive', updated_at: new Date().toISOString() })
+        .eq('id', salon.id)
+      return { success: false, error: 'Sua assinatura expirou. Renove para continuar usando.' }
+    }
+
     const isValid = verifyPassword(password, salon.owner_password)
     if (!isValid) {
       return { success: false, error: 'Email ou senha incorretos' }
@@ -60,7 +70,8 @@ export async function salonLogin(email: string, password: string) {
       salonId: salon.id,
       salonName: salon.name,
       ownerEmail: salon.owner_email,
-      plan: salon.plan
+      plan: salon.plan,
+      subscriptionEndsAt: salon.subscription_ends_at || ''
     }
 
     const cookieStore = await cookies()
@@ -129,7 +140,8 @@ export async function salonRegister(data: {
       salonId: salon.id,
       salonName: salon.name,
       ownerEmail: salon.owner_email,
-      plan: salon.plan
+      plan: salon.plan,
+      subscriptionEndsAt: salon.subscription_ends_at || ''
     }
 
     const cookieStore = await cookies()

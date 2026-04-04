@@ -56,6 +56,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'Sua conta esta inativa. Renove sua assinatura.' }, { status: 403 })
     }
 
+    const now = new Date()
+    const expiresAt = new Date(salon.subscription_ends_at)
+    if (now > expiresAt && salon.status !== 'blocked') {
+      await supabaseAdmin
+        .from('salons')
+        .update({ status: 'inactive', updated_at: new Date().toISOString() })
+        .eq('id', salon.id)
+      return NextResponse.json({ success: false, error: 'Sua assinatura expirou. Renove para continuar usando.' }, { status: 403 })
+    }
+
     const isValid = verifyPassword(password, salon.owner_password)
     if (!isValid) {
       return NextResponse.json({ success: false, error: 'Email ou senha incorretos' }, { status: 401 })
@@ -65,7 +75,8 @@ export async function POST(request: Request) {
       salonId: salon.id,
       salonName: salon.name,
       ownerEmail: salon.owner_email,
-      plan: salon.plan
+      plan: salon.plan,
+      subscriptionEndsAt: salon.subscription_ends_at || ''
     }
 
     const cookieStore = await cookies()

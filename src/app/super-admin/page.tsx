@@ -268,6 +268,16 @@ export default function SuperAdminPage() {
                           <Eye size={14} className="text-gray-400 hover:text-[#5E41FF]" />
                         </button>
                         {salon.status === 'active' && (
+                          <a
+                            href={`https://wa.me/5521984559663?text=${encodeURIComponent(`Olá ${salon.owner_name}! Sua assinatura do Gestão E Salão vence em ${formatDate(salon.subscription_ends_at)}. Valor: R$ 49,90. Link de pagamento: `)}`}
+                            target="_blank"
+                            className="p-2 bg-white/5 border border-white/5 rounded-xl hover:bg-emerald-500/10 hover:border-emerald-500/30 transition-all"
+                            title="Enviar cobrança"
+                          >
+                            <CreditCard size={14} className="text-gray-400 hover:text-emerald-500" />
+                          </a>
+                        )}
+                        {salon.status === 'active' && (
                           <button
                             onClick={() => updateSalonStatus(salon.id, 'blocked')}
                             className="p-2 bg-white/5 border border-white/5 rounded-xl hover:bg-red-500/10 hover:border-red-500/30 transition-all"
@@ -353,13 +363,22 @@ export default function SuperAdminPage() {
               </div>
               <div className="flex gap-3 pt-4">
                 {selectedSalon.status === 'active' ? (
-                  <button
-                    onClick={() => updateSalonStatus(selectedSalon.id, 'blocked')}
-                    disabled={actionLoading}
-                    className="flex-1 py-3 bg-red-500/10 border border-red-500/20 text-red-500 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-red-500/20 transition-all disabled:opacity-50"
-                  >
-                    Bloquear Acesso
-                  </button>
+                  <>
+                    <a
+                      href={`https://wa.me/5521984559663?text=${encodeURIComponent(`Olá ${selectedSalon.owner_name}! Sua assinatura do Gestão E Salão vence em ${formatDate(selectedSalon.subscription_ends_at)}. Para renovar: R$ 49,90/mês. Me chama aqui!`)}`}
+                      target="_blank"
+                      className="flex-1 py-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-emerald-500/20 transition-all flex items-center justify-center gap-2"
+                    >
+                      <LinkIcon size={14} /> Cobrar
+                    </a>
+                    <button
+                      onClick={() => updateSalonStatus(selectedSalon.id, 'blocked')}
+                      disabled={actionLoading}
+                      className="flex-1 py-3 bg-red-500/10 border border-red-500/20 text-red-500 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-red-500/20 transition-all disabled:opacity-50"
+                    >
+                      Bloquear
+                    </button>
+                  </>
                 ) : (
                   <button
                     onClick={() => updateSalonStatus(selectedSalon.id, 'active')}

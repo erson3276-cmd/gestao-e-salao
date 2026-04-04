@@ -21,15 +21,22 @@ export async function GET() {
 export async function PATCH(request: Request) {
   try {
     const body = await request.json()
-    const { id, status } = body
+    const { id, status, extendDays } = body
 
-    if (!id || !status) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+    if (!id) {
+      return NextResponse.json({ error: 'Missing salon id' }, { status: 400 })
+    }
+
+    const updateData: any = { updated_at: new Date().toISOString() }
+    if (status) updateData.status = status
+    if (extendDays) {
+      updateData.subscription_ends_at = new Date(Date.now() + extendDays * 24 * 60 * 60 * 1000).toISOString()
+      updateData.status = 'active'
     }
 
     const { data, error } = await supabaseAdmin
       .from('salons')
-      .update({ status, updated_at: new Date().toISOString() })
+      .update(updateData)
       .eq('id', id)
       .select()
       .single()

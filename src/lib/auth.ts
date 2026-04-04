@@ -13,6 +13,7 @@ export interface SalonSession {
   salonName: string
   ownerEmail: string
   plan: string
+  subscriptionEndsAt: string
 }
 
 export const SALON_COOKIE_NAME = 'salon_session'
