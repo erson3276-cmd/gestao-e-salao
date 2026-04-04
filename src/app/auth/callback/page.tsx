@@ -46,14 +46,14 @@ export default function AuthCallbackPage() {
         }
 
         const email = sessionData.session.user.email
-        const name = sessionData.session.user.user_metadata?.full_name || email.split('@')[0]
-
         if (!email) {
           setStatus('error')
           setError('Email não disponível')
           setTimeout(() => router.push('/login'), 3000)
           return
         }
+
+        const name = sessionData.session.user.user_metadata?.full_name || email.split('@')[0]
 
         const res = await fetch('/api/auth/google-callback', {
           method: 'POST',
