@@ -254,17 +254,6 @@ export default function WhatsAppPage() {
                   </button>
                 </div>
               )}
-                </div>
-              )}
-              {connecting && !polling && !qrCode && (
-                <div className="mt-4 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-center">
-                  <p className="text-sm text-red-400 font-bold">Servidor não respondeu</p>
-                  <p className="text-xs text-gray-500 mt-1">Verifique se o servidor de WhatsApp está online.</p>
-                  <button onClick={handleConnect} className="mt-3 px-4 py-2 bg-red-500/20 text-red-400 rounded-lg text-xs font-bold hover:bg-red-500/30 transition-all">
-                    Tentar novamente
-                  </button>
-                </div>
-              )}
             </div>
           </div>
         )}
