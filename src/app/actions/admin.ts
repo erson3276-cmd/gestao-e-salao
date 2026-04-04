@@ -81,7 +81,8 @@ async function callBaileysAPI(endpoint: string, method: string = 'GET', body?: a
 // ============== LOGIN ==============
 
 export async function adminLogin(password: string) {
-  if (password === 'moca2024') {
+  const expectedPassword = process.env.ADMIN_PASSWORD || 'moca2024'
+  if (password === expectedPassword) {
     const cookieStore = await cookies()
     cookieStore.set('admin_auth', 'authenticated', {
       httpOnly: true,

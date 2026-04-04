@@ -6,10 +6,7 @@ function generateSlug(name: string): string {
 }
 
 async function findSalonBySlug(slug: string) {
-  const { data: salonBySlug } = await supabaseAdmin.from('salons').select('id').eq('slug', slug).eq('status', 'active').single()
-  if (salonBySlug) return salonBySlug
-
-  const { data: allSalons } = await supabaseAdmin.from('salons').select('id, name, slug').eq('status', 'active')
+  const { data: allSalons } = await supabaseAdmin.from('salons').select('id, name').eq('status', 'active')
   if (allSalons) {
     for (const s of allSalons) {
       if (generateSlug(s.name) === slug || s.id === slug) return s

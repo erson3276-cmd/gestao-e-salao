@@ -1,17 +1,26 @@
 import { NextResponse } from 'next/server'
-
-let currentQR: { qr: string | null; state: string; updated_at: string } = {
-  qr: null,
-  state: 'disconnected',
-  updated_at: ''
-}
+import { supabaseAdmin } from '@/lib/supabaseAdmin'
 
 export async function GET() {
-  return NextResponse.json({
-    qr: currentQR.qr,
-    state: currentQR.state,
-    updated_at: currentQR.updated_at
-  })
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('whatsapp_qr')
+      .select('*')
+      .eq('id', 1)
+      .single()
+    
+    if (error) {
+      return NextResponse.json({ qr: null, state: 'disconnected', updated_at: '' })
+    }
+    
+    return NextResponse.json({
+      qr: data?.qr || null,
+      state: data?.state || 'disconnected',
+      updated_at: data?.updated_at || ''
+    })
+  } catch {
+    return NextResponse.json({ qr: null, state: 'disconnected', updated_at: '' })
+  }
 }
 
 export async function POST(request: Request) {
@@ -19,10 +28,17 @@ export async function POST(request: Request) {
     const body = await request.json()
     const { qr, state } = body
     
-    currentQR = {
-      qr: qr || null,
-      state: state || 'disconnected',
-      updated_at: new Date().toISOString()
+    const { error } = await supabaseAdmin
+      .from('whatsapp_qr')
+      .upsert({
+        id: 1,
+        qr: qr || null,
+        state: state || 'disconnected',
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'id' })
+    
+    if (error) {
+      return NextResponse.json({ success: false, error: error.message }, { status: 500 })
     }
     
     return NextResponse.json({ success: true })

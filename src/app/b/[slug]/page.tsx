@@ -85,7 +85,21 @@ export default function BookingPage() {
   }
 
   function getDayWorkingHours(dayOfWeek: number) {
-    return workingHours.find(wh => wh.day_of_week === dayOfWeek)
+    const wh = workingHours.find(w => w.day_of_week === dayOfWeek)
+    if (wh) return wh
+    if (workingHours.length === 0) {
+      const defaults: Record<number, WorkingHour> = {
+        0: { day_of_week: 0, start_time: '09:00', end_time: '14:00', is_active: false },
+        1: { day_of_week: 1, start_time: '09:00', end_time: '19:00', is_active: true },
+        2: { day_of_week: 2, start_time: '09:00', end_time: '19:00', is_active: true },
+        3: { day_of_week: 3, start_time: '09:00', end_time: '19:00', is_active: true },
+        4: { day_of_week: 4, start_time: '09:00', end_time: '19:00', is_active: true },
+        5: { day_of_week: 5, start_time: '09:00', end_time: '19:00', is_active: true },
+        6: { day_of_week: 6, start_time: '09:00', end_time: '17:00', is_active: true },
+      }
+      return defaults[dayOfWeek]
+    }
+    return undefined
   }
 
   function generateTimeSlots(dayOfWeek: number) {
@@ -225,13 +239,13 @@ export default function BookingPage() {
         {/* Step 1: Services */}
         {step === 1 && (
           <div>
-            <h2 className="text-sm font-bold mb-4 flex items-center gap-2">
-              <span className="w-6 h-6 rounded-full bg-[#5E41FF] text-white flex items-center justify-center text-xs font-black">1</span>
+            <h2 className="text-base font-bold mb-4 flex items-center gap-2">
+              <span className="w-7 h-7 rounded-full bg-[#5E41FF] text-white flex items-center justify-center text-sm font-black">1</span>
               Escolha o Serviço
             </h2>
             <div className="flex gap-2 overflow-x-auto pb-3 no-scrollbar mb-4">
               {categories.map((cat) => (
-                <button key={cat} onClick={() => setSelectedCategory(cat)} className={`px-4 py-2 rounded-full text-xs whitespace-nowrap font-bold transition-all ${selectedCategory === cat ? 'bg-[#5E41FF] text-white' : 'bg-[#121021] text-gray-500 border border-white/5'}`}>
+                <button key={cat} onClick={() => setSelectedCategory(cat)} className={`px-4 py-2 rounded-full text-sm whitespace-nowrap font-bold transition-all ${selectedCategory === cat ? 'bg-[#5E41FF] text-white' : 'bg-[#121021] text-gray-500 border border-white/5'}`}>
                   {cat}
                 </button>
               ))}
@@ -242,21 +256,21 @@ export default function BookingPage() {
                   <div className="w-16 h-16 mx-auto bg-[#5E41FF]/10 rounded-full flex items-center justify-center mb-4">
                     <Clock className="text-[#5E41FF]" size={24} />
                   </div>
-                  <p className="text-gray-400 font-bold">Nenhum serviço cadastrado</p>
+                  <p className="text-gray-400 font-bold text-base">Nenhum serviço cadastrado</p>
                   <p className="text-gray-600 text-sm mt-2">O salão ainda não configurou seus serviços.</p>
                 </div>
               ) : (
                 services.filter(s => selectedCategory === 'Todos' || s.category === selectedCategory).map((service) => (
                   <div key={service.id} onClick={() => { setSelectedService(service); setStep(2); }} className="p-4 bg-[#121021] border border-white/5 rounded-2xl flex justify-between items-center cursor-pointer hover:border-[#5E41FF]/30 transition-all">
                     <div>
-                      <h3 className="text-sm font-bold">{service.name}</h3>
+                      <h3 className="text-base font-bold">{service.name}</h3>
                       <div className="flex items-center gap-3 mt-1">
-                        <span className="text-[10px] text-gray-500 flex items-center gap-1"><Clock size={10} /> {service.duration_minutes} min</span>
+                        <span className="text-xs text-gray-500 flex items-center gap-1"><Clock size={12} /> {service.duration_minutes} min</span>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm font-black text-[#5E41FF]">R$ {service.price}</p>
-                      <ChevronRight className="text-gray-600 w-4 h-4 ml-auto mt-1" />
+                      <p className="text-base font-black text-[#5E41FF]">R$ {service.price}</p>
+                      <ChevronRight className="text-gray-600 w-5 h-5 ml-auto mt-1" />
                     </div>
                   </div>
                 ))
@@ -268,11 +282,11 @@ export default function BookingPage() {
         {/* Step 2: Date */}
         {step === 2 && (
           <div>
-            <button onClick={() => setStep(1)} className="flex items-center gap-2 text-gray-500 mb-4 text-sm hover:text-white transition-colors">
-              <ArrowLeft size={16} /> Voltar
+            <button onClick={() => setStep(1)} className="flex items-center gap-2 text-gray-500 mb-4 text-base hover:text-white transition-colors">
+              <ArrowLeft size={18} /> Voltar
             </button>
-            <h2 className="text-sm font-bold mb-4 flex items-center gap-2">
-              <span className="w-6 h-6 rounded-full bg-[#5E41FF] text-white flex items-center justify-center text-xs font-black">2</span>
+            <h2 className="text-base font-bold mb-4 flex items-center gap-2">
+              <span className="w-7 h-7 rounded-full bg-[#5E41FF] text-white flex items-center justify-center text-sm font-black">2</span>
               Escolha a Data
             </h2>
             <div className="grid grid-cols-4 gap-2">
@@ -284,15 +298,15 @@ export default function BookingPage() {
                     key={date.toString()}
                     onClick={() => { if (!isClosed) { setSelectedDate(date); setStep(3); } }}
                     disabled={isClosed}
-                    className={`p-3 rounded-xl text-center transition-all ${
+                    className={`p-4 rounded-xl text-center transition-all ${
                       isSameDay(date, selectedDate) ? 'bg-[#5E41FF] text-white' :
                       isClosed ? 'bg-[#121021]/30 text-gray-700 cursor-not-allowed' :
                       'bg-[#121021] text-gray-400 hover:bg-[#121021]/80'
                     }`}
                   >
-                    <p className="text-[9px] uppercase font-bold">{format(date, 'EEE', { locale: ptBR })}</p>
-                    <p className="text-lg font-black">{format(date, 'dd')}</p>
-                    {isClosed && <p className="text-[8px] text-red-500">Fechado</p>}
+                    <p className="text-xs uppercase font-bold">{format(date, 'EEE', { locale: ptBR })}</p>
+                    <p className="text-2xl font-black">{format(date, 'dd')}</p>
+                    {isClosed && <p className="text-[10px] text-red-500 mt-1">Fechado</p>}
                   </button>
                 )
               })}
@@ -303,18 +317,18 @@ export default function BookingPage() {
         {/* Step 3: Time */}
         {step === 3 && (
           <div>
-            <button onClick={() => setStep(2)} className="flex items-center gap-2 text-gray-500 mb-4 text-sm hover:text-white transition-colors">
-              <ArrowLeft size={16} /> Voltar
+            <button onClick={() => setStep(2)} className="flex items-center gap-2 text-gray-500 mb-4 text-base hover:text-white transition-colors">
+              <ArrowLeft size={18} /> Voltar
             </button>
-            <h2 className="text-sm font-bold mb-4 flex items-center gap-2">
-              <span className="w-6 h-6 rounded-full bg-[#5E41FF] text-white flex items-center justify-center text-xs font-black">3</span>
+            <h2 className="text-base font-bold mb-4 flex items-center gap-2">
+              <span className="w-7 h-7 rounded-full bg-[#5E41FF] text-white flex items-center justify-center text-sm font-black">3</span>
               Escolha o Horário
             </h2>
-            <p className="text-xs text-gray-500 mb-4">{format(selectedDate, "EEEE, dd 'de' MMMM", { locale: ptBR })}</p>
+            <p className="text-sm text-gray-500 mb-4">{format(selectedDate, "EEEE, dd 'de' MMMM", { locale: ptBR })}</p>
             {timeSlots.length > 0 ? (
               <div className="grid grid-cols-3 gap-2">
                 {timeSlots.map(time => (
-                  <button key={time} onClick={() => { setSelectedTime(time); setStep(4); }} className={`p-3 rounded-xl text-sm font-bold transition-all ${selectedTime === time ? 'bg-[#5E41FF] text-white' : 'bg-[#121021] text-gray-400 hover:bg-[#121021]/80'}`}>
+                  <button key={time} onClick={() => { setSelectedTime(time); setStep(4); }} className={`p-4 rounded-xl text-base font-bold transition-all ${selectedTime === time ? 'bg-[#5E41FF] text-white' : 'bg-[#121021] text-gray-400 hover:bg-[#121021]/80'}`}>
                     {time}
                   </button>
                 ))}
@@ -322,7 +336,7 @@ export default function BookingPage() {
             ) : (
               <div className="text-center py-12 text-gray-600">
                 <Clock size={32} className="mx-auto mb-3 opacity-50" />
-                <p className="text-sm font-bold">Nenhum horário disponível</p>
+                <p className="text-base font-bold">Nenhum horário disponível</p>
               </div>
             )}
           </div>
@@ -331,26 +345,26 @@ export default function BookingPage() {
         {/* Step 4: Info */}
         {step === 4 && (
           <div>
-            <button onClick={() => setStep(3)} className="flex items-center gap-2 text-gray-500 mb-4 text-sm hover:text-white transition-colors">
-              <ArrowLeft size={16} /> Voltar
+            <button onClick={() => setStep(3)} className="flex items-center gap-2 text-gray-500 mb-4 text-base hover:text-white transition-colors">
+              <ArrowLeft size={18} /> Voltar
             </button>
-            <h2 className="text-sm font-bold mb-4 flex items-center gap-2">
-              <span className="w-6 h-6 rounded-full bg-[#5E41FF] text-white flex items-center justify-center text-xs font-black">4</span>
+            <h2 className="text-base font-bold mb-4 flex items-center gap-2">
+              <span className="w-7 h-7 rounded-full bg-[#5E41FF] text-white flex items-center justify-center text-sm font-black">4</span>
               Seus Dados
             </h2>
 
             <div className="space-y-3 mb-6">
-              <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Seu nome" className="w-full p-4 bg-[#121021] border border-white/5 rounded-xl text-sm outline-none focus:border-[#5E41FF]/50" />
-              <input type="tel" value={whatsapp} onChange={e => setWhatsapp(e.target.value)} placeholder="WhatsApp (com DDD)" className="w-full p-4 bg-[#121021] border border-white/5 rounded-xl text-sm outline-none focus:border-[#5E41FF]/50" />
+              <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Seu nome" className="w-full p-4 bg-[#121021] border border-white/5 rounded-xl text-base outline-none focus:border-[#5E41FF]/50" />
+              <input type="tel" value={whatsapp} onChange={e => setWhatsapp(e.target.value)} placeholder="WhatsApp (com DDD)" className="w-full p-4 bg-[#121021] border border-white/5 rounded-xl text-base outline-none focus:border-[#5E41FF]/50" />
             </div>
 
             <div className="p-4 bg-[#121021] border border-white/5 rounded-xl mb-6">
-              <p className="text-[10px] text-gray-500 uppercase font-bold tracking-widest mb-2">Resumo</p>
-              <p className="text-sm font-bold">{selectedService?.name}</p>
-              <p className="text-xs text-gray-500 mt-1">{format(selectedDate, 'dd/MM/yyyy')} às {selectedTime} • R$ {selectedService?.price}</p>
+              <p className="text-xs text-gray-500 uppercase font-bold tracking-widest mb-2">Resumo</p>
+              <p className="text-base font-bold">{selectedService?.name}</p>
+              <p className="text-sm text-gray-500 mt-1">{format(selectedDate, 'dd/MM/yyyy')} às {selectedTime} • R$ {selectedService?.price}</p>
             </div>
 
-            <button onClick={handleBooking} disabled={bookingLoading || !name || !whatsapp} className="w-full py-4 bg-[#5E41FF] text-white rounded-xl font-black uppercase tracking-widest text-sm flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 border-b-4 border-[#3D28B8]">
+            <button onClick={handleBooking} disabled={bookingLoading || !name || !whatsapp} className="w-full py-4 bg-[#5E41FF] text-white rounded-xl font-black uppercase tracking-widest text-base flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 border-b-4 border-[#3D28B8]">
               {bookingLoading ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : (
                 <>
                   Confirmar Agendamento

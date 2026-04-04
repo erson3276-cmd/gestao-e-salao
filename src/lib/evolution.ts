@@ -1,4 +1,4 @@
-const API_URL = 'http://167.234.248.199:8080'
+const API_URL = 'http://167.234.248.199:8082'
 const API_KEY = ''  // AUTH_TYPE=none
 const INSTANCE = 'salao'
 

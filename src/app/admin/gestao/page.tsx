@@ -1,15 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { Save, Loader2, Wifi, RefreshCw, Copy, Check, LogOut, Clock, Plus, Trash2, Upload, Users, X } from 'lucide-react'
-
-const headers = {
-  'Content-Type': 'application/json'
-}
-
-const serviceHeaders = {
-  'Content-Type': 'application/json'
-}
+import { Save, Loader2, Copy, Check, Clock, Plus, Trash2, Upload, Users, X } from 'lucide-react'
 
 const dayNames = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado']
 
@@ -47,9 +39,6 @@ export default function GestaoPage() {
     image_url: ''
   })
 
-  const [waConnected, setWaConnected] = useState(false)
-  const [qrCode, setQrCode] = useState('')
-  const [connecting, setConnecting] = useState(false)
   const [copied, setCopied] = useState(false)
 
   const [workingHours, setWorkingHours] = useState<WorkingHour[]>([
@@ -72,9 +61,6 @@ export default function GestaoPage() {
     loadProfile()
     loadWorkingHours()
     loadProfessionals()
-    checkWA()
-    const interval = setInterval(checkWA, 10000)
-    return () => clearInterval(interval)
   }, [])
 
   async function loadSession() {
@@ -125,15 +111,6 @@ export default function GestaoPage() {
       const data = await res.json()
       if (data.professionals) setProfessionals(data.professionals)
     } catch (e) { console.error(e) }
-  }
-
-  async function checkWA() {
-    try {
-      const res = await fetch('/api/wa-status')
-      const data = await res.json()
-      setWaConnected(data.connected === true)
-      setWaConnected(true)
-    } catch (e) { setWaConnected(false) }
   }
 
   async function handleSave() {
@@ -217,33 +194,6 @@ export default function GestaoPage() {
     setProfForm(prof)
     setEditingProfId(prof.id || null)
     setIsProfModalOpen(true)
-  }
-
-  async function connectWA() {
-    setConnecting(true)
-    setQrCode('')
-    try {
-      const res = await fetch('/api/whatsapp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'connect' })
-      })
-      const data = await res.json()
-      if (data.base64) setQrCode(data.base64)
-      if (data.pairingCode) alert('Código: ' + data.pairingCode)
-      if (data.error) alert('Erro: ' + data.error)
-    } catch (e) { alert('Erro ao conectar') }
-    setConnecting(false)
-  }
-
-  async function disconnectWA() {
-    if (!confirm('Desconectar WhatsApp?')) return
-    try {
-      await fetch('/api/wa-disconnect', { method: 'POST' })
-      setWaConnected(false)
-      setQrCode('')
-      alert('Desconectado!')
-    } catch (e) { alert('Erro') }
   }
 
   function generateSlug(name: string): string {
@@ -390,34 +340,6 @@ export default function GestaoPage() {
           </div>
         ) : (
           <div className="p-3 bg-gray-800 rounded-xl text-sm text-gray-500">Carregando link...</div>
-        )}
-      </div>
-
-      {/* WhatsApp */}
-      <div className="bg-gray-900 rounded-2xl p-5 mb-5">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="font-bold">WhatsApp</h2>
-          <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-xs ${waConnected ? 'bg-green-500/20 text-green-500' : 'bg-red-500/20 text-red-500'}`}>
-            <Wifi size={12} />
-            {waConnected ? 'Conectado' : 'Desconectado'}
-          </div>
-        </div>
-        <div className="flex gap-2">
-          {waConnected && (
-            <button onClick={disconnectWA} className="p-3 bg-red-500/20 text-red-500 rounded-xl hover:bg-red-500/30 transition-all" title="Desconectar">
-              <LogOut size={20} />
-            </button>
-          )}
-          <button onClick={connectWA} disabled={connecting} className="flex-1 p-3 bg-yellow-500 text-black font-bold rounded-xl flex items-center justify-center gap-2">
-            {connecting ? <Loader2 size={20} className="animate-spin" /> : <RefreshCw size={20} />}
-            {waConnected ? 'Reconectar' : 'Conectar'}
-          </button>
-        </div>
-        {qrCode && (
-          <div className="mt-4 flex flex-col items-center">
-            <img src={qrCode} alt="QR" className="w-48 h-48" />
-            <p className="text-xs text-gray-400 mt-2">Escaneie com WhatsApp</p>
-          </div>
         )}
       </div>
 

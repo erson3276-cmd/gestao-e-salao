@@ -21,7 +21,7 @@ export async function POST(request: Request) {
       
       if (payment && (payment.status === 'RECEIVED' || payment.status === 'CONFIRMED')) {
         const description = payment.description || ''
-        const salonMatch = description.match(/Gestão E Salão - (\w+)/)
+        const salonMatch = description.match(/Gest[aã]o E Sal[aã]o - (\w+)/)
         const planLabel = salonMatch ? salonMatch[1] : 'Mensal'
         
         const daysMap: Record<string, number> = {
@@ -33,13 +33,15 @@ export async function POST(request: Request) {
 
         const { data: salon } = await supabaseAdmin
           .from('salons')
-          .select('id, owner_email')
+          .select('id, owner_email, subscription_ends_at')
           .eq('owner_email', payment.customer?.email || '')
           .single()
 
         if (salon) {
-          const currentEndsAt = new Date()
-          const newEndsAt = new Date(currentEndsAt.getTime() + days * 24 * 60 * 60 * 1000).toISOString()
+          const now = new Date()
+          const currentEndsAt = salon.subscription_ends_at ? new Date(salon.subscription_ends_at) : now
+          const baseDate = currentEndsAt > now ? currentEndsAt : now
+          const newEndsAt = new Date(baseDate.getTime() + days * 24 * 60 * 60 * 1000).toISOString()
           
           await supabaseAdmin
             .from('salons')

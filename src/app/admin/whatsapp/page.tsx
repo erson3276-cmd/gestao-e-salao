@@ -48,6 +48,13 @@ export default function WhatsAppPage() {
       if (data.qr) {
         setQrCode(data.qr)
         startPolling()
+      } else if (data.error) {
+        console.error('Connect error:', data)
+        if (res.status === 503) {
+          alert(`Servidor WhatsApp indisponível.\n\nURL: ${data.server || 'não configurada'}\nDetalhes: ${data.details || 'Servidor não responde'}`)
+        } else {
+          alert(`Erro ao conectar: ${data.error}\n${data.details || ''}`)
+        }
       }
     } catch (e) {
       console.error('Error connecting:', e)

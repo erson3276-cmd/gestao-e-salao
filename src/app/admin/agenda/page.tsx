@@ -251,6 +251,7 @@ export default function AgendaPage() {
     try {
       const service = services.find(s => s.id === selectedApt.service_id)
       const tip = parseFloat(tipAmount) || 0
+      const total = (service?.price || 0) + tip
       
       const res = await fetch('/api/vendas', {
         method: 'POST',
@@ -258,9 +259,7 @@ export default function AgendaPage() {
         body: JSON.stringify({
           customer_id: selectedApt.customer_id,
           service_id: selectedApt.service_id,
-          amount: service?.price || 0,
-          tip_amount: tip,
-          total_amount: (service?.price || 0) + tip,
+          amount: total,
           payment_method: paymentMethod,
           date: new Date().toISOString()
         })
@@ -450,7 +449,7 @@ export default function AgendaPage() {
       {/* New Appointment Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-          <div className="bg-[#121021] rounded-2xl p-6 w-full max-w-sm">
+          <div className="bg-[#121021] rounded-2xl p-6 w-full max-w-sm max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-bold text-white">Novo Agendamento</h3>
               <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-white/10 rounded-lg"><X size={20} className="text-gray-400" /></button>
@@ -458,17 +457,54 @@ export default function AgendaPage() {
             <div className="space-y-3">
               <div>
                 <label className="text-xs text-gray-400 mb-1 block">Cliente</label>
-                <select value={formData.customerId} onChange={e => setFormData({...formData, customerId: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-emerald-500">
-                  <option value="">Selecione...</option>
-                  {customers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                </select>
+                <div className="bg-white/5 border border-white/10 rounded-xl overflow-hidden">
+                  <div className="max-h-32 overflow-y-auto">
+                    {customers.length === 0 ? (
+                      <p className="p-3 text-gray-500 text-sm text-center">Nenhum cliente cadastrado</p>
+                    ) : (
+                      customers.map(c => (
+                        <button
+                          key={c.id}
+                          type="button"
+                          onClick={() => setFormData({...formData, customerId: c.id})}
+                          className={`w-full p-3 text-left text-sm transition-all ${
+                            formData.customerId === c.id
+                              ? 'bg-emerald-500/20 text-white font-bold'
+                              : 'text-gray-300 hover:bg-white/5'
+                          }`}
+                        >
+                          {c.name}
+                        </button>
+                      ))
+                    )}
+                  </div>
+                </div>
               </div>
               <div>
                 <label className="text-xs text-gray-400 mb-1 block">Serviço</label>
-                <select value={formData.serviceId} onChange={e => setFormData({...formData, serviceId: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-emerald-500">
-                  <option value="">Selecione...</option>
-                  {services.map(s => <option key={s.id} value={s.id}>{s.name} - R$ {s.price}</option>)}
-                </select>
+                <div className="bg-white/5 border border-white/10 rounded-xl overflow-hidden">
+                  <div className="max-h-32 overflow-y-auto">
+                    {services.length === 0 ? (
+                      <p className="p-3 text-gray-500 text-sm text-center">Nenhum serviço cadastrado</p>
+                    ) : (
+                      services.map(s => (
+                        <button
+                          key={s.id}
+                          type="button"
+                          onClick={() => setFormData({...formData, serviceId: s.id})}
+                          className={`w-full p-3 text-left text-sm flex justify-between transition-all ${
+                            formData.serviceId === s.id
+                              ? 'bg-emerald-500/20 text-white font-bold'
+                              : 'text-gray-300 hover:bg-white/5'
+                          }`}
+                        >
+                          <span>{s.name}</span>
+                          <span className="text-emerald-400">R$ {s.price}</span>
+                        </button>
+                      ))
+                    )}
+                  </div>
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
@@ -521,11 +557,27 @@ export default function AgendaPage() {
                     </div>
                     <div className="mt-3">
                       <label className="text-xs text-gray-400 mb-1 block">Pagamento</label>
-                      <select value={paymentMethod} onChange={e => setPaymentMethod(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-emerald-500">
-                        <option value="dinheiro">Dinheiro</option>
-                        <option value="pix">PIX</option>
-                        <option value="cartao">Cartão</option>
-                      </select>
+                      <div className="grid grid-cols-3 gap-2">
+                        {[
+                          { value: 'dinheiro', label: 'Dinheiro', icon: '💵' },
+                          { value: 'pix', label: 'PIX', icon: '📱' },
+                          { value: 'cartao', label: 'Cartão', icon: '💳' },
+                        ].map(opt => (
+                          <button
+                            key={opt.value}
+                            type="button"
+                            onClick={() => setPaymentMethod(opt.value)}
+                            className={`p-3 rounded-xl text-sm font-bold flex flex-col items-center gap-1 transition-all ${
+                              paymentMethod === opt.value
+                                ? 'bg-emerald-500/20 border-2 border-emerald-500 text-white'
+                                : 'bg-white/5 border border-white/10 text-gray-400 hover:border-white/20'
+                            }`}
+                          >
+                            <span className="text-lg">{opt.icon}</span>
+                            <span className="text-xs">{opt.label}</span>
+                          </button>
+                        ))}
+                      </div>
                     </div>
                     <div className="pt-3 mt-3 border-t border-white/10 flex justify-between items-center">
                       <span className="text-gray-400">Total</span>

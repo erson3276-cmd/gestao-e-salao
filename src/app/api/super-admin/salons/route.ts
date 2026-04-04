@@ -59,7 +59,16 @@ export async function PATCH(request: Request) {
     const updateData: any = { updated_at: new Date().toISOString() }
     if (status) updateData.status = status
     if (extendDays) {
-      updateData.subscription_ends_at = new Date(Date.now() + extendDays * 24 * 60 * 60 * 1000).toISOString()
+      const { data: salon } = await supabaseAdmin
+        .from('salons')
+        .select('subscription_ends_at')
+        .eq('id', id)
+        .single()
+      
+      const now = new Date()
+      const currentEndsAt = salon?.subscription_ends_at ? new Date(salon.subscription_ends_at) : now
+      const baseDate = currentEndsAt > now ? currentEndsAt : now
+      updateData.subscription_ends_at = new Date(baseDate.getTime() + extendDays * 24 * 60 * 60 * 1000).toISOString()
       updateData.status = 'active'
     }
 

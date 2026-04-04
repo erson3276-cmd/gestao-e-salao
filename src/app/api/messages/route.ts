@@ -1,5 +1,34 @@
-import { evolution } from '@/lib/evolution'
 import { supabaseAdmin } from '@/lib/supabaseAdmin'
+
+async function evolutionFetch(endpoint: string, method: string = 'GET', body?: any) {
+  const apiUrl = process.env.BAILEYS_API_URL
+  const apiKey = process.env.BAILEYS_API_KEY
+  
+  if (!apiUrl) return null
+  
+  const url = `${apiUrl}${endpoint}`
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    'apikey': apiKey || ''
+  }
+  
+  const options: RequestInit = {
+    method,
+    headers
+  }
+
+  if (body) {
+    options.body = JSON.stringify(body)
+  }
+
+  try {
+    const res = await fetch(url, options)
+    return await res.json()
+  } catch (error) {
+    console.error('Evolution API error:', error)
+    return null
+  }
+}
 
 export async function GET(request: Request) {
   try {
@@ -10,13 +39,12 @@ export async function GET(request: Request) {
       return Response.json({ error: 'Telefone é obrigatório' }, { status: 400 })
     }
 
-    // Buscar mensagens de um chat específico via Evolution API
+    const instanceId = process.env.BAILEYS_INSTANCE_ID || 'salao'
     const messagesResponse = await evolutionFetch(
-      `/chat/getMessages/${process.env.EVOLUTION_INSTANCE}/${phone}`
+      `/chat/getMessages/${instanceId}/${phone}`
     )
 
     if (messagesResponse && messagesResponse.messages) {
-      // Formatar mensagens
       const messages = messagesResponse.messages.map((msg: any) => ({
         id: msg.key?.id || msg.key?.idMessage || '',
         from: msg.key?.fromMe ? 'me' : 'them',
@@ -56,11 +84,17 @@ export async function POST(request: Request) {
       return Response.json({ error: 'Telefone e mensagem são obrigatórios' }, { status: 400 })
     }
 
-    // Enviar mensagem via Evolution API
-    const result = await evolution.sendText(phone, message)
+    const instanceId = process.env.BAILEYS_INSTANCE_ID || 'salao'
+    const cleanPhone = phone.replace(/\D/g, '')
+    let brazilianPhone = cleanPhone
+    if (!cleanPhone.startsWith('55')) brazilianPhone = '55' + cleanPhone
+
+    const result = await evolutionFetch(`/message/sendText/${instanceId}`, 'POST', {
+      number: brazilianPhone,
+      text: message
+    })
 
     if (result && result.key) {
-      // Salvar no banco se tiver ID do cliente
       if (customer_id) {
         try {
           await supabaseAdmin.from('messages').insert({
@@ -94,34 +128,5 @@ export async function POST(request: Request) {
       error: error.message || 'Erro ao enviar mensagem',
       success: false 
     }, { status: 500 })
-  }
-}
-
-// Função auxiliar para chamada na Evolution API
-async function evolutionFetch(endpoint: string, method: string = 'GET', body?: any) {
-  const apiUrl = process.env.EVOLUTION_API_URL || ''
-  const apiKey = process.env.EVOLUTION_API_KEY || ''
-  
-  const url = `${apiUrl}${endpoint}`
-  const headers = {
-    'Content-Type': 'application/json',
-    'apikey': apiKey
-  }
-  
-  const options: RequestInit = {
-    method,
-    headers
-  }
-
-  if (body) {
-    options.body = JSON.stringify(body)
-  }
-
-  try {
-    const res = await fetch(url, options)
-    return await res.json()
-  } catch (error) {
-    console.error('Evolution API error:', error)
-    return null
   }
 }

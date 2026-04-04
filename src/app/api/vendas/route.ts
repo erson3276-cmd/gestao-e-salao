@@ -24,7 +24,7 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json()
-    const { customer_id, service_id, appointment_id, amount, tip_amount, total_amount, payment_method, date } = body
+    const { customer_id, service_id, appointment_id, amount, payment_method, date } = body
     
     let targetSalonId = salonId === 'admin' ? null : salonId
     
@@ -37,8 +37,6 @@ export async function POST(request: Request) {
     const { data, error } = await supabase.from('vendas').insert([{ 
       customer_id, service_id, appointment_id, 
       amount: Number(amount) || 0,
-      tip_amount: Number(tip_amount) || 0,
-      total_amount: Number(total_amount) || Number(amount) || 0, 
       payment_method,
       date: date || new Date().toISOString(),
       salon_id: targetSalonId
@@ -57,7 +55,7 @@ export async function PUT(request: Request) {
 
   try {
     const body = await request.json()
-    const { id, customer_id, service_id, appointment_id, amount, tip_amount, total_amount, payment_method, date } = body
+    const { id, customer_id, service_id, appointment_id, amount, payment_method, date } = body
     if (!id) return NextResponse.json({ error: 'ID é obrigatório' }, { status: 400 })
     
     const updateData: any = {}
@@ -65,8 +63,6 @@ export async function PUT(request: Request) {
     if (service_id !== undefined) updateData.service_id = service_id
     if (appointment_id !== undefined) updateData.appointment_id = appointment_id
     if (amount !== undefined) updateData.amount = Number(amount)
-    if (tip_amount !== undefined) updateData.tip_amount = Number(tip_amount)
-    if (total_amount !== undefined) updateData.total_amount = Number(total_amount)
     if (payment_method !== undefined) updateData.payment_method = payment_method
     if (date !== undefined) updateData.date = date
     

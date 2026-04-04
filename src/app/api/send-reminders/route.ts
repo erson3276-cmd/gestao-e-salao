@@ -15,6 +15,7 @@ export async function GET() {
       .from('appointments')
       .select(`
         id,
+        salon_id,
         start_time,
         status,
         customers!appointments_customer_id_fkey (id, name, whatsapp),
@@ -31,31 +32,33 @@ export async function GET() {
     const results = []
     
     for (const appt of appointments || []) {
-      const customer = Array.isArray(appt.customers) ? appt.customers[0] : appt.customers
-      const service = Array.isArray(appt.services) ? appt.services[0] : appt.services
-      
-      if (!customer?.whatsapp) {
-        results.push({ appointmentId: appt.id, status: 'skipped', reason: 'No phone' })
-        continue
-      }
-      
-      const timeStr = new Date(appt.start_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
-      const serviceName = service?.name || 'Serviço'
-      
-      const message = `Bom dia, *${customer.name}*! ☀️\n\nLembrete: Você tem *${serviceName}* hoje no *Gestão E Salão* às *${timeStr}*! 💅\n\nTe esperamos! 🌸`
-      
       try {
+        const customer = Array.isArray(appt.customers) ? appt.customers[0] : appt.customers
+        const service = Array.isArray(appt.services) ? appt.services[0] : appt.services
+        
+        if (!customer?.whatsapp) {
+          results.push({ appointmentId: appt.id, status: 'skipped', reason: 'No phone' })
+          continue
+        }
+        
+        const timeStr = new Date(appt.start_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+        const serviceName = service?.name || 'Serviço'
+        const salonName = 'Gestão E Salão'
+        
+        const message = `Bom dia, *${customer.name}*! ☀️\n\nLembrete: Você tem *${serviceName}* hoje no *${salonName}* às *${timeStr}*! 💅\n\nTe esperamos! 🌸`
+        
         await supabase
           .from('whatsapp_messages')
           .insert({
             phone: customer.whatsapp,
             message: message,
-            status: 'pending'
+            status: 'pending',
+            salon_id: appt.salon_id
           })
         
         results.push({ appointmentId: appt.id, phone: customer.whatsapp, status: 'queued' })
       } catch (err: any) {
-        results.push({ appointmentId: appt.id, phone: customer.whatsapp, status: 'error', error: err.message })
+        results.push({ appointmentId: appt.id, status: 'error', error: err.message })
       }
     }
     

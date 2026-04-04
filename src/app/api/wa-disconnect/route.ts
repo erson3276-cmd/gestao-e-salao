@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server'
 export async function POST() {
   try {
     // Call Baileys logout endpoint via server
-    const baileysUrl = process.env.BAILEYS_API_URL || 'http://localhost:8080'
+    const baileysUrl = process.env.BAILEYS_API_URL || 'http://167.234.248.199:8082'
     const baileysKey = process.env.BAILEYS_API_KEY || ''
     
     await fetch(`${baileysUrl}/logout`, {
