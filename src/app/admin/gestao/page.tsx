@@ -135,21 +135,26 @@ export default function GestaoPage() {
   async function handleSave() {
     setSaving(true)
     try {
-      await fetch('/api/gestao/profile', {
+      const res = await fetch('/api/gestao/profile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(profile)
       })
-      for (const wh of workingHours) {
-        await fetch('/api/working-hours', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(wh)
-        })
+      const data = await res.json()
+      if (!res.ok || data.error) {
+        alert('Erro ao salvar: ' + (data.error || 'Erro desconhecido'))
+        setSaving(false)
+        return
       }
       setSaved(true)
       setTimeout(() => setSaved(false), 2000)
-    } catch (e) { alert('Erro ao salvar') }
+      // Reload profile to confirm save
+      const reloadRes = await fetch('/api/gestao/profile')
+      const reloadData = await reloadRes.json()
+      if (reloadData.profile) setProfile(reloadData.profile)
+    } catch (e: any) {
+      alert('Erro ao salvar: ' + e.message)
+    }
     setSaving(false)
   }
 

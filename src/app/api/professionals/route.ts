@@ -8,16 +8,16 @@ export async function GET() {
 
   try {
     const { data, error } = await supabase
-      .from('working_hours')
+      .from('professionals')
       .select('*')
       .eq('salon_id', session.salonId)
-      .order('day_of_week', { ascending: true })
+      .order('name', { ascending: true })
     
     if (error) {
       return NextResponse.json({ success: false, error: error.message }, { status: 500 })
     }
     
-    return NextResponse.json({ success: true, data: data || [] })
+    return NextResponse.json({ professionals: data || [] })
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 })
   }
@@ -29,39 +29,51 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json()
-    const { day_of_week, start_time, end_time, is_active } = body
-    
-    const { data: existing } = await supabase
-      .from('working_hours')
-      .select('id')
-      .eq('day_of_week', day_of_week)
-      .eq('salon_id', session.salonId)
-      .single()
-    
-    let result
-    if (existing) {
+    const { id, name, commission_percent, whatsapp } = body
+
+    if (id) {
       const { data, error } = await supabase
-        .from('working_hours')
-        .update({ start_time, end_time, is_active })
-        .eq('day_of_week', day_of_week)
+        .from('professionals')
+        .update({ name, commission_percent, whatsapp })
+        .eq('id', id)
         .eq('salon_id', session.salonId)
         .select()
         .single()
       
       if (error) throw error
-      result = data
+      return NextResponse.json({ success: true, data })
     } else {
       const { data, error } = await supabase
-        .from('working_hours')
-        .insert([{ day_of_week, start_time, end_time, is_active, salon_id: session.salonId }])
+        .from('professionals')
+        .insert([{ name, commission_percent, whatsapp, salon_id: session.salonId }])
         .select()
         .single()
       
       if (error) throw error
-      result = data
+      return NextResponse.json({ success: true, data })
     }
-    
-    return NextResponse.json({ success: true, data: result })
+  } catch (error: any) {
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 })
+  }
+}
+
+export async function DELETE(request: Request) {
+  const session = await getSalonSession()
+  if (!session) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
+
+  try {
+    const { searchParams } = new URL(request.url)
+    const id = searchParams.get('id')
+    if (!id) return NextResponse.json({ success: false, error: 'Missing id' }, { status: 400 })
+
+    const { error } = await supabase
+      .from('professionals')
+      .delete()
+      .eq('id', id)
+      .eq('salon_id', session.salonId)
+
+    if (error) throw error
+    return NextResponse.json({ success: true })
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 })
   }
