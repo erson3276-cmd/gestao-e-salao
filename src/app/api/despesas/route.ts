@@ -1,175 +1,97 @@
+import { NextResponse } from 'next/server'
 import { supabaseAdmin as supabase } from '@/lib/supabaseAdmin'
+import { getSalonId } from '@/lib/session'
 
-export async function GET(request: Request) {
+export async function GET() {
+  const salonId = await getSalonId()
+  if (!salonId) return NextResponse.json({ data: [], success: true })
+
   try {
-    const { searchParams } = new URL(request.url)
-    const month = searchParams.get('month')
-    const year = searchParams.get('year')
-    const category = searchParams.get('category')
-    const paid = searchParams.get('paid')
-    const recurring = searchParams.get('recurring')
-
-    let query = supabase
-      .from('despesas')
-      .select('*')
-      .order('date', { ascending: false })
-
-    if (month && year) {
-      const startDate = `${year}-${String(month).padStart(2, '0')}-01`
-      const endDate = new Date(parseInt(year), parseInt(month), 0).toISOString().split('T')[0]
-      query = query.gte('date', startDate).lte('date', endDate)
-    }
-
-    if (category && category !== 'all') {
-      query = query.eq('category', category)
-    }
-
-    if (paid !== null && paid !== undefined && paid !== 'all') {
-      query = query.eq('paid', paid === 'true')
-    }
-
-    if (recurring !== null && recurring !== undefined && recurring !== 'all') {
-      query = query.eq('recurring', recurring === 'true')
-    }
-
+    let query = supabase.from('despesas').select('*').order('date', { ascending: false })
+    if (salonId !== 'admin') query = query.eq('salon_id', salonId)
     const { data, error } = await query
-    
-    if (error) {
-      console.error('Error fetching despesas:', error)
-      return Response.json({ error: error.message }, { status: 500 })
-    }
-    
-    return Response.json({ data: data || [], success: true })
+    if (error) throw error
+    return NextResponse.json({ data: data || [], success: true })
   } catch (error: any) {
-    console.error('Exception in GET despesas:', error)
-    return Response.json({ error: error.message || 'Erro interno' }, { status: 500 })
+    return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }
 
 export async function POST(request: Request) {
+  const salonId = await getSalonId()
+  if (!salonId) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
+
   try {
     const body = await request.json()
-    const { 
-      description, 
-      amount, 
-      category, 
-      date, 
-      due_date, 
-      paid, 
-      recurring,
-      recurrence_type,
-      notes 
-    } = body
+    const { description, amount, category, date, due_date, paid, recurring, recurrence_type, notes } = body
 
-    if (!description || !amount) {
-      return Response.json({ error: 'Descrição e valor são obrigatórios' }, { status: 400 })
-    }
-    
-    const { data, error } = await supabase
-      .from('despesas')
-      .insert([{ 
-        description: description.trim(), 
-        amount: parseFloat(amount), 
-        category: category || 'Outros', 
-        date: date || new Date().toISOString().split('T')[0],
-        due_date: due_date || null,
-        paid: paid || false,
-        recurring: recurring || false,
-        recurrence_type: recurrence_type || null,
-        notes: notes || null,
-        paid_date: paid ? new Date().toISOString().split('T')[0] : null
-      }])
-      .select()
-      .single()
-    
-    if (error) {
-      console.error('Error creating despesa:', error)
-      return Response.json({ error: error.message }, { status: 500 })
-    }
-    
-    return Response.json({ data, success: true })
+    if (!description || !amount) return NextResponse.json({ error: 'Descrição e valor são obrigatórios' }, { status: 400 })
+
+    const targetSalonId = salonId === 'admin' ? (body.salon_id || null) : salonId
+
+    const { data, error } = await supabase.from('despesas').insert([{
+      description: description.trim(),
+      amount: parseFloat(amount),
+      category: category || 'Outros',
+      date: date || new Date().toISOString().split('T')[0],
+      due_date: due_date || null,
+      paid: paid || false,
+      recurring: recurring || false,
+      recurrence_type: recurrence_type || null,
+      notes: notes || null,
+      paid_date: paid ? new Date().toISOString().split('T')[0] : null,
+      salon_id: targetSalonId
+    }]).select().single()
+
+    if (error) throw error
+    return NextResponse.json({ data, success: true })
   } catch (error: any) {
-    console.error('Exception in POST despesas:', error)
-    return Response.json({ error: error.message || 'Erro interno' }, { status: 500 })
+    return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }
 
 export async function PUT(request: Request) {
+  const salonId = await getSalonId()
+  if (!salonId) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
+
   try {
     const body = await request.json()
-    const { 
-      id, 
-      description, 
-      amount, 
-      category, 
-      date, 
-      due_date, 
-      paid, 
-      recurring,
-      recurrence_type,
-      notes 
-    } = body
+    const { id, ...updateData } = body
+    if (!id) return NextResponse.json({ error: 'ID é obrigatório' }, { status: 400 })
 
-    if (!id) {
-      return Response.json({ error: 'ID é obrigatório' }, { status: 400 })
+    if (updateData.amount !== undefined) updateData.amount = parseFloat(updateData.amount)
+    if (updateData.description !== undefined) updateData.description = updateData.description.trim()
+    if (updateData.paid !== undefined) {
+      updateData.paid_date = updateData.paid ? new Date().toISOString().split('T')[0] : null
     }
-    
-    const updateData: Record<string, any> = {}
-    
-    if (description !== undefined) updateData.description = description.trim()
-    if (amount !== undefined) updateData.amount = parseFloat(amount)
-    if (category !== undefined) updateData.category = category
-    if (date !== undefined) updateData.date = date
-    if (due_date !== undefined) updateData.due_date = due_date || null
-    if (paid !== undefined) {
-      updateData.paid = paid
-      updateData.paid_date = paid ? (new Date().toISOString().split('T')[0]) : null
-    }
-    if (recurring !== undefined) updateData.recurring = recurring
-    if (recurrence_type !== undefined) updateData.recurrence_type = recurrence_type
-    if (notes !== undefined) updateData.notes = notes || null
 
-    const { data, error } = await supabase
-      .from('despesas')
-      .update(updateData)
-      .eq('id', id)
-      .select()
-      .single()
-    
-    if (error) {
-      console.error('Error updating despesa:', error)
-      return Response.json({ error: error.message }, { status: 500 })
-    }
-    
-    return Response.json({ data, success: true })
+    let query = supabase.from('despesas').update(updateData).eq('id', id)
+    if (salonId !== 'admin') query = query.eq('salon_id', salonId)
+
+    const { data, error } = await query.select().single()
+    if (error) throw error
+    return NextResponse.json({ data, success: true })
   } catch (error: any) {
-    console.error('Exception in PUT despesas:', error)
-    return Response.json({ error: error.message || 'Erro interno' }, { status: 500 })
+    return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }
 
 export async function DELETE(request: Request) {
+  const salonId = await getSalonId()
+  if (!salonId) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
+
   try {
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')
-    
-    if (!id) {
-      return Response.json({ error: 'ID é obrigatório' }, { status: 400 })
-    }
-    
-    const { error } = await supabase
-      .from('despesas')
-      .delete()
-      .eq('id', id)
-    
-    if (error) {
-      console.error('Error deleting despesa:', error)
-      return Response.json({ error: error.message }, { status: 500 })
-    }
-    
-    return Response.json({ success: true })
+    if (!id) return NextResponse.json({ error: 'ID é obrigatório' }, { status: 400 })
+
+    let query = supabase.from('despesas').delete().eq('id', id)
+    if (salonId !== 'admin') query = query.eq('salon_id', salonId)
+
+    const { error } = await query
+    if (error) throw error
+    return NextResponse.json({ success: true })
   } catch (error: any) {
-    console.error('Exception in DELETE despesas:', error)
-    return Response.json({ error: error.message || 'Erro interno' }, { status: 500 })
+    return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }
