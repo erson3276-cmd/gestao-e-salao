@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import {
   Users, TrendingUp, DollarSign, Activity, Search,
   CheckCircle, XCircle, Clock, Eye, LogOut, Building2,
-  Calendar, ArrowUpRight, ArrowDownRight, Shield, CreditCard, Link as LinkIcon
+  Calendar, ArrowUpRight, ArrowDownRight, Shield, CreditCard, Link as LinkIcon, MessageSquare
 } from 'lucide-react'
 import { salonLogout } from '@/app/actions/salon-auth'
 
