@@ -2,16 +2,8 @@ import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabaseAdmin'
 import { getPayment } from '@/lib/asaas'
 
-const WEBHOOK_TOKEN = process.env.ASAAS_WEBHOOK_TOKEN
-
 export async function POST(request: Request) {
   try {
-    const signature = request.headers.get('asaas-signature')
-    
-    if (WEBHOOK_TOKEN && signature !== WEBHOOK_TOKEN) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
     const body = await request.json()
     const event = body.event
     const paymentId = body.payment?.id
