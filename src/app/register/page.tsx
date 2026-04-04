@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { ShieldCheck, ArrowRight, Mail, User, Phone, Building2, Eye, EyeOff, Lock, Loader2 } from 'lucide-react'
+import { supabaseClient } from '@/lib/supabaseClient'
 
 function RegisterForm() {
   const [salonName, setSalonName] = useState('')
@@ -58,9 +59,27 @@ function RegisterForm() {
     }
   }
 
-  const handleGoogleRegister = () => {
+  const handleGoogleRegister = async () => {
     setGoogleLoading(true)
-    window.location.href = '/api/auth/google'
+    try {
+      const { error } = await supabaseClient.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/api/auth/callback`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
+        },
+      })
+      if (error) {
+        setError(error.message || 'Erro ao iniciar cadastro com Google')
+        setGoogleLoading(false)
+      }
+    } catch {
+      setError('Erro ao conectar com Google')
+      setGoogleLoading(false)
+    }
   }
 
   return (

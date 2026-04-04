@@ -1,21 +1,25 @@
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
-import { supabaseClient } from '@/lib/supabaseClient'
-import { SALON_COOKIE_NAME, SUPER_ADMIN_COOKIE_NAME, type SalonSession } from '@/lib/auth'
+import { supabaseAdmin } from '@/lib/supabaseAdmin'
+import { SALON_COOKIE_NAME, type SalonSession } from '@/lib/auth'
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const code = searchParams.get('code')
-  const next = searchParams.get('next') || '/admin/agenda'
+  const error = searchParams.get('error')
+
+  if (error) {
+    return NextResponse.redirect(new URL(`/login?error=${error}`, request.url))
+  }
 
   if (!code) {
     return NextResponse.redirect(new URL('/login?error=missing_code', request.url))
   }
 
   try {
-    const { data, error } = await supabaseClient.auth.exchangeCodeForSession(code)
+    const { data, error: authError } = await supabaseAdmin.auth.exchangeCodeForSession(code)
 
-    if (error || !data.user) {
+    if (authError || !data.user) {
       return NextResponse.redirect(new URL('/login?error=auth_failed', request.url))
     }
 
@@ -24,7 +28,6 @@ export async function GET(request: Request) {
       return NextResponse.redirect(new URL('/login?error=no_email', request.url))
     }
 
-    const { supabaseAdmin } = await import('@/lib/supabaseAdmin')
     const { data: salon, error: salonError } = await supabaseAdmin
       .from('salons')
       .select('*')
@@ -32,7 +35,10 @@ export async function GET(request: Request) {
       .single()
 
     if (salonError || !salon) {
-      return NextResponse.redirect(new URL('/register?from_google=true&email=' + encodeURIComponent(email), request.url))
+      const name = data.user.user_metadata?.full_name || email.split('@')[0]
+      return NextResponse.redirect(
+        new URL(`/register?from_google=true&email=${encodeURIComponent(email)}&name=${encodeURIComponent(name)}`, request.url)
+      )
     }
 
     if (salon.status === 'blocked') {
@@ -40,6 +46,16 @@ export async function GET(request: Request) {
     }
 
     if (salon.status === 'inactive') {
+      return NextResponse.redirect(new URL('/subscription-expired', request.url))
+    }
+
+    const now = new Date()
+    const expiresAt = new Date(salon.subscription_ends_at)
+    if (now > expiresAt) {
+      await supabaseAdmin
+        .from('salons')
+        .update({ status: 'inactive', updated_at: new Date().toISOString() })
+        .eq('id', salon.id)
       return NextResponse.redirect(new URL('/subscription-expired', request.url))
     }
 
@@ -60,7 +76,7 @@ export async function GET(request: Request) {
       path: '/'
     })
 
-    return NextResponse.redirect(new URL(next, request.url))
+    return NextResponse.redirect(new URL('/admin/agenda', request.url))
   } catch {
     return NextResponse.redirect(new URL('/login?error=server_error', request.url))
   }

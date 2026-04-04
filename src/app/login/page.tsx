@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Lock, ShieldCheck, ArrowRight, Mail, Loader2 } from 'lucide-react'
+import { supabaseClient } from '@/lib/supabaseClient'
 
 const errorMessages: Record<string, string> = {
   missing_code: 'Erro na autenticação. Tente novamente.',
@@ -55,9 +56,28 @@ function LoginForm() {
     }
   }
 
-  const handleGoogleLogin = () => {
+  const handleGoogleLogin = async () => {
     setGoogleLoading(true)
-    window.location.href = '/api/auth/google'
+    setError('')
+    try {
+      const { error } = await supabaseClient.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/api/auth/callback`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
+        },
+      })
+      if (error) {
+        setError(error.message || 'Erro ao iniciar login com Google')
+        setGoogleLoading(false)
+      }
+    } catch {
+      setError('Erro ao conectar com Google')
+      setGoogleLoading(false)
+    }
   }
 
   return (
@@ -78,7 +98,6 @@ function LoginForm() {
            <div className="absolute -top-24 -right-24 w-48 h-48 bg-[#5E41FF]/10 blur-[80px]" />
            
            <div className="space-y-6 relative z-10">
-              {/* Google Login */}
               <button
                 onClick={handleGoogleLogin}
                 disabled={googleLoading}
