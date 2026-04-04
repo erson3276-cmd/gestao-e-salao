@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabaseAdmin'
-import { createCustomer, findCustomerByEmail, createPayment } from '@/lib/asaas'
+import { createCustomer, findCustomerByEmail, createPayment, updateCustomer } from '@/lib/asaas'
 import { getSalonId } from '@/lib/session'
 
 const plans = {
@@ -44,6 +44,10 @@ export async function POST(request: Request) {
         salon.owner_phone || undefined,
         salon.cpf_cnpj || undefined
       )
+    } else if (salon.cpf_cnpj && !asaasCustomer.cpfCnpj) {
+      // Update customer with CPF if not set
+      await updateCustomer(asaasCustomer.id, salon.owner_name, salon.cpf_cnpj)
+      asaasCustomer.cpfCnpj = salon.cpf_cnpj
     }
 
     // Create payment

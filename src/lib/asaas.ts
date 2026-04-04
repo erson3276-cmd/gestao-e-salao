@@ -35,6 +35,13 @@ export async function createCustomer(name: string, email: string, phone?: string
   })
 }
 
+export async function updateCustomer(customerId: string, name?: string, cpfCnpj?: string) {
+  return asaasFetch(`/customers/${customerId}`, 'POST', {
+    name: name || undefined,
+    cpfCnpj: cpfCnpj || undefined
+  })
+}
+
 export async function findCustomerByEmail(email: string) {
   const data = await asaasFetch(`/customers?email=${encodeURIComponent(email)}`)
   return data?.data?.[0] || null
