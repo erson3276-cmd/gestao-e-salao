@@ -1,11 +1,11 @@
 'use server'
 
 import { cookies } from 'next/headers'
-import { supabaseAdmin } from '@/lib/supabaseAdmin'
-import { hashPassword, verifyPassword, SALON_COOKIE_NAME, SUPER_ADMIN_COOKIE_NAME, SUPER_ADMIN_EMAIL, SUPER_ADMIN_PASSWORD, type SalonSession } from '@/lib/auth'
+import { SALON_COOKIE_NAME, SUPER_ADMIN_COOKIE_NAME, SUPER_ADMIN_EMAIL, SUPER_ADMIN_PASSWORD, hashPassword, verifyPassword, type SalonSession } from '@/lib/auth'
 
 async function salonsTableExists(): Promise<boolean> {
   try {
+    const { supabaseAdmin } = await import('@/lib/supabaseAdmin')
     const { error } = await supabaseAdmin.from('salons').select('id', { count: 'exact', head: true })
     return !error
   } catch {
@@ -32,6 +32,7 @@ export async function salonLogin(email: string, password: string) {
       return { success: false, error: 'Sistema em manutencao. Tente novamente mais tarde.' }
     }
 
+    const { supabaseAdmin } = await import('@/lib/supabaseAdmin')
     const { data: salon, error } = await supabaseAdmin
       .from('salons')
       .select('*')
@@ -91,6 +92,7 @@ export async function salonRegister(data: {
       return { success: false, error: 'Sistema em manutencao. Tente novamente mais tarde.' }
     }
 
+    const { supabaseAdmin } = await import('@/lib/supabaseAdmin')
     const { data: existing } = await supabaseAdmin
       .from('salons')
       .select('id')
