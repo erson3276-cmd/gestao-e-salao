@@ -19,7 +19,9 @@ export async function GET() {
   return NextResponse.json({
     profile: {
       id: salon.id,
+      salon_id: salon.id,
       name: salon.name || '',
+      professional_name: salon.owner_name || '',
       whatsapp_number: salon.whatsapp_number || salon.owner_phone || '',
       address: salon.address || '',
       image_url: salon.image_url || '',
@@ -39,7 +41,8 @@ export async function POST(request: Request) {
   const { error } = await supabaseAdmin
     .from('salons')
     .update({
-      name: data.name || data.salonName,
+      name: data.name || data.salonName || session.salonName,
+      owner_name: data.professional_name || data.owner_name,
       whatsapp_number: data.whatsapp_number,
       address: data.address,
       image_url: data.image_url,

@@ -35,6 +35,7 @@ export default function GestaoPage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   
   const [salonId, setSalonId] = useState<string | null>(null)
+  const [salonName, setSalonName] = useState<string>('')
   const [profile, setProfile] = useState<any>({
     name: '',
     professional_name: '',
@@ -81,7 +82,10 @@ export default function GestaoPage() {
       const res = await fetch('/api/session')
       if (res.ok) {
         const data = await res.json()
-        if (data.salonId) setSalonId(data.salonId)
+        if (data.salonId) {
+          setSalonId(data.salonId)
+          setSalonName(data.salonName || '')
+        }
       }
     } catch (e) {
       console.error('Error loading session:', e)
@@ -253,7 +257,8 @@ export default function GestaoPage() {
   }
 
   function copyLink() {
-    const slug = profile?.slug || (profile?.name ? generateSlug(profile.name) : salonId)
+    const name = salonName || profile?.name || 'salao'
+    const slug = generateSlug(name)
     const bookingUrl = `${window.location.origin}/b/${slug}`
     navigator.clipboard.writeText(bookingUrl)
     setCopied(true)
@@ -378,7 +383,7 @@ export default function GestaoPage() {
         <h2 className="font-bold mb-4">Link de Agendamento</h2>
         {salonId ? (
           <div className="flex items-center gap-2">
-            <input readOnly value={`${window.location.origin}/b/${profile?.name ? generateSlug(profile.name) : salonId}`} className="flex-1 p-3 bg-gray-800 rounded-xl text-sm" />
+            <input readOnly value={`${window.location.origin}/b/${generateSlug(salonName || profile?.name || 'salao')}`} className="flex-1 p-3 bg-gray-800 rounded-xl text-sm" />
             <button onClick={copyLink} className="p-3 bg-yellow-500 rounded-xl">
               {copied ? <Check size={20} /> : <Copy size={20} />}
             </button>
