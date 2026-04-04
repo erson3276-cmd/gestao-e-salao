@@ -46,13 +46,27 @@ export async function POST(request: Request) {
 
     console.log('Cliente encontrado:', customer)
 
-    // 2. Se cliente não encontrado -> erro
+    // 2. Se cliente não encontrado -> criar automaticamente
     if (!customer) {
-      return NextResponse.json({ 
-        success: false, 
-        error: 'Cliente não encontrado. Entre em contato com o salão para se cadastrar.',
-        code: 'NOT_REGISTERED'
-      }, { status: 403 })
+      const { data: newCustomer, error: createError } = await supabase
+        .from('customers')
+        .insert({
+          name: name,
+          whatsapp: cleanWhatsapp,
+          active: true
+        })
+        .select()
+        .single()
+
+      if (createError || !newCustomer) {
+        return NextResponse.json({ 
+          success: false, 
+          error: 'Erro ao cadastrar. Tente novamente.',
+          code: 'CREATE_ERROR'
+        }, { status: 500 })
+      }
+
+      customer = newCustomer
     }
 
     // 3. Se cliente explicitamente inativo/bloqueado -> erro
