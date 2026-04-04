@@ -237,20 +237,30 @@ export default function BookingPage() {
               ))}
             </div>
             <div className="space-y-2">
-              {services.filter(s => selectedCategory === 'Todos' || s.category === selectedCategory).map((service) => (
-                <div key={service.id} onClick={() => { setSelectedService(service); setStep(2); }} className="p-4 bg-[#121021] border border-white/5 rounded-2xl flex justify-between items-center cursor-pointer hover:border-[#5E41FF]/30 transition-all">
-                  <div>
-                    <h3 className="text-sm font-bold">{service.name}</h3>
-                    <div className="flex items-center gap-3 mt-1">
-                      <span className="text-[10px] text-gray-500 flex items-center gap-1"><Clock size={10} /> {service.duration_minutes} min</span>
+              {services.filter(s => selectedCategory === 'Todos' || s.category === selectedCategory).length === 0 ? (
+                <div className="text-center py-12">
+                  <div className="w-16 h-16 mx-auto bg-[#5E41FF]/10 rounded-full flex items-center justify-center mb-4">
+                    <Clock className="text-[#5E41FF]" size={24} />
+                  </div>
+                  <p className="text-gray-400 font-bold">Nenhum serviço cadastrado</p>
+                  <p className="text-gray-600 text-sm mt-2">O salão ainda não configurou seus serviços.</p>
+                </div>
+              ) : (
+                services.filter(s => selectedCategory === 'Todos' || s.category === selectedCategory).map((service) => (
+                  <div key={service.id} onClick={() => { setSelectedService(service); setStep(2); }} className="p-4 bg-[#121021] border border-white/5 rounded-2xl flex justify-between items-center cursor-pointer hover:border-[#5E41FF]/30 transition-all">
+                    <div>
+                      <h3 className="text-sm font-bold">{service.name}</h3>
+                      <div className="flex items-center gap-3 mt-1">
+                        <span className="text-[10px] text-gray-500 flex items-center gap-1"><Clock size={10} /> {service.duration_minutes} min</span>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-black text-[#5E41FF]">R$ {service.price}</p>
+                      <ChevronRight className="text-gray-600 w-4 h-4 ml-auto mt-1" />
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-sm font-black text-[#5E41FF]">R$ {service.price}</p>
-                    <ChevronRight className="text-gray-600 w-4 h-4 ml-auto mt-1" />
-                  </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
         )}
