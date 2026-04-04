@@ -28,25 +28,48 @@ async function evolutionFetch(endpoint: string, method: string = 'GET', body?: a
 }
 
 export const baileys = {
-  status: async (instanceId: string) => {
+  status: async (instanceName: string) => {
     try {
-      const res = await evolutionFetch(`/instance/${instanceId}/status`)
-      if (res.instance?.status === 'open') {
+      const res = await evolutionFetch(`/instance/connectionState/${instanceName}`)
+      if (res.instance?.status === 'open' || res.state === 'open') {
         return { connected: true, state: 'connected', hasSession: true }
       }
-      return { connected: false, state: res.instance?.status || 'disconnected', hasSession: false }
+      return { connected: false, state: res.instance?.status || res.state || 'disconnected', hasSession: false }
     } catch (e: any) {
       return { connected: false, state: 'error', hasSession: false }
     }
   },
   
-  qr: async (instanceId: string) => {
+  createInstance: async (instanceName: string) => {
     try {
-      await evolutionFetch(`/instance/${instanceId}/connect`, 'POST')
-      await new Promise(r => setTimeout(r, 5000))
-      const res = await evolutionFetch(`/instance/${instanceId}/qrcode`)
+      const res = await evolutionFetch('/instance/create', 'POST', {
+        instanceName,
+        integration: 'WHATSAPP-BAILEYS',
+        qrcode: false
+      })
+      return res
+    } catch (e: any) {
+      return { error: e.message }
+    }
+  },
+  
+  connect: async (instanceName: string) => {
+    try {
+      const res = await evolutionFetch(`/instance/connect/${instanceName}`, 'POST')
+      return res
+    } catch (e: any) {
+      return { message: e.message }
+    }
+  },
+  
+  qr: async (instanceName: string) => {
+    try {
+      const res = await evolutionFetch(`/instance/connect/${instanceName}`)
       if (res.qrcode) {
         return { qr: res.qrcode }
+      }
+      if (res.pairingCode) {
+        return { code: res.pairingCode }
       }
       if (res.instance?.status === 'open') {
         return { qr: null, message: 'Já conectado!' }
@@ -57,21 +80,18 @@ export const baileys = {
     }
   },
   
-  pairingCode: async (instanceId: string, phone: string) => {
+  pairingCode: async (instanceName: string, phone: string) => {
     try {
-      await evolutionFetch(`/instance/${instanceId}/connect`, 'POST')
-      await new Promise(r => setTimeout(r, 3000))
+      let cleanPhone = phone.replace(/\D/g, '')
+      if (!cleanPhone.startsWith('55')) cleanPhone = '55' + cleanPhone
       
-      const cleanPhone = phone.replace(/\D/g, '')
-      const res = await evolutionFetch(`/instance/${instanceId}/pairingcode`, 'POST', { 
-        phoneNumber: cleanPhone
-      })
+      const res = await evolutionFetch(`/instance/connect/${instanceName}?number=${cleanPhone}`)
       
-      if (res.code) {
-        return { code: res.code }
-      }
       if (res.pairingCode) {
         return { code: res.pairingCode }
+      }
+      if (res.code) {
+        return { code: res.code }
       }
       return { code: null, message: res.message || 'Erro ao gerar código' }
     } catch (e: any) {
@@ -79,12 +99,12 @@ export const baileys = {
     }
   },
   
-  sendText: async (instanceId: string, phone: string, text: string) => {
+  sendText: async (instanceName: string, phone: string, text: string) => {
     try {
       let cleanPhone = phone.replace(/\D/g, '')
       if (!cleanPhone.startsWith('55')) cleanPhone = '55' + cleanPhone
       
-      const res = await evolutionFetch(`/message/sendText/${instanceId}`, 'POST', {
+      const res = await evolutionFetch(`/message/sendText/${instanceName}`, 'POST', {
         number: cleanPhone,
         text: text
       })
@@ -95,45 +115,24 @@ export const baileys = {
     }
   },
 
-  connect: async (instanceId: string) => {
+  disconnect: async (instanceName: string) => {
     try {
-      const res = await evolutionFetch(`/instance/${instanceId}/connect`, 'POST')
+      const res = await evolutionFetch(`/instance/logout/${instanceName}`, 'DELETE')
       return res
     } catch (e: any) {
       return { message: e.message }
-    }
-  },
-
-  disconnect: async (instanceId: string) => {
-    try {
-      const res = await evolutionFetch(`/instance/${instanceId}/logout`, 'POST')
-      return res
-    } catch (e: any) {
-      return { message: e.message }
-    }
-  },
-
-  createInstance: async (instanceId: string) => {
-    try {
-      const res = await evolutionFetch('/instance/create', 'POST', {
-        instanceName: instanceId,
-        qrcode: true
-      })
-      return res
-    } catch (e: any) {
-      return { error: e.message }
     }
   }
 }
 
-export async function sendWhatsAppMessage(instanceId: string, phone: string, message: string) {
-  return baileys.sendText(instanceId, phone, message)
+export async function sendWhatsAppMessage(instanceName: string, phone: string, message: string) {
+  return baileys.sendText(instanceName, phone, message)
 }
 
-export async function getWhatsAppStatus(instanceId: string) {
-  return baileys.status(instanceId)
+export async function getWhatsAppStatus(instanceName: string) {
+  return baileys.status(instanceName)
 }
 
-export async function getWhatsAppQR(instanceId: string) {
-  return baileys.qr(instanceId)
+export async function getWhatsAppQR(instanceName: string) {
+  return baileys.qr(instanceName)
 }
