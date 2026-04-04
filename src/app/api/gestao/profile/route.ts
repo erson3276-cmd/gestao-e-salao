@@ -6,7 +6,6 @@ export async function GET() {
   const salonId = await getSalonId()
   if (!salonId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  // If admin, get the first active salon (or the one from session)
   const targetId = salonId === 'admin' ? null : salonId
 
   let query = supabaseAdmin.from('salons').select('*')
