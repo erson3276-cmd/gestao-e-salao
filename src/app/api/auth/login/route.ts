@@ -19,6 +19,8 @@ export async function POST(request: Request) {
     // Super Admin login
     if (email === SUPER_ADMIN_EMAIL && password === SUPER_ADMIN_PASSWORD) {
       const cookieStore = await cookies()
+      // Clear any existing salon session
+      cookieStore.delete(SALON_COOKIE_NAME)
       cookieStore.set(SUPER_ADMIN_COOKIE_NAME, 'authenticated', {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',

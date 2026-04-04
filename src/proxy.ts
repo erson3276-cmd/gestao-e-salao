@@ -28,11 +28,8 @@ export function proxy(request: NextRequest) {
     return NextResponse.next()
   }
 
-  if (isAuthPath && (salonSession || superAdminSession)) {
-    if (superAdminSession) {
-      return NextResponse.redirect(new URL('/super-admin', request.url))
-    }
-    return NextResponse.redirect(new URL('/admin/agenda', request.url))
+  if (isAuthPath) {
+    return NextResponse.next()
   }
 
   return NextResponse.next()
