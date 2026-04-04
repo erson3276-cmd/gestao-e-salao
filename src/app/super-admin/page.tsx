@@ -417,6 +417,22 @@ export default function SuperAdminPage() {
                   </button>
                 )}
                 <button
+                  onClick={() => {
+                    const days = prompt('Quantos dias deseja adicionar à assinatura?', '30')
+                    if (days && !isNaN(Number(days))) {
+                      updateSalonStatus(selectedSalon.id, 'active')
+                      fetch('/api/super-admin/salons', {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ id: selectedSalon.id, extendDays: Number(days) })
+                      })
+                    }
+                  }}
+                  className="py-3 bg-[#5E41FF]/10 border border-[#5E41FF]/20 text-[#5E41FF] rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-[#5E41FF]/20 transition-all flex items-center justify-center gap-2"
+                >
+                  <Calendar size={14} /> + Dias
+                </button>
+                <button
                   onClick={() => deleteSalon(selectedSalon.id)}
                   disabled={deleteLoading === selectedSalon.id}
                   className="py-3 bg-red-500/20 border border-red-500/30 text-red-500 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-red-500/30 transition-all disabled:opacity-50 flex items-center justify-center gap-2"

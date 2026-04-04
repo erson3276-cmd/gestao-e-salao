@@ -20,7 +20,8 @@ import {
   LogOut,
   ChevronDown,
   User,
-  LogIn
+  LogIn,
+  CreditCard
 } from 'lucide-react'
 
 // Cores Oficiais Colavo (Dark Luxo)
@@ -40,6 +41,7 @@ const sidebarItems = [
   { name: 'Relatórios', icon: BarChart3, path: '/admin/relatorios' },
   { name: 'Comissão', icon: Calculator, path: '/admin/comissao' },
   { name: 'Gestão do salão', icon: Settings, path: '/admin/gestao' },
+  { name: 'Assinatura', icon: CreditCard, path: '/admin/assinatura' },
 ]
 
 export default function AdminLayout({
