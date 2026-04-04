@@ -15,31 +15,25 @@ export async function GET(request: Request, { params }: { params: Promise<{ slug
   const { slug } = await params
   
   try {
-    // 1. Try to find by slug column first (if it exists and is populated)
-    const { data: salonBySlug } = await supabaseAdmin
+    // 1. Fetch all active salons
+    const { data: allSalons, error } = await supabaseAdmin
       .from('salons')
-      .select('id, name, slug, image_url, address, whatsapp_number')
+      .select('id, name, image_url, address, whatsapp_number')
       .eq('status', 'active')
-      .filter('slug', 'eq', slug)
-      .single()
 
-    if (salonBySlug) {
-      return NextResponse.json({ salon: salonBySlug })
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    // 2. Fallback: Fetch all active salons and match by generated slug from name
-    const { data: allSalons } = await supabaseAdmin
-      .from('salons')
-      .select('id, name, slug, image_url, address, whatsapp_number')
-      .eq('status', 'active')
+    if (!allSalons || allSalons.length === 0) {
+      return NextResponse.json({ salon: null }, { status: 404 })
+    }
 
-    if (allSalons) {
-      for (const salon of allSalons) {
-        const generatedSlug = generateSlug(salon.name)
-        // Match by generated slug OR by ID (for old links)
-        if (generatedSlug === slug || salon.id === slug) {
-          return NextResponse.json({ salon: { ...salon, slug: generatedSlug } })
-        }
+    // 2. Match by generated slug from name OR by ID (for old links)
+    for (const salon of allSalons) {
+      const generatedSlug = generateSlug(salon.name)
+      if (generatedSlug === slug || salon.id === slug) {
+        return NextResponse.json({ salon: { ...salon, slug: generatedSlug } })
       }
     }
 
