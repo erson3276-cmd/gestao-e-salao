@@ -17,6 +17,7 @@ export async function salonLogin(email: string, password: string) {
   try {
     if (email === SUPER_ADMIN_EMAIL && password === SUPER_ADMIN_PASSWORD) {
       const cookieStore = await cookies()
+      cookieStore.delete(SALON_COOKIE_NAME)
       cookieStore.set(SUPER_ADMIN_COOKIE_NAME, 'authenticated', {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
@@ -48,7 +49,7 @@ export async function salonLogin(email: string, password: string) {
     }
 
     if (salon.status === 'inactive') {
-      return { success: false, error: 'Sua conta esta inativa. Renove sua assinatura.' }
+      return { success: false, error: 'Sua assinatura expirou. Renove para continuar usando.' }
     }
 
     const now = new Date()
