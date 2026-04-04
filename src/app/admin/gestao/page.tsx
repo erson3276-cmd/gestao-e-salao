@@ -381,7 +381,7 @@ export default function GestaoPage() {
       {/* Link */}
       <div className="bg-gray-900 rounded-2xl p-5 mb-5">
         <h2 className="font-bold mb-4">Link de Agendamento</h2>
-        {salonId ? (
+        {(salonId || profile?.id) ? (
           <div className="flex items-center gap-2">
             <input readOnly value={`${window.location.origin}/b/${generateSlug(salonName || profile?.name || 'salao')}`} className="flex-1 p-3 bg-gray-800 rounded-xl text-sm" />
             <button onClick={copyLink} className="p-3 bg-yellow-500 rounded-xl">
