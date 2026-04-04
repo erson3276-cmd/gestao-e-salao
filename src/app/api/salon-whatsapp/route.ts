@@ -29,11 +29,11 @@ export async function POST(request: Request) {
   const session = await getSalonSession()
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { action } = await request.json()
+  const { action, phone } = await request.json()
   const instanceId = `salon-${session.salonId}`
 
   if (action === 'connect') {
-    const result = await baileys.connect(instanceId)
+    await baileys.connect(instanceId)
     
     await supabaseAdmin
       .from('salons')
@@ -42,6 +42,19 @@ export async function POST(request: Request) {
 
     const qr = await baileys.qr(instanceId)
     return NextResponse.json({ success: true, qr: qr?.qr, pairingCode: qr?.pairingCode })
+  }
+
+  if (action === 'pairingCode') {
+    if (!phone) return NextResponse.json({ error: 'Phone required' }, { status: 400 })
+    
+    await baileys.connect(instanceId)
+    await supabaseAdmin
+      .from('salons')
+      .update({ whatsapp_instance_id: instanceId })
+      .eq('id', session.salonId)
+
+    const result = await baileys.pairingCode(instanceId, phone)
+    return NextResponse.json({ success: true, code: result?.code })
   }
 
   if (action === 'disconnect') {

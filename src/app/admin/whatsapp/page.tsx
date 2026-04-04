@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { MessageSquare, QrCode, Wifi, WifiOff, Loader2, LogOut, RefreshCw, Copy, Check } from 'lucide-react'
+import { MessageSquare, QrCode, Wifi, WifiOff, Loader2, LogOut, RefreshCw, Copy, Check, Smartphone, Maximize2, X } from 'lucide-react'
 
 export default function WhatsAppPage() {
   const [status, setStatus] = useState<any>(null)
@@ -10,6 +10,10 @@ export default function WhatsAppPage() {
   const [connecting, setConnecting] = useState(false)
   const [copied, setCopied] = useState(false)
   const [polling, setPolling] = useState(false)
+  const [showQrModal, setShowQrModal] = useState(false)
+  const [phone, setPhone] = useState('')
+  const [pairingCode, setPairingCode] = useState<string | null>(null)
+  const [pairingLoading, setPairingLoading] = useState(false)
 
   useEffect(() => {
     loadStatus()
@@ -20,9 +24,10 @@ export default function WhatsAppPage() {
       const res = await fetch('/api/salon-whatsapp')
       const data = await res.json()
       setStatus(data)
-      if (data.connected && data.instanceId) {
+      if (data.connected) {
         setQrCode(null)
         setConnecting(false)
+        setPairingCode(null)
       }
     } catch (e) {
       console.error('Error loading WhatsApp status:', e)
@@ -32,6 +37,7 @@ export default function WhatsAppPage() {
   async function handleConnect() {
     setConnecting(true)
     setQrCode(null)
+    setPairingCode(null)
     try {
       const res = await fetch('/api/salon-whatsapp', {
         method: 'POST',
@@ -48,6 +54,31 @@ export default function WhatsAppPage() {
     }
   }
 
+  async function handlePairingCode() {
+    if (!phone || phone.length < 10) {
+      alert('Digite o número com DDD (ex: 21982755539)')
+      return
+    }
+    setPairingLoading(true)
+    try {
+      const res = await fetch('/api/salon-whatsapp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'pairingCode', phone })
+      })
+      const data = await res.json()
+      if (data.code) {
+        setPairingCode(data.code)
+      } else {
+        alert('Erro ao gerar código. Tente novamente.')
+      }
+    } catch (e) {
+      console.error('Error pairing:', e)
+    } finally {
+      setPairingLoading(false)
+    }
+  }
+
   async function handleDisconnect() {
     setLoading(true)
     try {
@@ -59,6 +90,7 @@ export default function WhatsAppPage() {
       setStatus({ connected: false, instanceId: null })
       setQrCode(null)
       setConnecting(false)
+      setPairingCode(null)
     } catch (e) {
       console.error('Error disconnecting:', e)
     } finally {
@@ -75,12 +107,12 @@ export default function WhatsAppPage() {
         setStatus(data)
         if (data.connected) {
           setQrCode(null)
+          setPairingCode(null)
           setPolling(false)
+          setConnecting(false)
           clearInterval(interval)
         }
-      } catch {
-        // keep polling
-      }
+      } catch { /* keep polling */ }
     }, 3000)
     setTimeout(() => {
       clearInterval(interval)
@@ -149,69 +181,120 @@ export default function WhatsAppPage() {
           </div>
         </div>
 
-        {/* QR Code */}
-        {connecting && !status?.connected && (
-          <div className="p-8 bg-black/40 rounded-2xl border border-white/5 text-center">
-            {polling ? (
-              <div className="space-y-4">
-                <div className="w-8 h-8 border-2 border-[#5E41FF]/30 border-t-[#5E41FF] rounded-full animate-spin mx-auto" />
-                <p className="text-sm text-gray-400">Aguardando leitura do QR Code...</p>
-                <p className="text-xs text-gray-600">Abra o WhatsApp no celular → Configurações → Aparelhos conectados → Conectar</p>
+        {/* Connection Options */}
+        {!status?.connected && (
+          <div className="space-y-6">
+            {/* Option 1: Pairing Code (for mobile) */}
+            <div className="p-6 bg-black/30 rounded-2xl border border-white/5">
+              <div className="flex items-center gap-3 mb-4">
+                <Smartphone className="text-[#5E41FF]" size={20} />
+                <h3 className="text-sm font-black uppercase">Código de Pareamento (Celular)</h3>
               </div>
-            ) : qrCode ? (
-              <div className="space-y-4">
-                <div className="w-64 h-64 mx-auto bg-white rounded-2xl flex items-center justify-center">
-                  {qrCode.startsWith('data:') ? (
-                    <img src={qrCode} alt="QR Code" className="w-56 h-56" />
-                  ) : (
-                    <QrCode size={80} className="text-gray-800" />
+              <p className="text-xs text-gray-500 mb-4">Digite seu número com DDD. Um código de 6 dígitos aparecerá para você digitar no WhatsApp do celular.</p>
+              <div className="flex gap-3">
+                <input
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
+                  placeholder="Ex: 21982755539"
+                  className="flex-1 p-3 bg-black/40 border border-white/10 rounded-xl text-sm outline-none focus:border-[#5E41FF]/50"
+                />
+                <button
+                  onClick={handlePairingCode}
+                  disabled={pairingLoading || !phone}
+                  className="px-6 py-3 bg-[#5E41FF] text-white rounded-xl text-sm font-black uppercase hover:bg-[#4a33cc] transition-all disabled:opacity-50"
+                >
+                  {pairingLoading ? <Loader2 size={16} className="animate-spin" /> : 'Gerar Código'}
+                </button>
+              </div>
+              {pairingCode && (
+                <div className="mt-4 p-4 bg-[#5E41FF]/10 border border-[#5E41FF]/20 rounded-xl text-center">
+                  <p className="text-xs text-gray-400 mb-2">Seu código de pareamento:</p>
+                  <p className="text-4xl font-black text-[#5E41FF] tracking-widest">{pairingCode}</p>
+                  <p className="text-xs text-gray-500 mt-2">Abra o WhatsApp → Aparelhos conectados → Conectar com código</p>
+                </div>
+              )}
+            </div>
+
+            {/* Option 2: QR Code (for desktop) */}
+            <div className="p-6 bg-black/30 rounded-2xl border border-white/5">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <QrCode className="text-[#5E41FF]" size={20} />
+                  <h3 className="text-sm font-black uppercase">QR Code (Computador)</h3>
+                </div>
+                {qrCode && (
+                  <button onClick={() => setShowQrModal(true)} className="p-2 bg-white/5 rounded-lg hover:bg-white/10 transition-all">
+                    <Maximize2 size={16} className="text-gray-400" />
+                  </button>
+                )}
+              </div>
+              <button
+                onClick={handleConnect}
+                disabled={connecting}
+                className="w-full py-3 bg-white/5 border border-white/10 text-white rounded-xl text-sm font-black uppercase hover:bg-white/10 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {connecting ? <><Loader2 size={16} className="animate-spin" /> Conectando...</> : <><QrCode size={16} /> Gerar QR Code</>}
+              </button>
+              {connecting && polling && (
+                <div className="mt-4 text-center">
+                  <div className="w-8 h-8 border-2 border-[#5E41FF]/30 border-t-[#5E41FF] rounded-full animate-spin mx-auto mb-3" />
+                  <p className="text-sm text-gray-400">Aguardando leitura do QR Code...</p>
+                  {qrCode && (
+                    <p className="text-xs text-gray-600 mt-1">Clique no ícone de expandir para ver o QR Code em tela cheia</p>
                   )}
                 </div>
-                <p className="text-sm text-gray-400">Escaneie o QR Code com seu WhatsApp</p>
-                <p className="text-xs text-gray-600">WhatsApp → Configurações → Aparelhos conectados → Conectar aparelho</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <Loader2 size={32} className="animate-spin mx-auto text-[#5E41FF]" />
-                <p className="text-sm text-gray-400">Gerando QR Code...</p>
-              </div>
-            )}
+              )}
+            </div>
           </div>
-        )}
-
-        {/* Connect Button */}
-        {!status?.connected && !connecting && (
-          <button
-            onClick={handleConnect}
-            disabled={loading}
-            className="w-full py-4 bg-[#5E41FF] text-white rounded-2xl font-black uppercase tracking-widest text-sm flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-[0.98] transition-all border-b-4 border-[#3D28B8] shadow-xl shadow-[#5E41FF]/20 disabled:opacity-50"
-          >
-            <QrCode size={20} /> Conectar WhatsApp
-          </button>
         )}
       </div>
 
       {/* Instructions */}
       <div className="p-6 bg-[#121021]/50 border border-white/5 rounded-2xl space-y-4">
         <h3 className="text-sm font-black uppercase tracking-widest text-gray-400">Como conectar</h3>
-        <ol className="space-y-3">
-          {[
-            'Clique em "Conectar WhatsApp" acima',
-            'Abra o WhatsApp no seu celular',
-            'Vá em Configurações → Aparelhos conectados',
-            'Toque em "Conectar um aparelho"',
-            'Escaneie o QR Code que aparecer na tela',
-            'Pronto! As confirmações serão enviadas automaticamente'
-          ].map((step, i) => (
-            <li key={i} className="flex items-start gap-3">
-              <span className="w-6 h-6 rounded-full bg-[#5E41FF]/10 border border-[#5E41FF]/20 flex items-center justify-center text-[#5E41FF] text-xs font-black shrink-0 mt-0.5">
-                {i + 1}
-              </span>
-              <span className="text-sm text-gray-400">{step}</span>
-            </li>
-          ))}
-        </ol>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <h4 className="text-sm font-bold text-[#5E41FF] mb-2">📱 No Celular (Código)</h4>
+            <ol className="space-y-2">
+              <li className="text-xs text-gray-500">1. Digite seu número com DDD acima</li>
+              <li className="text-xs text-gray-500">2. Clique em "Gerar Código"</li>
+              <li className="text-xs text-gray-500">3. Abra o WhatsApp no celular</li>
+              <li className="text-xs text-gray-500">4. Configurações → Aparelhos conectados</li>
+              <li className="text-xs text-gray-500">5. "Conectar com código" → Digite o código</li>
+            </ol>
+          </div>
+          <div>
+            <h4 className="text-sm font-bold text-[#5E41FF] mb-2">💻 No Computador (QR Code)</h4>
+            <ol className="space-y-2">
+              <li className="text-xs text-gray-500">1. Clique em "Gerar QR Code"</li>
+              <li className="text-xs text-gray-500">2. Abra o WhatsApp no celular</li>
+              <li className="text-xs text-gray-500">3. Configurações → Aparelhos conectados</li>
+              <li className="text-xs text-gray-500">4. Escaneie o QR Code na tela</li>
+            </ol>
+          </div>
+        </div>
       </div>
+
+      {/* QR Code Modal */}
+      {showQrModal && qrCode && (
+        <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 p-6" onClick={() => setShowQrModal(false)}>
+          <div className="relative bg-[#121021] border border-white/10 rounded-3xl p-8 max-w-md w-full" onClick={e => e.stopPropagation()}>
+            <button onClick={() => setShowQrModal(false)} className="absolute top-4 right-4 p-2 hover:bg-white/10 rounded-xl transition-all">
+              <X size={20} className="text-gray-400" />
+            </button>
+            <h3 className="text-center text-sm font-black uppercase text-gray-400 mb-6">Escaneie o QR Code</h3>
+            <div className="w-64 h-64 mx-auto bg-white rounded-2xl flex items-center justify-center mb-4">
+              {qrCode.startsWith('data:') ? (
+                <img src={qrCode} alt="QR Code" className="w-56 h-56" />
+              ) : (
+                <QrCode size={80} className="text-gray-800" />
+              )}
+            </div>
+            <p className="text-center text-xs text-gray-500">Abra o WhatsApp → Aparelhos conectados → Conectar aparelho</p>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

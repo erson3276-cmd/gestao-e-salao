@@ -40,6 +40,15 @@ export const baileys = {
     }
   },
   
+  pairingCode: async (instanceId: string, phone: string) => {
+    try {
+      const res = await baileysFetch(instanceId, '/pairingCode', 'POST', { phone })
+      return res
+    } catch {
+      return { code: null, message: 'Erro ao gerar código' }
+    }
+  },
+  
   sendText: async (instanceId: string, phone: string, text: string) => {
     try {
       let cleanPhone = phone.replace(/\D/g, '')
