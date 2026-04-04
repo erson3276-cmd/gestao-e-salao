@@ -35,11 +35,11 @@ export default function Home() {
           </h1>
           <p className="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto mb-10">
             Agenda, clientes, financeiro e WhatsApp em um só lugar. 
-            Tudo que você precisa para organizar seu salão e ganhar mais tempo.
+            Teste grátis por 30 dias. Depois, apenas R$ 49,90/mês com tudo incluso.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link href="/register" className="w-full sm:w-auto px-8 py-4 bg-[#5E41FF] text-white rounded-2xl font-black uppercase tracking-widest text-sm flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-[0.98] transition-all border-b-4 border-[#3D28B8] shadow-xl shadow-[#5E41FF]/20">
-              Criar Conta Grátis <ArrowRight size={18} />
+              30 Dias Grátis <ArrowRight size={18} />
             </Link>
             <Link href="/login" className="w-full sm:w-auto px-8 py-4 bg-white/5 border border-white/10 text-white rounded-2xl font-black uppercase tracking-widest text-sm flex items-center justify-center gap-3 hover:bg-white/10 transition-all">
               Já tenho conta
@@ -96,13 +96,13 @@ export default function Home() {
             <div className="relative z-10">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-xl font-black uppercase italic">Profissional</h3>
-                <span className="px-3 py-1 bg-[#5E41FF]/10 border border-[#5E41FF]/20 rounded-full text-[#5E41FF] text-[10px] font-black uppercase tracking-widest">Mais Popular</span>
+                <span className="px-3 py-1 bg-[#5E41FF]/10 border border-[#5E41FF]/20 rounded-full text-[#5E41FF] text-[10px] font-black uppercase tracking-widest">30 Dias Grátis</span>
               </div>
               <div className="flex items-baseline gap-2 mb-2">
                 <span className="text-5xl font-black">R$ 49</span>
                 <span className="text-gray-500 font-bold">,90/mês</span>
               </div>
-              <p className="text-gray-600 text-sm mb-8">Tudo que você precisa para gerenciar seu salão.</p>
+              <p className="text-gray-600 text-sm mb-8">Tudo incluso. Sem plano básico. Sem limitações.</p>
               
               <ul className="space-y-4 mb-10">
                 {[
@@ -124,7 +124,7 @@ export default function Home() {
               </ul>
 
               <Link href="/register" className="w-full py-4 bg-[#5E41FF] text-white rounded-2xl font-black uppercase tracking-widest text-sm flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-[0.98] transition-all border-b-4 border-[#3D28B8] shadow-xl shadow-[#5E41FF]/20">
-                Começar Agora <ArrowRight size={18} />
+                Testar 30 Dias Grátis <ArrowRight size={18} />
               </Link>
             </div>
           </div>
@@ -139,12 +139,12 @@ export default function Home() {
             <h2 className="text-3xl md:text-4xl font-black tracking-tighter italic uppercase mb-4">
               Pronto para organizar seu salão?
             </h2>
-            <p className="text-gray-400 max-w-xl mx-auto mb-8">
-              Crie sua conta em menos de 2 minutos. Sem cartão de crédito. Sem compromisso.
-            </p>
-            <Link href="/register" className="inline-flex items-center gap-3 px-8 py-4 bg-[#5E41FF] text-white rounded-2xl font-black uppercase tracking-widest text-sm hover:scale-[1.02] active:scale-[0.98] transition-all border-b-4 border-[#3D28B8] shadow-xl shadow-[#5E41FF]/20">
-              Criar Conta Grátis <ArrowRight size={18} />
-            </Link>
+          <p className="text-gray-400 max-w-xl mx-auto mb-8">
+            Teste grátis por 30 dias. Sem cartão de crédito. Sem compromisso.
+          </p>
+          <Link href="/register" className="inline-flex items-center gap-3 px-8 py-4 bg-[#5E41FF] text-white rounded-2xl font-black uppercase tracking-widest text-sm hover:scale-[1.02] active:scale-[0.98] transition-all border-b-4 border-[#3D28B8] shadow-xl shadow-[#5E41FF]/20">
+            Testar 30 Dias Grátis <ArrowRight size={18} />
+          </Link>
           </div>
         </div>
       </section>
