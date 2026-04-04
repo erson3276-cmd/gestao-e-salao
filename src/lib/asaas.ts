@@ -1,6 +1,9 @@
 const ASAAS_API_URL = process.env.ASAAS_API_URL || 'https://api.asaas.com/v3'
 const ASAAS_API_KEY = process.env.ASAAS_API_KEY || ''
 
+console.log('[Asaas] API URL:', ASAAS_API_URL)
+console.log('[Asaas] API Key configured:', !!ASAAS_API_KEY)
+
 async function asaasFetch(endpoint: string, method: string = 'GET', body?: any) {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
