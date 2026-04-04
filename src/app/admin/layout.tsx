@@ -139,7 +139,7 @@ export default function AdminLayout({
         {/* Bottom Sidebar Info */}
         <div className="absolute bottom-8 left-4 right-4">
            <div className="p-4 rounded-3xl bg-black/40 border border-white/5 space-y-4 shadow-inner">
-              <a href="https://wa.me/5521984559663?text=Olá! Preciso de suporte com o Gestão E Salão." target="_blank" className="flex items-center gap-3 text-[10px] uppercase font-black tracking-widest text-gray-500 hover:text-white w-full transition-colors">
+              <a href="https://wa.me/5521982755539?text=Olá! Preciso de suporte com o Gestão E Salão." target="_blank" className="flex items-center gap-3 text-[10px] uppercase font-black tracking-widest text-gray-500 hover:text-white w-full transition-colors">
                 <HelpCircle size={14} className="text-[#5E41FF]" /> Suporte VIP
               </a>
              <button 

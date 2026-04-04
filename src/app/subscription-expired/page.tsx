@@ -42,7 +42,7 @@ export default function SubscriptionExpiredPage() {
 
           <div className="space-y-3">
             <a
-              href="https://wa.me/5521984559663?text=Oi! Quero renovar minha assinatura do Gestão E Salão."
+              href="https://wa.me/5521982755539?text=Oi! Quero renovar minha assinatura do Gestão E Salão."
               target="_blank"
               className="w-full py-4 bg-emerald-600 text-white rounded-2xl font-black uppercase tracking-widest text-xs flex items-center justify-center gap-3 hover:bg-emerald-500 transition-all border-b-4 border-emerald-800"
             >

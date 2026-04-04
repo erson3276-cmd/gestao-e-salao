@@ -149,7 +149,7 @@ export default function SuperAdminPage() {
             <p className="text-xs text-gray-500">Suporte disponível diretamente pelo WhatsApp.</p>
           </div>
           <a
-            href="https://wa.me/5521984559663?text=Olá! Preciso de suporte com o Gestão E Salão (Super Admin)."
+            href="https://wa.me/5521982755539?text=Olá! Preciso de suporte com o Gestão E Salão (Super Admin)."
             target="_blank"
             className="px-6 py-3 bg-emerald-600 text-white rounded-2xl font-black uppercase tracking-widest text-xs flex items-center gap-2 hover:bg-emerald-500 transition-all border-b-4 border-emerald-800"
           >
@@ -283,7 +283,7 @@ export default function SuperAdminPage() {
                         </button>
                         {salon.status === 'active' && (
                           <a
-                            href={`https://wa.me/5521984559663?text=${encodeURIComponent(`Olá ${salon.owner_name}! Sua assinatura do Gestão E Salão vence em ${formatDate(salon.subscription_ends_at)}. Valor: R$ 49,90. Link de pagamento: `)}`}
+                            href={`https://wa.me/5521982755539?text=${encodeURIComponent(`Olá ${salon.owner_name}! Sua assinatura do Gestão E Salão vence em ${formatDate(salon.subscription_ends_at)}. Valor: R$ 49,90. Link de pagamento: `)}`}
                             target="_blank"
                             className="p-2 bg-white/5 border border-white/5 rounded-xl hover:bg-emerald-500/10 hover:border-emerald-500/30 transition-all"
                             title="Enviar cobrança"
@@ -379,7 +379,7 @@ export default function SuperAdminPage() {
                 {selectedSalon.status === 'active' ? (
                   <>
                     <a
-                      href={`https://wa.me/5521984559663?text=${encodeURIComponent(`Olá ${selectedSalon.owner_name}! Sua assinatura do Gestão E Salão vence em ${formatDate(selectedSalon.subscription_ends_at)}. Para renovar: R$ 49,90/mês. Me chama aqui!`)}`}
+                      href={`https://wa.me/5521982755539?text=${encodeURIComponent(`Olá ${selectedSalon.owner_name}! Sua assinatura do Gestão E Salão vence em ${formatDate(selectedSalon.subscription_ends_at)}. Para renovar: R$ 49,90/mês. Me chama aqui!`)}`}
                       target="_blank"
                       className="flex-1 py-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-emerald-500/20 transition-all flex items-center justify-center gap-2"
                     >
