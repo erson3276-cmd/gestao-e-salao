@@ -57,7 +57,8 @@ export async function POST(request: Request) {
       salonId: salon.id,
       salonName: salon.name,
       ownerEmail: salon.owner_email,
-      plan: salon.plan
+      plan: salon.plan,
+      subscriptionEndsAt: salon.subscription_ends_at || ''
     }
 
     const cookieStore = await cookies()
