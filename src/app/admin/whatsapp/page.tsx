@@ -60,7 +60,7 @@ export default function WhatsAppPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'disconnect' })
       })
-      setStatus({ connected: false, instanceId: null })
+      setStatus({ connected: false, instanceId: undefined })
       setPairingCode(null)
     } catch (e) {
       console.error('Error disconnecting:', e)
