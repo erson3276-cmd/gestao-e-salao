@@ -1,19 +1,22 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { CreditCard, Calendar, CheckCircle2, Copy, Check, MessageSquare, Clock, Shield, ArrowUpRight, Zap } from 'lucide-react'
+import { CreditCard, Calendar, CheckCircle2, Copy, Check, MessageSquare, Clock, Shield, ArrowUpRight, Zap, Loader2, QrCode, FileText } from 'lucide-react'
 
 const plans = [
-  { id: 'monthly', label: 'Mensal', months: 1, price: 49.90, discount: 0 },
-  { id: 'semiannual', label: 'Semestral', months: 6, price: 249.90, discount: 16, original: 299.40 },
-  { id: 'annual', label: 'Anual', months: 12, price: 449.90, discount: 25, original: 598.80 },
+  { id: 'monthly', label: 'Mensal', months: 1, days: 30, price: 49.90, discount: 0 },
+  { id: 'semiannual', label: 'Semestral', months: 6, days: 180, price: 249.90, discount: 16, original: 299.40 },
+  { id: 'annual', label: 'Anual', months: 12, days: 365, price: 449.90, discount: 25, original: 598.80 },
 ]
 
 export default function SubscriptionPage() {
   const [session, setSession] = useState<any>(null)
   const [loading, setLoading] = useState(true)
-  const [copied, setCopied] = useState(false)
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null)
+  const [billingType, setBillingType] = useState<'PIX' | 'CREDIT_CARD' | 'BOLETO'>('PIX')
+  const [paymentLoading, setPaymentLoading] = useState(false)
+  const [payment, setPayment] = useState<any>(null)
+  const [copied, setCopied] = useState(false)
 
   useEffect(() => {
     loadSession()
@@ -33,15 +36,37 @@ export default function SubscriptionPage() {
     }
   }
 
-  function copyPix() {
-    navigator.clipboard.writeText('21982755539')
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
+  async function createPayment() {
+    if (!selectedPlan || !session?.salonId) return
+    setPaymentLoading(true)
+    setPayment(null)
+    try {
+      const res = await fetch('/api/payment/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          salonId: session.salonId,
+          planId: selectedPlan,
+          billingType
+        })
+      })
+      const data = await res.json()
+      if (data.success) {
+        setPayment(data.payment)
+      } else {
+        alert(data.error || 'Erro ao criar pagamento')
+      }
+    } catch {
+      alert('Erro ao conectar ao servidor')
+    } finally {
+      setPaymentLoading(false)
+    }
   }
 
-  function sendProof(plan: typeof plans[0]) {
-    const msg = `Olá! Sou do salão *${session?.salonName || ''}* e acabei de enviar o comprovante da renovação do plano *${plan.label}* (R$ ${plan.price.toFixed(2).replace('.', ',')}).`
-    window.open(`https://wa.me/5521982755539?text=${encodeURIComponent(msg)}`, '_blank')
+  function copyText(text: string) {
+    navigator.clipboard.writeText(text)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
   }
 
   if (loading) {
@@ -105,7 +130,7 @@ export default function SubscriptionPage() {
           {plans.map((plan) => (
             <button
               key={plan.id}
-              onClick={() => setSelectedPlan(plan.id)}
+              onClick={() => { setSelectedPlan(plan.id); setPayment(null); }}
               className={`p-6 rounded-3xl border text-left transition-all ${
                 selectedPlan === plan.id
                   ? 'bg-[#5E41FF]/10 border-[#5E41FF]/40 ring-2 ring-[#5E41FF]/20'
@@ -134,45 +159,110 @@ export default function SubscriptionPage() {
         </div>
       </div>
 
-      {/* Payment */}
-      {selectedPlan && (
+      {/* Payment Method */}
+      {selectedPlan && !payment && (
         <div className="p-8 bg-[#121021] border border-[#5E41FF]/10 rounded-3xl space-y-6">
-          <div className="flex items-center gap-3">
-            <Shield className="text-[#5E41FF]" size={20} />
-            <h3 className="text-sm font-black uppercase">Pagamento via PIX</h3>
+          <h3 className="text-sm font-black uppercase">Forma de Pagamento</h3>
+          
+          <div className="grid grid-cols-3 gap-3">
+            {[
+              { id: 'PIX', icon: QrCode, label: 'PIX' },
+              { id: 'CREDIT_CARD', icon: CreditCard, label: 'Cartão' },
+              { id: 'BOLETO', icon: FileText, label: 'Boleto' },
+            ].map((method) => (
+              <button
+                key={method.id}
+                onClick={() => setBillingType(method.id as any)}
+                className={`p-4 rounded-2xl border flex flex-col items-center gap-2 transition-all ${
+                  billingType === method.id
+                    ? 'bg-[#5E41FF]/10 border-[#5E41FF]/40'
+                    : 'bg-black/30 border-white/5 hover:border-white/10'
+                }`}
+              >
+                <method.icon size={20} className={billingType === method.id ? 'text-[#5E41FF]' : 'text-gray-500'} />
+                <span className="text-xs font-bold">{method.label}</span>
+              </button>
+            ))}
           </div>
 
-          <div className="p-4 bg-black/40 rounded-2xl space-y-4">
-            <div>
-              <p className="text-[9px] text-gray-600 uppercase font-black tracking-widest mb-1">Chave PIX (Telefone)</p>
-              <div className="flex items-center gap-3">
-                <code className="text-lg font-mono font-bold text-white">(21) 98275-5539</code>
-                <button onClick={copyPix} className="p-2 bg-white/5 rounded-lg hover:bg-white/10 transition-all">
-                  {copied ? <Check size={16} className="text-emerald-500" /> : <Copy size={16} className="text-gray-400" />}
-                </button>
-              </div>
-            </div>
-
-            <div className="p-3 bg-[#5E41FF]/10 border border-[#5E41FF]/20 rounded-xl">
-              <p className="text-sm font-bold text-[#5E41FF]">
-                {plans.find(p => p.id === selectedPlan)?.label} — R$ {plans.find(p => p.id === selectedPlan)?.price.toFixed(2).replace('.', ',')}
-              </p>
-              <p className="text-xs text-gray-500 mt-1">
-                +{plans.find(p => p.id === selectedPlan)?.months} dias de acesso completo
-              </p>
-            </div>
+          <div className="p-4 bg-[#5E41FF]/10 border border-[#5E41FF]/20 rounded-xl">
+            <p className="text-sm font-bold text-[#5E41FF]">
+              {plans.find(p => p.id === selectedPlan)?.label} — R$ {plans.find(p => p.id === selectedPlan)?.price.toFixed(2).replace('.', ',')}
+            </p>
+            <p className="text-xs text-gray-500 mt-1">
+              +{plans.find(p => p.id === selectedPlan)?.days} dias de acesso completo
+            </p>
           </div>
 
           <button
-            onClick={() => sendProof(plans.find(p => p.id === selectedPlan)!)}
-            className="w-full py-4 bg-emerald-600 text-white rounded-2xl font-black uppercase tracking-widest text-sm flex items-center justify-center gap-3 hover:bg-emerald-500 transition-all border-b-4 border-emerald-800"
+            onClick={createPayment}
+            disabled={paymentLoading}
+            className="w-full py-4 bg-[#5E41FF] text-white rounded-2xl font-black uppercase tracking-widest text-sm flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 border-b-4 border-[#3D28B8]"
           >
-            <MessageSquare size={18} /> Já Paguei — Enviar Comprovante
+            {paymentLoading ? (
+              <><Loader2 size={18} className="animate-spin" /> Gerando pagamento...</>
+            ) : (
+              <>
+                <Zap size={18} /> Pagar Agora
+              </>
+            )}
           </button>
+        </div>
+      )}
 
-          <p className="text-xs text-gray-600 text-center">
-            Após o envio do comprovante, seu acesso é reativado em até 5 minutos.
-          </p>
+      {/* Payment Result */}
+      {payment && (
+        <div className="p-8 bg-[#121021] border border-emerald-500/20 rounded-3xl space-y-6">
+          <div className="flex items-center gap-3">
+            <CheckCircle2 className="text-emerald-500" size={24} />
+            <h3 className="text-sm font-black uppercase">Pagamento Gerado</h3>
+          </div>
+
+          {billingType === 'PIX' && (
+            <div className="space-y-4">
+              {payment.pixQrCode && (
+                <div className="w-48 h-48 mx-auto bg-white rounded-2xl p-4">
+                  <img src={`data:image/png;base64,${payment.pixQrCode}`} alt="QR Code PIX" className="w-full h-full" />
+                </div>
+              )}
+              {payment.pixCopiaECola && (
+                <div>
+                  <p className="text-[9px] text-gray-600 uppercase font-black tracking-widest mb-2">PIX Copia e Cola</p>
+                  <div className="flex items-center gap-2 p-3 bg-black/40 rounded-xl">
+                    <code className="text-xs text-gray-400 font-mono flex-1 truncate">{payment.pixCopiaECola}</code>
+                    <button onClick={() => copyText(payment.pixCopiaECola)} className="p-2 bg-white/5 rounded-lg hover:bg-white/10 shrink-0">
+                      {copied ? <Check size={14} className="text-emerald-500" /> : <Copy size={14} className="text-gray-400" />}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {billingType === 'CREDIT_CARD' && (
+            <div className="p-6 bg-black/40 rounded-2xl text-center">
+              <p className="text-sm text-gray-400 mb-4">O pagamento foi processado no cartão de crédito.</p>
+              <p className="text-lg font-black text-emerald-500">R$ {payment.value.toFixed(2).replace('.', ',')}</p>
+            </div>
+          )}
+
+          {billingType === 'BOLETO' && payment.boletoUrl && (
+            <div className="space-y-4">
+              <a
+                href={payment.boletoUrl}
+                target="_blank"
+                className="w-full py-4 bg-white text-gray-900 rounded-2xl font-black uppercase tracking-widest text-sm flex items-center justify-center gap-3 hover:bg-gray-100 transition-all border-b-4 border-gray-300"
+              >
+                <FileText size={18} /> Baixar Boleto
+              </a>
+            </div>
+          )}
+
+          <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
+            <p className="text-xs text-emerald-400 font-bold">
+              ✅ Assim que o pagamento for confirmado, seu acesso será renovado automaticamente por +{plans.find(p => p.id === selectedPlan)?.days} dias.
+            </p>
+          </div>
         </div>
       )}
     </div>
