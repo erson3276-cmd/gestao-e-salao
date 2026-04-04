@@ -34,6 +34,7 @@ export default function GestaoPage() {
   const [saved, setSaved] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   
+  const [salonId, setSalonId] = useState<string | null>(null)
   const [profile, setProfile] = useState<any>({
     name: '',
     professional_name: '',
@@ -66,6 +67,7 @@ export default function GestaoPage() {
   const [editingProfId, setEditingProfId] = useState<string | null>(null)
 
   useEffect(() => {
+    loadSession()
     loadProfile()
     loadWorkingHours()
     loadProfessionals()
@@ -73,6 +75,18 @@ export default function GestaoPage() {
     const interval = setInterval(checkWA, 10000)
     return () => clearInterval(interval)
   }, [])
+
+  async function loadSession() {
+    try {
+      const res = await fetch('/api/session')
+      if (res.ok) {
+        const data = await res.json()
+        if (data.salonId) setSalonId(data.salonId)
+      }
+    } catch (e) {
+      console.error('Error loading session:', e)
+    }
+  }
 
   async function loadProfile() {
     try {
@@ -224,7 +238,7 @@ export default function GestaoPage() {
   }
 
   function copyLink() {
-    const bookingUrl = `${window.location.origin}/book/${profile?.id || ''}`
+    const bookingUrl = `${window.location.origin}/book/${salonId || ''}`
     navigator.clipboard.writeText(bookingUrl)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
@@ -347,8 +361,8 @@ export default function GestaoPage() {
       <div className="bg-gray-900 rounded-2xl p-5 mb-5">
         <h2 className="font-bold mb-4">Link de Agendamento</h2>
         <div className="flex items-center gap-2">
-          <input readOnly value={`${window.location.origin}/book/${profile?.id || ''}`} className="flex-1 p-3 bg-gray-800 rounded-xl text-sm" />
-          <button onClick={copyLink} className="p-3 bg-yellow-500 rounded-xl">
+          <input readOnly value={salonId ? `${window.location.origin}/book/${salonId}` : 'Carregando...'} className="flex-1 p-3 bg-gray-800 rounded-xl text-sm" />
+          <button onClick={copyLink} disabled={!salonId} className="p-3 bg-yellow-500 rounded-xl disabled:opacity-50">
             {copied ? <Check size={20} /> : <Copy size={20} />}
           </button>
         </div>
