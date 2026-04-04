@@ -20,12 +20,19 @@ export async function POST(request: Request) {
       .single()
 
     if (!customer) {
-      const { data: newCustomer } = await supabaseAdmin
+      const { data: newCustomer, error: createError } = await supabaseAdmin
         .from('customers')
         .insert({ name, whatsapp: cleanWhatsapp, salon_id: salonId, active: true })
         .select()
         .single()
+      if (createError || !newCustomer) {
+        return NextResponse.json({ success: false, error: 'Erro ao cadastrar cliente' }, { status: 500 })
+      }
       customer = newCustomer
+    }
+
+    if (!customer?.id) {
+      return NextResponse.json({ success: false, error: 'Cliente inválido' }, { status: 500 })
     }
 
     // Check conflicts
