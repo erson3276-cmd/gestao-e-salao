@@ -26,6 +26,14 @@ export async function POST(request: Request) {
     const body = await request.json()
     const { customer_id, service_id, appointment_id, amount, tip_amount, total_amount, payment_method, date } = body
     
+    let targetSalonId = salonId === 'admin' ? null : salonId
+    
+    if (!targetSalonId) {
+       const { data: salons } = await supabase.from('salons').select('id').eq('status', 'active').limit(1)
+       if (salons && salons.length > 0) targetSalonId = salons[0].id
+    }
+    if (body.salon_id) targetSalonId = body.salon_id
+
     const { data, error } = await supabase.from('vendas').insert([{ 
       customer_id, service_id, appointment_id, 
       amount: Number(amount) || 0,
@@ -33,7 +41,7 @@ export async function POST(request: Request) {
       total_amount: Number(total_amount) || Number(amount) || 0, 
       payment_method,
       date: date || new Date().toISOString(),
-      salon_id: salonId === 'admin' ? null : salonId
+      salon_id: targetSalonId
     }]).select().single()
     
     if (error) throw error

@@ -252,7 +252,7 @@ export default function AgendaPage() {
       const service = services.find(s => s.id === selectedApt.service_id)
       const tip = parseFloat(tipAmount) || 0
       
-      await fetch('/api/vendas', {
+      const res = await fetch('/api/vendas', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -266,6 +266,13 @@ export default function AgendaPage() {
         })
       })
       
+      const data = await res.json()
+      if (!data.success) {
+        alert('Erro ao registrar venda: ' + (data.error || 'Erro desconhecido'))
+        setSaving(false)
+        return
+      }
+      
       await fetch(`/api/appointments/${selectedApt.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -277,7 +284,7 @@ export default function AgendaPage() {
       setTipAmount('')
       setPaymentMethod('dinheiro')
       loadData()
-    } catch (e) { alert('Erro ao finalizar') }
+    } catch (e: any) { alert('Erro ao finalizar: ' + e.message) }
     setSaving(false)
   }
 

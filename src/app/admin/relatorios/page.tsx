@@ -1,166 +1,226 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { BarChart3, TrendingUp, TrendingDown, DollarSign, Loader2, ChevronLeft, ChevronRight, Gift } from 'lucide-react'
-import { format, subMonths, addMonths } from 'date-fns'
+import { 
+  TrendingUp, TrendingDown, DollarSign, Calendar, ArrowUpRight, ArrowDownRight, 
+  CreditCard, Smartphone, Banknote, PieChart, BarChart3, Filter, Download,
+  ReceiptText, ShoppingBag
+} from 'lucide-react'
+import { format, startOfMonth, endOfMonth, startOfDay, endOfDay, parseISO, isSameDay, isThisMonth, isToday } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 
-interface Venda {
+interface Sale {
+  id: string
   amount: number
-  tip_amount?: number
+  tip_amount: number
+  total_amount: number
+  payment_method: string
+  date: string
+  services?: { name: string }
+  customers?: { name: string }
 }
 
-interface Despesa {
+interface Expense {
+  id: string
+  description: string
   amount: number
-}
-
-interface Comissao {
-  comission_amount: number
+  category: string
+  date: string
+  paid: boolean
 }
 
 export default function RelatoriosPage() {
+  const [sales, setSales] = useState<Sale[]>([])
+  const [expenses, setExpenses] = useState<Expense[]>([])
   const [loading, setLoading] = useState(true)
-  const [vendas, setVendas] = useState<Venda[]>([])
-  const [despesas, setDespesas] = useState<Despesa[]>([])
-  const [comissoes, setComissoes] = useState<Comissao[]>([])
-  const [currentMonth, setCurrentMonth] = useState(new Date())
+  const [view, setView] = useState<'day' | 'month'>('day')
 
   useEffect(() => {
     fetchData()
-  }, [currentMonth])
+  }, [])
 
   async function fetchData() {
     setLoading(true)
     try {
-      const month = format(currentMonth, 'M')
-      const year = format(currentMonth, 'yyyy')
-      
-      const [vendasRes, despesasRes, comissaoRes] = await Promise.all([
+      const [salesRes, expensesRes] = await Promise.all([
         fetch('/api/vendas'),
-        fetch(`/api/despesas?month=${month}&year=${year}`),
-        fetch('/api/comissao')
+        fetch('/api/despesas')
       ])
-      const vendasData = await vendasRes.json()
-      const despesasData = await despesasRes.json()
-      const comissaoData = await comissaoRes.json()
       
-      if (vendasData.success) setVendas(vendasData.data)
-      if (despesasData.success) setDespesas(despesasData.data)
-      if (comissaoData.success) setComissoes(comissaoData.data)
+      const salesData = await salesRes.json()
+      const expensesData = await expensesRes.json()
+      
+      setSales(salesData.data || [])
+      setExpenses(expensesData.data || [])
     } catch (e) {
-      console.error(e)
+      console.error('Erro ao carregar dados:', e)
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }
 
-  const totalVendas = vendas.reduce((sum, v) => sum + (v.amount || 0), 0)
-  const totalGorjetas = vendas.reduce((sum, v) => sum + (v.tip_amount || 0), 0)
-  const totalDespesas = despesas.reduce((sum, d) => sum + (d.amount || 0), 0)
-  const totalComissao = comissoes.reduce((sum, c) => sum + (c.comission_amount || 0), 0)
-  const lucro = totalVendas + totalGorjetas - totalDespesas - totalComissao
+  const now = new Date()
+  
+  const filteredSales = sales.filter(s => {
+    const sDate = parseISO(s.date)
+    if (view === 'day') return isSameDay(sDate, now)
+    return isThisMonth(sDate)
+  })
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="animate-spin text-[#5E41FF]" size={24} />
-      </div>
-    )
-  }
+  const filteredExpenses = expenses.filter(e => {
+    const eDate = parseISO(e.date)
+    if (view === 'day') return isSameDay(eDate, now)
+    return isThisMonth(eDate)
+  })
+
+  const totalRevenue = filteredSales.reduce((sum, s) => sum + (Number(s.total_amount) || Number(s.amount) || 0), 0)
+  const totalTips = filteredSales.reduce((sum, s) => sum + (Number(s.tip_amount) || 0), 0)
+  const totalExpenses = filteredExpenses.filter(e => e.paid).reduce((sum, e) => sum + (Number(e.amount) || 0), 0)
+  const netProfit = totalRevenue - totalExpenses
+
+  const paymentMethods = filteredSales.reduce((acc, s) => {
+    const method = s.payment_method || 'Outro'
+    acc[method] = (acc[method] || 0) + (Number(s.total_amount) || Number(s.amount) || 0)
+    return acc
+  }, {} as Record<string, number>)
+
+  const formatCurrency = (val: number) => val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 
   return (
-    <div className="p-4 md:p-6">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-xl md:text-2xl font-bold">Relatórios</h1>
-        <div className="flex items-center gap-2">
-          <button onClick={() => setCurrentMonth(subMonths(currentMonth, 1))} className="p-2 bg-[#121021] rounded-lg hover:bg-[#1a1a2e] transition-all">
-            <ChevronLeft size={18} />
+    <div className="space-y-8">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-black italic uppercase flex items-center gap-3">
+            <BarChart3 className="text-[#5E41FF]" size={28} /> Relatórios Financeiros
+          </h1>
+          <p className="text-gray-500 text-sm mt-1">Visão geral do desempenho do seu salão.</p>
+        </div>
+        <div className="flex bg-[#121021] rounded-xl p-1 border border-white/5">
+          <button onClick={() => setView('day')} className={`px-4 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all ${view === 'day' ? 'bg-[#5E41FF] text-white' : 'text-gray-500 hover:text-white'}`}>
+            Hoje
           </button>
-          <span className="px-4 py-2 bg-[#121021] rounded-lg text-sm min-w-[120px] text-center">
-            {format(currentMonth, 'MMMM yyyy', { locale: ptBR })}
-          </span>
-          <button onClick={() => setCurrentMonth(addMonths(currentMonth, 1))} className="p-2 bg-[#121021] rounded-lg hover:bg-[#1a1a2e] transition-all">
-            <ChevronRight size={18} />
+          <button onClick={() => setView('month')} className={`px-4 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all ${view === 'month' ? 'bg-[#5E41FF] text-white' : 'text-gray-500 hover:text-white'}`}>
+            Mês
           </button>
         </div>
       </div>
 
-      {/* Cards Principais */}
-      <div className="grid grid-cols-2 gap-4 mb-6">
-        <div className="bg-[#121021] rounded-xl p-4">
-          <div className="flex items-center gap-2 mb-2">
-            <TrendingUp size={18} className="text-emerald-400" />
-            <p className="text-xs text-gray-400">Serviços</p>
-          </div>
-          <p className="text-xl font-bold text-emerald-400">R$ {totalVendas.toFixed(2)}</p>
-        </div>
-        <div className="bg-[#121021] rounded-xl p-4">
-          <div className="flex items-center gap-2 mb-2">
-            <Gift size={18} className="text-yellow-400" />
-            <p className="text-xs text-gray-400">Gorjetas</p>
-          </div>
-          <p className="text-xl font-bold text-yellow-400">R$ {totalGorjetas.toFixed(2)}</p>
-        </div>
-      </div>
+      {loading ? (
+        <div className="flex justify-center py-20"><div className="w-8 h-8 border-2 border-[#5E41FF] border-t-transparent rounded-full animate-spin" /></div>
+      ) : (
+        <>
+          {/* KPI Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-[#121021] border border-white/5 p-6 rounded-3xl relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/10 blur-2xl rounded-full" />
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center"><TrendingUp size={20} className="text-emerald-500" /></div>
+                <span className="text-xs font-black uppercase tracking-widest text-gray-500">Receita Bruta</span>
+              </div>
+              <p className="text-3xl font-black text-emerald-500">{formatCurrency(totalRevenue)}</p>
+              <p className="text-xs text-gray-600 mt-2">{filteredSales.length} vendas no período</p>
+            </div>
 
-      {/* Lucro */}
-      <div className={`rounded-xl p-6 mb-6 ${lucro >= 0 ? 'bg-emerald-500/10 border border-emerald-500/30' : 'bg-red-500/10 border border-red-500/30'}`}>
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm text-gray-400 mb-1">Lucro Líquido</p>
-            <p className={`text-3xl font-bold ${lucro >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-              R$ {lucro.toFixed(2)}
-            </p>
-            <p className="text-xs text-gray-500 mt-1">Serviços + Gorjetas - Despesas - Comissões</p>
-          </div>
-          <DollarSign size={40} className={lucro >= 0 ? 'text-emerald-400' : 'text-red-400'} />
-        </div>
-      </div>
+            <div className="bg-[#121021] border border-white/5 p-6 rounded-3xl relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-red-500/10 blur-2xl rounded-full" />
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center"><TrendingDown size={20} className="text-red-500" /></div>
+                <span className="text-xs font-black uppercase tracking-widest text-gray-500">Despesas Pagas</span>
+              </div>
+              <p className="text-3xl font-black text-red-500">{formatCurrency(totalExpenses)}</p>
+              <p className="text-xs text-gray-600 mt-2">{filteredExpenses.length} registros</p>
+            </div>
 
-      {/* Detalhamento */}
-      <div className="space-y-4">
-        <div className="bg-[#121021] rounded-xl p-4 flex items-center justify-between">
-          <div>
-            <p className="font-medium">Total Serviços</p>
-            <p className="text-xs text-gray-400">{vendas.length} transações</p>
-          </div>
-          <p className="font-bold text-emerald-400">R$ {totalVendas.toFixed(2)}</p>
-        </div>
-        
-        <div className="bg-[#121021] rounded-xl p-4 flex items-center justify-between">
-          <div>
-            <p className="font-medium">Total Gorjetas</p>
-            <p className="text-xs text-gray-400">{vendas.filter(v => (v.tip_amount || 0) > 0).length} gorjetas</p>
-          </div>
-          <p className="font-bold text-yellow-400">R$ {totalGorjetas.toFixed(2)}</p>
-        </div>
-        
-        <div className="bg-[#121021] rounded-xl p-4 flex items-center justify-between">
-          <div>
-            <p className="font-medium">Total Despesas</p>
-            <p className="text-xs text-gray-400">{despesas.length} transações</p>
-          </div>
-          <p className="font-bold text-red-400">R$ {totalDespesas.toFixed(2)}</p>
-        </div>
-        
-        <div className="bg-[#121021] rounded-xl p-4 flex items-center justify-between">
-          <div>
-            <p className="font-medium">Total Comissões</p>
-            <p className="text-xs text-gray-400">{comissoes.length} transações</p>
-          </div>
-          <p className="font-bold text-orange-400">R$ {totalComissao.toFixed(2)}</p>
-        </div>
-      </div>
+            <div className="bg-[#121021] border border-white/5 p-6 rounded-3xl relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-[#5E41FF]/10 blur-2xl rounded-full" />
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-xl bg-[#5E41FF]/10 flex items-center justify-center"><DollarSign size={20} className="text-[#5E41FF]" /></div>
+                <span className="text-xs font-black uppercase tracking-widest text-gray-500">Lucro Líquido</span>
+              </div>
+              <p className={`text-3xl font-black ${netProfit >= 0 ? 'text-white' : 'text-red-500'}`}>{formatCurrency(netProfit)}</p>
+              <p className="text-xs text-gray-600 mt-2">Receita - Despesas</p>
+            </div>
 
-      {/* Fórmula */}
-      <div className="mt-6 p-4 bg-[#121021] rounded-xl border border-white/10">
-        <p className="text-xs text-gray-400 mb-2">Cálculo do Lucro</p>
-        <p className="text-sm">
-          R$ {totalVendas.toFixed(2)} (vendas) - R$ {totalDespesas.toFixed(2)} (despesas) - R$ {totalComissao.toFixed(2)} (comissoes) = 
-          <span className={`font-bold ml-2 ${lucro >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-            R$ {lucro.toFixed(2)}
-          </span>
-        </p>
-      </div>
+            <div className="bg-[#121021] border border-white/5 p-6 rounded-3xl relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-yellow-500/10 blur-2xl rounded-full" />
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-xl bg-yellow-500/10 flex items-center justify-center"><ArrowUpRight size={20} className="text-yellow-500" /></div>
+                <span className="text-xs font-black uppercase tracking-widest text-gray-500">Gorjetas</span>
+              </div>
+              <p className="text-3xl font-black text-yellow-500">{formatCurrency(totalTips)}</p>
+              <p className="text-xs text-gray-600 mt-2">Extras dos clientes</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Payment Methods Breakdown */}
+            <div className="bg-[#121021] border border-white/5 p-6 rounded-3xl">
+              <h3 className="text-sm font-black uppercase tracking-widest text-gray-400 mb-6 flex items-center gap-2">
+                <PieChart size={16} /> Formas de Pagamento
+              </h3>
+              <div className="space-y-4">
+                {Object.entries(paymentMethods).map(([method, amount]) => (
+                  <div key={method} className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center">
+                        {method === 'Pix' ? <Smartphone size={14} className="text-[#5E41FF]" /> : 
+                         method === 'Dinheiro' ? <Banknote size={14} className="text-emerald-500" /> : 
+                         <CreditCard size={14} className="text-blue-500" />}
+                      </div>
+                      <span className="text-sm text-gray-300">{method}</span>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-bold text-white">{formatCurrency(amount as number)}</p>
+                      <p className="text-[10px] text-gray-600">{((amount as number) / (totalRevenue || 1) * 100).toFixed(0)}%</p>
+                    </div>
+                  </div>
+                ))}
+                {Object.keys(paymentMethods).length === 0 && (
+                  <p className="text-center text-gray-600 text-sm py-4">Nenhuma venda registrada</p>
+                )}
+              </div>
+            </div>
+
+            {/* Recent Transactions */}
+            <div className="lg:col-span-2 bg-[#121021] border border-white/5 p-6 rounded-3xl">
+              <h3 className="text-sm font-black uppercase tracking-widest text-gray-400 mb-6 flex items-center gap-2">
+                <Calendar size={16} /> Transações Recentes
+              </h3>
+              <div className="space-y-3">
+                {[
+                  ...filteredSales.map(s => ({ ...s, type: 'sale' as const })),
+                  ...filteredExpenses.map(e => ({ ...e, type: 'expense' as const }))
+                ]
+                .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                .slice(0, 10)
+                .map((t, i) => (
+                  <div key={i} className="flex items-center justify-between p-3 bg-black/20 rounded-xl hover:bg-black/40 transition-all">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${t.type === 'sale' ? 'bg-emerald-500/10' : 'bg-red-500/10'}`}>
+                        {t.type === 'sale' ? <ArrowUpRight size={18} className="text-emerald-500" /> : <ArrowDownRight size={18} className="text-red-500" />}
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-white">
+                          {t.type === 'sale' ? (t.services?.name || 'Venda') : t.description}
+                        </p>
+                        <p className="text-[10px] text-gray-600">
+                          {format(parseISO(t.date), 'dd/MM/yyyy HH:mm')} • {t.type === 'sale' ? t.payment_method : t.category}
+                        </p>
+                      </div>
+                    </div>
+                    <p className={`text-sm font-black ${t.type === 'sale' ? 'text-emerald-500' : 'text-red-500'}`}>
+                      {t.type === 'sale' ? '+' : '-'} {formatCurrency(t.type === 'sale' ? (Number(t.total_amount) || Number(t.amount)) : Number(t.amount))}
+                    </p>
+                  </div>
+                ))}
+                {filteredSales.length === 0 && filteredExpenses.length === 0 && (
+                  <p className="text-center text-gray-600 text-sm py-8">Nenhuma transação encontrada</p>
+                )}
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   )
 }
