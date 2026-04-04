@@ -11,23 +11,36 @@ export default function AuthCallbackPage() {
 
   useEffect(() => {
     async function handleCallback() {
-      const hash = window.location.hash
-      if (!hash) {
-        setError('Nenhum token recebido')
-        setTimeout(() => router.push('/login'), 3000)
-        return
-      }
-
       try {
-        const { data, error: authError } = await supabaseClient.auth.getSession()
-        
-        if (authError || !data.session) {
-          setError('Falha na autenticação')
+        const hash = window.location.hash.substring(1)
+        if (!hash) {
+          setError('Nenhum token recebido')
           setTimeout(() => router.push('/login'), 3000)
           return
         }
 
-        const email = data.session.user.email
+        const params = new URLSearchParams(hash)
+        const accessToken = params.get('access_token')
+        const refreshToken = params.get('refresh_token')
+
+        if (!accessToken) {
+          setError('Token de acesso não encontrado')
+          setTimeout(() => router.push('/login'), 3000)
+          return
+        }
+
+        const { data: sessionData, error: sessionError } = await supabaseClient.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken || '',
+        })
+
+        if (sessionError || !sessionData.session) {
+          setError('Falha ao criar sessão')
+          setTimeout(() => router.push('/login'), 3000)
+          return
+        }
+
+        const email = sessionData.session.user.email
         if (!email) {
           setError('Email não disponível')
           setTimeout(() => router.push('/login'), 3000)
@@ -37,7 +50,7 @@ export default function AuthCallbackPage() {
         const res = await fetch('/api/auth/google-callback', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, name: data.session.user.user_metadata?.full_name || email.split('@')[0] })
+          body: JSON.stringify({ email, name: sessionData.session.user.user_metadata?.full_name || email.split('@')[0] })
         })
 
         const result = await res.json()
