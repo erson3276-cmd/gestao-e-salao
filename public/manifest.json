@@ -1,28 +1,28 @@
 {
-  "name": "Moça Chiq - Salão Premium",
-  "short_name": "Moça Chiq",
-  "description": "Agende seu horário com a Suanne Chagas na Moça Chiq",
-  "start_url": "/",
+  "name": "Gestão E Salão",
+  "short_name": "GES",
+  "description": "Sistema completo para gerenciar seu salão de beleza",
+  "start_url": "/login",
   "display": "standalone",
   "background_color": "#0A0A0A",
-  "theme_color": "#121021",
+  "theme_color": "#5E41FF",
   "orientation": "portrait-primary",
   "scope": "/",
   "icons": [
     {
-      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💅</text></svg>",
+      "src": "/icon-192.png",
       "sizes": "192x192",
-      "type": "image/svg+xml",
+      "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💅</text></svg>",
+      "src": "/icon-512.png",
       "sizes": "512x512",
-      "type": "image/svg+xml",
+      "type": "image/png",
       "purpose": "any maskable"
     }
   ],
-  "categories": ["beauty", "lifestyle"],
+  "categories": ["business", "productivity"],
   "lang": "pt-BR",
   "dir": "ltr",
   "prefer_related_applications": false
