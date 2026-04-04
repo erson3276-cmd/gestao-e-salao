@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { format, addDays, startOfToday, isSameDay, eachDayOfInterval } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { ChevronRight, ChevronLeft, CheckCircle2, User, MapPin, Clock, ArrowLeft, Loader2 } from 'lucide-react'
@@ -163,10 +164,15 @@ export default function BookingPage() {
     return (
       <main className="min-h-screen bg-[#0A0A0A] flex items-center justify-center p-6 text-center">
         <div>
-          <h1 className="text-xl font-black text-white mb-4">Salão não encontrado</h1>
-          <button onClick={() => router.push('/')} className="px-6 py-3 bg-[#5E41FF] text-white rounded-xl text-sm font-bold">
+          <div className="w-20 h-20 mx-auto bg-red-500/10 border border-red-500/20 rounded-2xl flex items-center justify-center mb-6">
+            <span className="text-4xl">🔍</span>
+          </div>
+          <h1 className="text-xl font-black text-white mb-3">Salão não encontrado</h1>
+          <p className="text-gray-500 text-sm mb-2">Este link pode estar expirado ou o salão foi removido.</p>
+          <p className="text-gray-600 text-xs mb-6">Slug buscado: <code className="bg-white/5 px-2 py-1 rounded">{slug}</code></p>
+          <Link href="/" className="px-6 py-3 bg-[#5E41FF] text-white rounded-xl text-sm font-bold hover:bg-[#4a33cc] transition-all">
             Voltar ao início
-          </button>
+          </Link>
         </div>
       </main>
     )

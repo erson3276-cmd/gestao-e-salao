@@ -14,36 +14,37 @@ function generateSlug(name: string): string {
 export async function GET(request: Request, { params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
   
-  // First try by slug column if it exists
-  const { data: salonBySlug } = await supabaseAdmin
-    .from('salons')
-    .select('id, name, slug, image_url, address, whatsapp_number')
-    .eq('slug', slug)
-    .eq('status', 'active')
-    .single()
+  try {
+    // 1. Try to find by slug column first (if it exists and is populated)
+    const { data: salonBySlug } = await supabaseAdmin
+      .from('salons')
+      .select('id, name, slug, image_url, address, whatsapp_number')
+      .eq('status', 'active')
+      .filter('slug', 'eq', slug)
+      .single()
 
-  if (salonBySlug) {
-    return NextResponse.json({ salon: salonBySlug })
-  }
+    if (salonBySlug) {
+      return NextResponse.json({ salon: salonBySlug })
+    }
 
-  // Fallback: try matching by generated slug from name
-  const { data: allSalons } = await supabaseAdmin
-    .from('salons')
-    .select('id, name, slug, image_url, address, whatsapp_number')
-    .eq('status', 'active')
+    // 2. Fallback: Fetch all active salons and match by generated slug from name
+    const { data: allSalons } = await supabaseAdmin
+      .from('salons')
+      .select('id, name, slug, image_url, address, whatsapp_number')
+      .eq('status', 'active')
 
-  if (allSalons) {
-    for (const salon of allSalons) {
-      const generatedSlug = generateSlug(salon.name)
-      if (generatedSlug === slug || salon.id === slug) {
-        // Auto-update slug if column exists
-        try {
-          await supabaseAdmin.from('salons').update({ slug: generatedSlug }).eq('id', salon.id)
-        } catch { /* column may not exist */ }
-        return NextResponse.json({ salon: { ...salon, slug: generatedSlug } })
+    if (allSalons) {
+      for (const salon of allSalons) {
+        const generatedSlug = generateSlug(salon.name)
+        // Match by generated slug OR by ID (for old links)
+        if (generatedSlug === slug || salon.id === slug) {
+          return NextResponse.json({ salon: { ...salon, slug: generatedSlug } })
+        }
       }
     }
-  }
 
-  return NextResponse.json({ salon: null }, { status: 404 })
+    return NextResponse.json({ salon: null }, { status: 404 })
+  } catch (e: any) {
+    return NextResponse.json({ error: e.message }, { status: 500 })
+  }
 }
