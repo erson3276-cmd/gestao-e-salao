@@ -53,7 +53,7 @@ export default function LoginPage() {
            
            <form onSubmit={handleSubmit} className="space-y-6 relative z-10">
               <div className="space-y-2">
-                 <label className="text-[10px] uppercase font-bold tracking-widest text-gray-400 px-1">Olá, Suanne! 👋</label>
+                  <label className="text-[10px] uppercase font-bold tracking-widest text-gray-400 px-1">Bem-vindo! 👋</label>
                  <p className="text-sm text-gray-500 px-1 pb-4">Digite sua senha de segurança para continuar.</p>
                  
                  <div className="relative group">

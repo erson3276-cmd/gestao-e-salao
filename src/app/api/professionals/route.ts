@@ -1,54 +1,35 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin as supabase } from '@/lib/supabaseAdmin'
-import { getSalonSession } from '@/app/actions/salon-auth'
+import { getSalonId } from '@/lib/session'
 
 export async function GET() {
-  const session = await getSalonSession()
-  if (!session) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
+  const salonId = await getSalonId()
+  if (!salonId) return NextResponse.json({ professionals: [] })
 
   try {
-    const { data, error } = await supabase
-      .from('professionals')
-      .select('*')
-      .eq('salon_id', session.salonId)
-      .order('name', { ascending: true })
-    
-    if (error) {
-      return NextResponse.json({ success: false, error: error.message }, { status: 500 })
-    }
-    
+    let query = supabase.from('professionals').select('*').order('name', { ascending: true })
+    if (salonId !== 'admin') query = query.eq('salon_id', salonId)
+    const { data, error } = await query
+    if (error) throw error
     return NextResponse.json({ professionals: data || [] })
   } catch (error: any) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 })
+    return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }
 
 export async function POST(request: Request) {
-  const session = await getSalonSession()
-  if (!session) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
+  const salonId = await getSalonId()
+  if (!salonId) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
 
   try {
     const body = await request.json()
     const { id, name, commission_percent, whatsapp } = body
-
     if (id) {
-      const { data, error } = await supabase
-        .from('professionals')
-        .update({ name, commission_percent, whatsapp })
-        .eq('id', id)
-        .eq('salon_id', session.salonId)
-        .select()
-        .single()
-      
+      const { data, error } = await supabase.from('professionals').update({ name, commission_percent, whatsapp }).eq('id', id).select().single()
       if (error) throw error
       return NextResponse.json({ success: true, data })
     } else {
-      const { data, error } = await supabase
-        .from('professionals')
-        .insert([{ name, commission_percent, whatsapp, salon_id: session.salonId }])
-        .select()
-        .single()
-      
+      const { data, error } = await supabase.from('professionals').insert([{ name, commission_percent, whatsapp, salon_id: salonId === 'admin' ? null : salonId }]).select().single()
       if (error) throw error
       return NextResponse.json({ success: true, data })
     }
@@ -58,23 +39,19 @@ export async function POST(request: Request) {
 }
 
 export async function DELETE(request: Request) {
-  const session = await getSalonSession()
-  if (!session) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
+  const salonId = await getSalonId()
+  if (!salonId) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
 
   try {
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')
-    if (!id) return NextResponse.json({ success: false, error: 'Missing id' }, { status: 400 })
-
-    const { error } = await supabase
-      .from('professionals')
-      .delete()
-      .eq('id', id)
-      .eq('salon_id', session.salonId)
-
+    if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 })
+    let query = supabase.from('professionals').delete().eq('id', id)
+    if (salonId !== 'admin') query = query.eq('salon_id', salonId)
+    const { error } = await query
     if (error) throw error
     return NextResponse.json({ success: true })
   } catch (error: any) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 })
+    return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }
