@@ -29,7 +29,24 @@ async function revalidateAdmin() {
 
 export async function sendWhatsAppMessage(message: string, phone: string) {
   try {
-    const result = await baileys.sendText(phone, message)
+    const salonId = await getSalonId()
+    let instanceId: string | null = null
+    
+    if (salonId) {
+      const { data: salon } = await supabase
+        .from('salons')
+        .select('whatsapp_instance_id')
+        .eq('id', salonId)
+        .single()
+      instanceId = salon?.whatsapp_instance_id || null
+    }
+    
+    if (!instanceId) {
+      return { success: false, error: 'WhatsApp não configurado para este salão' }
+    }
+    
+    const { baileys } = await import('@/lib/baileys')
+    const result = await baileys.sendText(instanceId, phone, message)
     console.log('WhatsApp enviado:', result)
     return { success: true }
   } catch (error) {
@@ -251,12 +268,26 @@ export async function addAppointment(appointmentData: any) {
       .eq('id', appointmentData.service_id)
       .single()
     
+    let salonName = 'Gestão E Salão'
+    let instanceId: string | null = null
+    if (salonId) {
+      const { data: salon } = await supabase
+        .from('salons')
+        .select('name, whatsapp_instance_id')
+        .eq('id', salonId)
+        .single()
+      if (salon) {
+        salonName = salon.name
+        instanceId = salon.whatsapp_instance_id
+      }
+    }
+    
     if (customer?.whatsapp) {
       const serviceName = service?.name || 'Serviço'
       const dateStr = new Date(appointmentData.start_time).toLocaleDateString('pt-BR')
       const timeStr = new Date(appointmentData.start_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
       
-      const message = `Olá *${customer.name}*! ✨\n\nSeu agendamento de *${serviceName}* no *Gestão E Salão* foi confirmado! ✅\n\n🗓️ *Data:* ${dateStr}\n🕒 *Horário:* ${timeStr}\n\nTe esperamos para te deixar ainda mais linda! 🌸`
+      const message = `Olá *${customer.name}*! ✨\n\nSeu agendamento de *${serviceName}* no *${salonName}* foi confirmado! ✅\n\n🗓️ *Data:* ${dateStr}\n🕒 *Horário:* ${timeStr}\n\nTe esperamos! 🌸`
       
       await supabase
         .from('whatsapp_messages')
@@ -266,6 +297,16 @@ export async function addAppointment(appointmentData: any) {
           status: 'pending',
           salon_id: salonId || null
         })
+      
+      if (instanceId) {
+        try {
+          const { baileys } = await import('@/lib/baileys')
+          await baileys.sendText(instanceId, customer.whatsapp.replace(/\D/g, ''), message)
+        } catch (sendError) {
+          console.error('Erro ao enviar WhatsApp:', sendError)
+        }
+      }
+      
       console.log('Mensagem de confirmação salva para:', customer.whatsapp)
     }
   } catch (waError) {
