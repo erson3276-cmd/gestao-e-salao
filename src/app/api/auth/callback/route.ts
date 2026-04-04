@@ -37,7 +37,7 @@ export async function GET(request: Request) {
     if (salonError || !salon) {
       const name = data.user.user_metadata?.full_name || email.split('@')[0]
       return NextResponse.redirect(
-        new URL(`/register?from_google=true&email=${encodeURIComponent(email)}&name=${encodeURIComponent(name)}`, request.url)
+        new URL(`/register/google-setup?email=${encodeURIComponent(email)}&name=${encodeURIComponent(name)}`, request.url)
       )
     }
 
