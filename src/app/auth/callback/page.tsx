@@ -46,6 +46,8 @@ export default function AuthCallbackPage() {
         }
 
         const email = sessionData.session.user.email
+        const name = sessionData.session.user.user_metadata?.full_name || email.split('@')[0]
+
         if (!email) {
           setStatus('error')
           setError('Email não disponível')
@@ -56,18 +58,19 @@ export default function AuthCallbackPage() {
         const res = await fetch('/api/auth/google-callback', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, name: sessionData.session.user.user_metadata?.full_name || email.split('@')[0] })
+          body: JSON.stringify({ email, name })
         })
 
         const result = await res.json()
 
-        if (result.success) {
-          router.push(result.redirect || '/admin/agenda')
+        if (result.success && !result.needsRegister) {
+          router.push('/admin/agenda')
           router.refresh()
         } else if (result.needsRegister) {
           setStatus('redirecting')
-          setRedirectUrl(`/register/google-setup?email=${encodeURIComponent(email)}`)
-          setTimeout(() => router.push(`/register/google-setup?email=${encodeURIComponent(email)}`), 1500)
+          const url = `/register/google-setup?email=${encodeURIComponent(email)}&name=${encodeURIComponent(result.name || name)}`
+          setRedirectUrl(url)
+          setTimeout(() => router.push(url), 1500)
         } else {
           setStatus('error')
           setError(result.error || 'Erro ao processar login')
