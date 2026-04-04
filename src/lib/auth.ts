@@ -1,7 +1,7 @@
 import { createHash } from 'crypto'
 
 export function hashPassword(password: string): string {
-  return createHash('sha256').update(password + process.env.AUTH_SALT || 'gestao-esalao-2024').digest('hex')
+  return createHash('sha256').update(password + (process.env.AUTH_SALT || 'gestao-esalao-saas-2024-secure')).digest('hex')
 }
 
 export function verifyPassword(password: string, hash: string): boolean {
