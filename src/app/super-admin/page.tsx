@@ -158,20 +158,6 @@ export default function SuperAdminPage() {
       </header>
 
       <div className="p-8 max-w-[1400px] mx-auto">
-        {/* Support Banner */}
-        <div className="mb-8 p-6 bg-[#121021] border border-[#5E41FF]/10 rounded-3xl flex items-center justify-between">
-          <div>
-            <h3 className="text-sm font-black uppercase italic text-white mb-1">Precisa de ajuda?</h3>
-            <p className="text-xs text-gray-500">Suporte disponível diretamente pelo WhatsApp.</p>
-          </div>
-          <a
-            href="https://wa.me/5521982755539?text=Olá! Preciso de suporte com o Gestão E Salão (Super Admin)."
-            target="_blank"
-            className="px-6 py-3 bg-emerald-600 text-white rounded-2xl font-black uppercase tracking-widest text-xs flex items-center gap-2 hover:bg-emerald-500 transition-all border-b-4 border-emerald-800"
-          >
-            <MessageSquare size={14} /> Falar com Suporte
-          </a>
-        </div>
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
           <div className="bg-[#121021] border border-white/5 p-6 rounded-3xl">
