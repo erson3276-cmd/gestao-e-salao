@@ -30,6 +30,7 @@ export async function GET() {
       name: salon.name || '',
       professional_name: salon.owner_name || '',
       whatsapp_number: salon.whatsapp_number || salon.owner_phone || '',
+      cpf_cnpj: salon.cpf_cnpj || '',
       address: salon.address || '',
       image_url: salon.image_url || '',
       opening_time: '09:00',
@@ -56,6 +57,7 @@ export async function POST(request: Request) {
       name: data.name || data.salonName,
       owner_name: data.professional_name || data.owner_name,
       whatsapp_number: data.whatsapp_number,
+      cpf_cnpj: data.cpf_cnpj,
       address: data.address,
       image_url: data.image_url,
       updated_at: new Date().toISOString()

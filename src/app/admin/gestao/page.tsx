@@ -33,6 +33,7 @@ export default function GestaoPage() {
     professional_name: '',
     whatsapp_number: '',
     address: '',
+    cpf_cnpj: '',
     opening_time: '09:00',
     closing_time: '18:00',
     slot_interval: 30,
@@ -261,6 +262,10 @@ export default function GestaoPage() {
           <div>
             <label className="text-xs text-gray-400">WhatsApp</label>
             <input value={profile.whatsapp_number} onChange={e => setProfile({...profile, whatsapp_number: e.target.value})} className="w-full p-3 bg-gray-800 rounded-xl mt-1" />
+          </div>
+          <div>
+            <label className="text-xs text-gray-400">CPF/CNPJ (para pagamentos)</label>
+            <input value={profile.cpf_cnpj || ''} onChange={e => setProfile({...profile, cpf_cnpj: e.target.value.replace(/\D/g, '')})} placeholder="000.000.000-00" maxLength={18} className="w-full p-3 bg-gray-800 rounded-xl mt-1" />
           </div>
           <div>
             <label className="text-xs text-gray-400">Endereço</label>
