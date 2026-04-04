@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabaseAdmin'
 import { createCustomer, findCustomerByEmail, createPayment } from '@/lib/asaas'
+import { getSalonId } from '@/lib/session'
 
 const plans = {
   monthly: { price: 49.90, days: 30, label: 'Mensal' },
@@ -10,20 +11,27 @@ const plans = {
 
 export async function POST(request: Request) {
   try {
-    const { salonId, planId, billingType } = await request.json()
+    const salonId = await getSalonId()
+    if (!salonId) {
+      return NextResponse.json({ success: false, error: 'Não autorizado' }, { status: 401 })
+    }
+
+    const { salonId: bodySalonId, planId, billingType } = await request.json()
     const plan = plans[planId as keyof typeof plans]
     
     if (!plan) {
       return NextResponse.json({ success: false, error: 'Plano inválido' }, { status: 400 })
     }
 
-    const { data: salon } = await supabaseAdmin
+    const targetSalonId = salonId === 'admin' ? (bodySalonId || salonId) : salonId
+
+    const { data: salon, error: salonError } = await supabaseAdmin
       .from('salons')
       .select('*')
-      .eq('id', salonId)
+      .eq('id', targetSalonId)
       .single()
 
-    if (!salon) {
+    if (salonError || !salon) {
       return NextResponse.json({ success: false, error: 'Salão não encontrado' }, { status: 404 })
     }
 
