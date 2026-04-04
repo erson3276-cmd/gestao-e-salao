@@ -33,8 +33,7 @@ export async function POST(request: Request) {
       asaasCustomer = await createCustomer(
         salon.owner_name,
         salon.owner_email,
-        null,
-        salon.owner_phone
+        salon.owner_phone || undefined
       )
     }
 

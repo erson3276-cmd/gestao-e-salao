@@ -19,9 +19,9 @@ async function asaasFetch(endpoint: string, method: string = 'GET', body?: any) 
   return ct && ct.includes('application/json') ? res.json() : null
 }
 
-export async function createCustomer(name: string, email: string, cpfCnpj?: string, phone?: string) {
+export async function createCustomer(name: string, email: string, phone?: string) {
   return asaasFetch('/customers', 'POST', {
-    name, email, cpfCnpj: cpfCnpj || null, mobilePhone: phone || null
+    name, email, mobilePhone: phone || undefined
   })
 }
 
