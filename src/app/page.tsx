@@ -213,7 +213,7 @@ export default function Home() {
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mb-8">
               <Link href="/register" className="w-full sm:w-auto group px-8 sm:px-10 py-4 sm:py-5 bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 bg-[length:200%_100%] text-white rounded-2xl font-black text-sm sm:text-base flex items-center justify-center gap-3 hover:shadow-2xl hover:shadow-purple-500/40 hover:bg-[position:100%_0] transition-all duration-500">
-                Começar 30 Dias Grátis
+                Começar 14 Dias Grátis
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Link>
               <a href="#solucao" className="w-full sm:w-auto px-8 sm:px-10 py-4 sm:py-5 bg-white/5 border border-white/10 text-white rounded-2xl font-bold text-sm sm:text-base flex items-center justify-center gap-3 hover:bg-white/10 transition-all backdrop-blur-sm">
@@ -543,7 +543,7 @@ export default function Home() {
                 Seus clientes estão prontos para agendar. Seu concorrente já automatizou. E você?
               </p>
               <Link href="/register" className="inline-flex items-center gap-3 px-8 sm:px-12 py-4 sm:py-5 bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 bg-[length:200%_100%] text-white rounded-2xl font-black text-sm sm:text-base hover:shadow-2xl hover:shadow-purple-500/40 hover:bg-[position:100%_0] transition-all duration-500">
-                Começar 30 Dias Grátis
+                Começar 14 Dias Grátis
                 <ArrowRight className="w-5 h-5" />
               </Link>
               <p className="text-sm text-gray-500 mt-4">Leva menos de 2 minutos para começar</p>
