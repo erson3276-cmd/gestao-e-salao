@@ -66,6 +66,25 @@ export async function createPayment(customerId: string, value: number, dueDate: 
   return data
 }
 
+export async function createPaymentWithCreditCard(customerId: string, value: number, dueDate: string, description: string, creditCard: { holderName: string, number: string, expiryDate: string, cvv: string }, creditCardHolderInfo?: { cpfCnpj?: string, email?: string, name?: string, phone?: string }) {
+  const data = await asaasFetch('/payments', 'POST', {
+    customer: customerId,
+    billingType: 'CREDIT_CARD',
+    value,
+    dueDate,
+    description,
+    cycle: 'NONE',
+    creditCard: {
+      holderName: creditCard.holderName,
+      number: creditCard.number.replace(/\s/g, ''),
+      expiryDate: creditCard.expiryDate,
+      cvv: creditCard.cvv
+    },
+    creditCardHolderInfo: creditCardHolderInfo || undefined
+  })
+  return data
+}
+
 export async function createRecurringSubscription(customerId: string, value: number, description: string, cycle: 'MONTHLY' | 'SEMESTERLY' | 'YEARLY' = 'MONTHLY') {
   const today = new Date()
   const dueDate = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]

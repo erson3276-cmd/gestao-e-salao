@@ -27,7 +27,7 @@ export default function SubscriptionExpiredPage() {
             Assinatura Expirada
           </h1>
           <p className="text-gray-500 text-sm">
-            Seu período de teste de 30 dias acabou. Para continuar usando o Gestão E Salão, renove sua assinatura.
+            Seu período de teste de 14 dias acabou. Para continuar usando o Gestão E Salão, renove sua assinatura.
           </p>
         </div>
 

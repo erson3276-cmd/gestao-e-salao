@@ -306,10 +306,10 @@ export default function AgendaPage() {
   const hours = Array.from({ length: END_HOUR - START_HOUR + 1 }, (_, i) => START_HOUR + i)
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A] p-4 pb-24">
+    <div className="min-h-screen bg-[#0A0A0A] p-2 sm:p-4 pb-24">
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-bold text-white">Agenda</h1>
+      <div className="flex items-center justify-between mb-3">
+        <h1 className="text-xl sm:text-2xl font-bold text-white">Agenda</h1>
         <div className="flex gap-2">
           <button onClick={() => setView('dia')} className={`px-3 py-1.5 rounded-lg text-sm ${view === 'dia' ? 'bg-emerald-500 text-white' : 'bg-white/10 text-gray-400'}`}>Dia</button>
           <button onClick={() => setView('semana')} className={`px-3 py-1.5 rounded-lg text-sm ${view === 'semana' ? 'bg-emerald-500 text-white' : 'bg-white/10 text-gray-400'}`}>Semana</button>
@@ -317,43 +317,43 @@ export default function AgendaPage() {
       </div>
 
       {/* Navigation */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-3">
         <button onClick={() => setCurrentDate(addDays(currentDate, view === 'semana' ? -7 : -1))} className="p-2 bg-white/10 rounded-lg"><ChevronLeft size={20} /></button>
-        <span className="text-white font-medium">
+        <span className="text-white font-medium text-sm sm:text-base">
           {view === 'semana' ? `${format(days[0], 'dd/MM')} - ${format(days[6], 'dd/MM/yyyy')}` : format(currentDate, "dd 'de' MMMM", { locale: ptBR })}
         </span>
         <button onClick={() => setCurrentDate(addDays(currentDate, view === 'semana' ? 7 : 1))} className="p-2 bg-white/10 rounded-lg"><ChevronRight size={20} /></button>
       </div>
 
       {/* Table Grid */}
-      <div className="bg-[#121021] rounded-2xl overflow-hidden">
+      <div className="w-full bg-[#121021] rounded-xl sm:rounded-2xl overflow-hidden flex flex-col h-[calc(100vh-200px)] sm:h-[calc(100vh-240px)]">
         {/* Header row */}
-        <div className="grid border-b border-white/10" style={{ gridTemplateColumns: `60px repeat(${days.length}, 1fr)` }}>
-          <div className="p-2 text-xs text-gray-500 text-center">Hora</div>
+        <div className="grid border-b border-white/10 flex-shrink-0" style={{ gridTemplateColumns: `40px repeat(${days.length}, 1fr)` }}>
+          <div className="p-1 sm:p-2 text-[10px] sm:text-xs text-gray-500 text-center">Hora</div>
           {days.map((day, i) => {
             const dayOfWeek = getDay(day)
             const wh = workingHours.find(w => w.day_of_week === dayOfWeek)
             return (
-              <div key={i} className={`p-2 text-center border-r border-white/5 ${isToday(day) ? 'bg-emerald-500/10' : ''}`}>
-                <p className={`text-xs font-medium ${isToday(day) ? 'text-emerald-400' : 'text-gray-400'}`}>
+              <div key={i} className={`p-1 sm:p-2 text-center border-r border-white/5 ${isToday(day) ? 'bg-emerald-500/10' : ''}`}>
+                <p className={`text-[10px] sm:text-xs font-medium ${isToday(day) ? 'text-emerald-400' : 'text-gray-400'}`}>
                   {format(day, 'EEE', { locale: ptBR })}
                 </p>
-                <p className={`text-lg font-bold ${isToday(day) ? 'text-emerald-400' : 'text-white'}`}>
+                <p className={`text-sm sm:text-lg font-bold ${isToday(day) ? 'text-emerald-400' : 'text-white'}`}>
                   {format(day, 'dd')}
                 </p>
-                {wh && <p className="text-[10px] text-gray-500">{wh.is_active ? `${wh.start_time}-${wh.end_time}` : 'Fechado'}</p>}
+                {wh && <p className="text-[8px] sm:text-[10px] text-gray-500">{wh.is_active ? `${wh.start_time}-${wh.end_time}` : 'Fechado'}</p>}
               </div>
             )
           })}
         </div>
 
         {/* Grid body */}
-        <div className="relative overflow-y-auto" style={{ maxHeight: '70vh' }}>
-          <div className="grid" style={{ gridTemplateColumns: `60px repeat(${days.length}, 1fr)` }}>
+        <div className="relative overflow-y-auto flex-1 w-full" style={{ overflowY: 'auto' }}>
+          <div className="w-full grid" style={{ gridTemplateColumns: `40px repeat(${days.length}, 1fr)` }}>
             {/* Hour labels */}
             <div>
               {hours.map(h => (
-                <div key={h} className="text-[10px] text-gray-500 text-right pr-2 border-t border-white/5" style={{ height: HOUR_HEIGHT, lineHeight: `${HOUR_HEIGHT}px` }}>
+                <div key={h} className="text-[8px] sm:text-[10px] text-gray-500 text-right pr-1 sm:pr-2 border-t border-white/5" style={{ height: HOUR_HEIGHT, lineHeight: `${HOUR_HEIGHT}px` }}>
                   {String(h).padStart(2, '0')}:00
                 </div>
               ))}

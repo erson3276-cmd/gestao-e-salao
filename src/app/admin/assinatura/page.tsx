@@ -1,13 +1,20 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { CreditCard, Calendar, CheckCircle2, Copy, Check, MessageSquare, Clock, Shield, ArrowUpRight, Zap, Loader2, QrCode, FileText } from 'lucide-react'
+import { CreditCard, Calendar, CheckCircle2, Copy, Check, MessageSquare, Clock, Shield, ArrowUpRight, Zap, Loader2, QrCode, FileText, X, Lock } from 'lucide-react'
 
 const plans = [
   { id: 'monthly', label: 'Mensal', months: 1, days: 30, price: 49.90, discount: 0 },
   { id: 'semiannual', label: 'Semestral', months: 6, days: 180, price: 249.90, discount: 16, original: 299.40 },
   { id: 'annual', label: 'Anual', months: 12, days: 365, price: 449.90, discount: 25, original: 598.80 },
 ]
+
+interface CreditCardForm {
+  holderName: string
+  number: string
+  expiryDate: string
+  cvv: string
+}
 
 export default function SubscriptionPage() {
   const [session, setSession] = useState<any>(null)
@@ -17,6 +24,14 @@ export default function SubscriptionPage() {
   const [paymentLoading, setPaymentLoading] = useState(false)
   const [payment, setPayment] = useState<any>(null)
   const [copied, setCopied] = useState(false)
+  const [showCardModal, setShowCardModal] = useState(false)
+  const [cardForm, setCardForm] = useState<CreditCardForm>({
+    holderName: '',
+    number: '',
+    expiryDate: '',
+    cvv: ''
+  })
+  const [cardErrors, setCardErrors] = useState<Record<string, string>>({})
 
   useEffect(() => {
     loadSession()
@@ -67,6 +82,79 @@ export default function SubscriptionPage() {
     navigator.clipboard.writeText(text)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
+  }
+
+  function handlePayClick() {
+    if (billingType === 'CREDIT_CARD') {
+      setShowCardModal(true)
+    } else {
+      createPayment()
+    }
+  }
+
+  function formatCardNumber(value: string): string {
+    const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '')
+    const matches = v.match(/\d{4,16}/g)
+    const match = matches && matches[0] || ''
+    const parts = []
+    for (let i = 0, len = match.length; i < len; i += 4) {
+      parts.push(match.substring(i, i + 4))
+    }
+    return parts.length ? parts.join(' ') : v
+  }
+
+  function formatExpiryDate(value: string): string {
+    const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '')
+    if (v.length >= 2) {
+      return v.substring(0, 2) + '/' + v.substring(2, 4)
+    }
+    return v
+  }
+
+  function validateCardForm() {
+    const errors: Record<string, string> = {}
+    if (!cardForm.holderName.trim()) errors.holderName = 'Nome obrigatório'
+    if (cardForm.number.replace(/\s/g, '').length < 13) errors.number = 'Número do cartão inválido'
+    if (!cardForm.expiryDate || cardForm.expiryDate.length < 5) errors.expiryDate = 'Validade obrigatória'
+    if (!cardForm.cvv || cardForm.cvv.length < 3) errors.cvv = 'CVV obrigatório'
+    setCardErrors(errors)
+    return Object.keys(errors).length === 0
+  }
+
+  async function submitCardPayment() {
+    if (!validateCardForm()) return
+    setPaymentLoading(true)
+    try {
+      const res = await fetch('/api/payment/card', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          planId: selectedPlan,
+          creditCard: {
+            holderName: cardForm.holderName,
+            number: cardForm.number.replace(/\s/g, ''),
+            expiryDate: cardForm.expiryDate,
+            cvv: cardForm.cvv
+          }
+        })
+      })
+      const data = await res.json()
+      setShowCardModal(false)
+      if (data.success) {
+        setPayment({
+          id: data.payment.id,
+          status: data.payment.status,
+          value: data.payment.value,
+          cardProcessed: true
+        })
+      } else {
+        alert(data.error || 'Erro ao processar cartão')
+      }
+    } catch {
+      alert('Erro ao conectar ao servidor')
+    } finally {
+      setPaymentLoading(false)
+    }
   }
 
   if (loading) {
@@ -195,7 +283,7 @@ export default function SubscriptionPage() {
           </div>
 
           <button
-            onClick={createPayment}
+            onClick={handlePayClick}
             disabled={paymentLoading}
             className="w-full py-4 bg-[#5E41FF] text-white rounded-2xl font-black uppercase tracking-widest text-sm flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 border-b-4 border-[#3D28B8]"
           >
@@ -241,7 +329,12 @@ export default function SubscriptionPage() {
 
           {billingType === 'CREDIT_CARD' && (
             <div className="space-y-4">
-              {payment.invoiceUrl ? (
+              {payment.cardProcessed ? (
+                <div className="text-center py-4">
+                  <p className="text-emerald-500 font-bold">Cartão processado com sucesso!</p>
+                  <p className="text-gray-400 text-sm mt-2">Aguarde a confirmação do pagamento.</p>
+                </div>
+              ) : payment.invoiceUrl ? (
                 <a
                   href={payment.invoiceUrl}
                   target="_blank"
@@ -255,7 +348,7 @@ export default function SubscriptionPage() {
                   <p className="text-sm text-gray-400 mb-4">O link de pagamento será gerado em breve.</p>
                 </div>
               )}
-              <p className="text-xs text-gray-500 text-center">Clique no botão acima para inserir os dados do cartão com segurança.</p>
+              {!payment.cardProcessed && <p className="text-xs text-gray-500 text-center">Clique no botão acima para inserir os dados do cartão com segurança.</p>}
             </div>
           )}
 
@@ -275,6 +368,102 @@ export default function SubscriptionPage() {
             <p className="text-xs text-emerald-400 font-bold">
               ✅ Assim que o pagamento for confirmado, seu acesso será renovado automaticamente por +{plans.find(p => p.id === selectedPlan)?.days} dias.
             </p>
+          </div>
+        </div>
+      )}
+
+      {/* Credit Card Modal */}
+      {showCardModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="w-full max-w-md bg-[#121021] border border-white/10 rounded-3xl p-6 space-y-6">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-black uppercase flex items-center gap-2">
+                <CreditCard className="text-[#5E41FF]" size={20} /> Dados do Cartão
+              </h3>
+              <button onClick={() => setShowCardModal(false)} className="p-2 hover:bg-white/10 rounded-xl">
+                <X size={20} className="text-gray-400" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="text-[10px] text-gray-500 uppercase font-black tracking-widest">Nome no Cartão</label>
+                <input
+                  type="text"
+                  value={cardForm.holderName}
+                  onChange={e => setCardForm({...cardForm, holderName: e.target.value})}
+                  placeholder="Nome como está no cartão"
+                  className="w-full p-3 bg-black/40 border border-white/10 rounded-xl mt-1 focus:border-[#5E41FF]/50 outline-none"
+                />
+                {cardErrors.holderName && <p className="text-red-500 text-xs mt-1">{cardErrors.holderName}</p>}
+              </div>
+
+              <div>
+                <label className="text-[10px] text-gray-500 uppercase font-black tracking-widest">Número do Cartão</label>
+                <input
+                  type="text"
+                  value={cardForm.number}
+                  onChange={e => setCardForm({...cardForm, number: formatCardNumber(e.target.value)})}
+                  placeholder="0000 0000 0000 0000"
+                  maxLength={19}
+                  className="w-full p-3 bg-black/40 border border-white/10 rounded-xl mt-1 focus:border-[#5E41FF]/50 outline-none"
+                />
+                {cardErrors.number && <p className="text-red-500 text-xs mt-1">{cardErrors.number}</p>}
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-[10px] text-gray-500 uppercase font-black tracking-widest">Validade</label>
+                  <input
+                    type="text"
+                    value={cardForm.expiryDate}
+                    onChange={e => setCardForm({...cardForm, expiryDate: formatExpiryDate(e.target.value)})}
+                    placeholder="MM/AA"
+                    maxLength={5}
+                    className="w-full p-3 bg-black/40 border border-white/10 rounded-xl mt-1 focus:border-[#5E41FF]/50 outline-none"
+                  />
+                  {cardErrors.expiryDate && <p className="text-red-500 text-xs mt-1">{cardErrors.expiryDate}</p>}
+                </div>
+                <div>
+                  <label className="text-[10px] text-gray-500 uppercase font-black tracking-widest">CVV</label>
+                  <input
+                    type="text"
+                    value={cardForm.cvv}
+                    onChange={e => setCardForm({...cardForm, cvv: e.target.value.replace(/\D/g, '')})}
+                    placeholder="123"
+                    maxLength={4}
+                    className="w-full p-3 bg-black/40 border border-white/10 rounded-xl mt-1 focus:border-[#5E41FF]/50 outline-none"
+                  />
+                  {cardErrors.cvv && <p className="text-red-500 text-xs mt-1">{cardErrors.cvv}</p>}
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 bg-[#5E41FF]/10 border border-[#5E41FF]/20 rounded-xl">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-400">Total a pagar:</span>
+                <span className="text-xl font-black text-white">R$ {plans.find(p => p.id === selectedPlan)?.price.toFixed(2).replace('.', ',')}</span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 text-xs text-gray-500">
+              <Lock size={14} className="text-emerald-500" />
+              Pagamento seguro via Asaas
+            </div>
+
+            <button
+              onClick={submitCardPayment}
+              disabled={paymentLoading}
+              className="w-full py-4 bg-[#5E41FF] text-white rounded-2xl font-black uppercase tracking-widest text-sm flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 border-b-4 border-[#3D28B8]"
+            >
+              {paymentLoading ? (
+                <><Loader2 size={18} className="animate-spin" /> Processando...</>
+              ) : (
+                <>
+                  <Zap size={18} /> Pagar Agora
+                </>
+              )}
+            </button>
           </div>
         </div>
       )}

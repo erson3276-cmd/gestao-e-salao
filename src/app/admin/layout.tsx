@@ -37,7 +37,7 @@ const sidebarItems = [
   { name: 'Clientes', icon: Users, path: '/admin/clientes' },
   { name: 'Serviços', icon: Package, path: '/admin/servicos' },
   { name: 'Despesas', icon: DollarSign, path: '/admin/despesas' },
-  { name: 'WhatsApp', icon: MessageSquare, path: '/admin/whatsapp' },
+  // WhatsApp removido temporariamente - adicionar quando tiver orçamento
   { name: 'Relatórios', icon: BarChart3, path: '/admin/relatorios' },
   { name: 'Comissão', icon: Calculator, path: '/admin/comissao' },
   { name: 'Gestão do salão', icon: Settings, path: '/admin/gestao' },
