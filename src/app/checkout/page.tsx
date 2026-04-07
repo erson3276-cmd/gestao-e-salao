@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { 
@@ -32,7 +32,15 @@ const plans = [
   { id: 'annual', label: 'Anual', price: 449.90, period: '12 meses' },
 ]
 
-export default function CheckoutPage() {
+const errorMessages: Record<string, string> = {
+  missing_code: 'Erro na autenticação. Tente novamente.',
+  auth_failed: 'Falha na autenticação Google. Tente novamente.',
+  no_email: 'Não foi possível obter seu email do Google.',
+  blocked: 'Sua conta está bloqueada. Entre em contato com o suporte.',
+  server_error: 'Erro no servidor. Tente novamente.',
+}
+
+function CheckoutContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [loading, setLoading] = useState(true)
@@ -186,7 +194,6 @@ export default function CheckoutPage() {
 
   return (
     <div className="min-h-screen bg-[#030014] text-white">
-      {/* Header */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-[#030014]/80 backdrop-blur-lg border-b border-white/5">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
           <Link href="/assine" className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
@@ -206,7 +213,6 @@ export default function CheckoutPage() {
             Finalize sua assinatura
           </h1>
 
-          {/* Resumo do plano */}
           <div className="bg-white/5 border border-white/10 rounded-2xl p-6 mb-8">
             <div className="flex justify-between items-center">
               <div>
@@ -226,7 +232,6 @@ export default function CheckoutPage() {
             </div>
           )}
 
-          {/* Método de pagamento */}
           <div className="grid grid-cols-3 gap-3 mb-8">
             <button
               onClick={() => changeMethod('PIX')}
@@ -257,7 +262,6 @@ export default function CheckoutPage() {
             </button>
           </div>
 
-          {/* Conteúdo do pagamento */}
           {loading ? (
             <div className="text-center py-12">
               <Loader2 className="w-8 h-8 text-purple-500 animate-spin mx-auto" />
@@ -385,5 +389,13 @@ export default function CheckoutPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function CheckoutPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center"><div className="w-8 h-8 border-2 border-[#5E41FF]/30 border-t-[#5E41FF] rounded-full animate-spin" /></div>}>
+      <CheckoutContent />
+    </Suspense>
   )
 }
