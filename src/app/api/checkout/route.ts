@@ -1,86 +1,68 @@
 import { NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
+import { SALON_COOKIE_NAME, hashPassword, type SalonSession } from '@/lib/auth'
 import { supabaseAdmin } from '@/lib/supabaseAdmin'
 import { createCustomer, findCustomerByEmail, createCheckout } from '@/lib/asaas'
 
 const plans = {
-  monthly: { price: 49, label: 'Plano Mensal' },
-  semiannual: { price: 249.90, label: 'Plano Semestral' },
-  annual: { price: 449.90, label: 'Plano Anual' },
+  monthly: { price: 49, label: 'Plano Mensal', months: 1 },
+  semiannual: { price: 249.90, label: 'Plano Semestral', months: 6 },
+  annual: { price: 449.90, label: 'Plano Anual', months: 12 },
 }
 
 export async function POST(request: Request) {
   try {
-    const salonId = await getSalonId()
-    if (!salonId) {
-      return NextResponse.json({ success: false, error: 'Não autorizado' }, { status: 401 })
-    }
-
-    const { salonId: bodySalonId, planId } = await request.json()
+    const { planId } = await request.json()
     const plan = plans[planId as keyof typeof plans]
     
     if (!plan) {
       return NextResponse.json({ success: false, error: 'Plano inválido' }, { status: 400 })
     }
 
-    const targetSalonId = salonId === 'admin' ? (bodySalonId || salonId) : salonId
+    // Get temp registration data
+    const cookieStore = await cookies()
+    const tempRegCookie = cookieStore.get('temp_registration')
 
-    const { data: salon, error: salonError } = await supabaseAdmin
-      .from('salons')
-      .select('*')
-      .eq('id', targetSalonId)
-      .single()
-
-    if (salonError || !salon) {
-      return NextResponse.json({ success: false, error: 'Salão não encontrado' }, { status: 404 })
+    if (!tempRegCookie) {
+      return NextResponse.json({ success: false, error: 'Dados de registro não encontrados. Faça o cadastro novamente.' }, { status: 400 })
     }
 
-    let asaasCustomer = await findCustomerByEmail(salon.owner_email)
+    const tempData = JSON.parse(tempRegCookie.value)
+
+    // Create or find Asaas customer
+    let asaasCustomer = await findCustomerByEmail(tempData.ownerEmail)
     
     if (!asaasCustomer) {
       asaasCustomer = await createCustomer(
-        salon.owner_name,
-        salon.owner_email,
-        salon.owner_phone || undefined,
-        salon.cpf_cnpj || undefined
+        tempData.ownerName,
+        tempData.ownerEmail,
+        tempData.ownerPhone
       )
     }
 
-    if (!asaasCustomer?.id) {
-      return NextResponse.json({ success: false, error: 'Falha ao criar/obter cliente Asaas' }, { status: 500 })
+    if (!asaasCustomer) {
+      return NextResponse.json({ success: false, error: 'Erro ao processar pagamento. Tente novamente.' }, { status: 500 })
     }
 
+    // Create checkout payment with Asaas checkout
     const checkout = await createCheckout(
       asaasCustomer.id,
-      salon.owner_name,
-      salon.owner_email,
-      salon.cpf_cnpj || '',
+      tempData.salonName,
+      tempData.ownerEmail,
+      tempData.ownerCpf || '',
       [{ name: plan.label, value: plan.price }]
     )
 
-    return NextResponse.json({
-      success: true,
-      checkoutUrl: checkout.url
+    if (!checkout || !checkout.checkoutUrl) {
+      return NextResponse.json({ success: false, error: 'Erro ao criar pagamento. Tente novamente.' }, { status: 500 })
+    }
+
+    return NextResponse.json({ 
+      success: true, 
+      checkoutUrl: checkout.checkoutUrl
     })
   } catch (e: any) {
     console.error('Checkout error:', e)
-    return NextResponse.json({ success: false, error: e.message }, { status: 500 })
-  }
-}
-
-async function getSalonId() {
-  const { cookies } = await import('next/headers')
-  const cookieStore = await cookies()
-  const token = cookieStore.get('salon_session')?.value
-  if (!token) return null
-  
-  try {
-    const { data } = await supabaseAdmin
-      .from('salons')
-      .select('id')
-      .eq('session_token', token)
-      .single()
-    return data?.id || null
-  } catch {
-    return null
+    return NextResponse.json({ success: false, error: 'Erro: ' + e.message }, { status: 500 })
   }
 }
