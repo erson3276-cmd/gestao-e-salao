@@ -1,16 +1,16 @@
 'use server'
 
-import { supabaseClientAdmin as supabaseClient } from '@/lib/supabaseClientAdmin'
+import { supabaseAdmin as supabase } from '@/lib/supabaseAdmin'
 import { revalidatePath } from 'next/cache'
 import { cookies } from 'next/headers'
 import { SALON_COOKIE_NAME, SUPER_ADMIN_COOKIE_NAME } from '@/lib/auth'
 import { getSalonSession, getSuperAdminSession } from '@/app/actions/salon-auth'
 
-if (!supabaseClient) {
+if (!supabase) {
   throw new Error('Supabase not configured')
 }
 
-const supabaseClientClient = supabaseClient!
+const supabaseClient = supabase!
 
 async function getSalonId(): Promise<string | null> {
   const session = await getSalonSession()
