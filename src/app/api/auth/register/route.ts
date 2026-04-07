@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
+import { SALON_COOKIE_NAME, hashPassword, type SalonSession } from '@/lib/auth'
 import { supabaseAdmin } from '@/lib/supabaseAdmin'
 
 export async function POST(request: Request) {
@@ -13,7 +15,6 @@ export async function POST(request: Request) {
       .limit(1)
 
     if (testError) {
-      console.error('Supabase test error:', testError)
       return NextResponse.json({ 
         success: false, 
         error: 'Erro de conexão: ' + testError.message 
@@ -34,6 +35,9 @@ export async function POST(request: Request) {
       }, { status: 409 })
     }
 
+    // Hash password
+    const hashedPassword = hashPassword(ownerPassword)
+
     // Create salon
     const { data: salon, error: insertError } = await supabaseAdmin
       .from('salons')
@@ -41,7 +45,7 @@ export async function POST(request: Request) {
         name: salonName,
         owner_name: ownerName,
         owner_email: ownerEmail,
-        owner_password: ownerPassword,
+        owner_password: hashedPassword,
         owner_phone: ownerPhone || null,
         owner_cpf: ownerCpf || null,
         plan: 'pending',
@@ -52,12 +56,29 @@ export async function POST(request: Request) {
       .single()
 
     if (insertError) {
-      console.error('Insert error:', insertError)
       return NextResponse.json({ 
         success: false, 
         error: 'Erro ao criar: ' + insertError.message 
       }, { status: 500 })
     }
+
+    // Create session cookie
+    const session: SalonSession = {
+      salonId: salon.id,
+      salonName: salon.name,
+      ownerEmail: salon.owner_email,
+      plan: salon.plan,
+      subscriptionEndsAt: salon.subscription_ends_at || ''
+    }
+
+    const cookieStore = await cookies()
+    cookieStore.set(SALON_COOKIE_NAME, JSON.stringify(session), {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 7,
+      path: '/'
+    })
 
     return NextResponse.json({ 
       success: true, 
@@ -65,7 +86,6 @@ export async function POST(request: Request) {
       salonId: salon?.id 
     })
   } catch (e: any) {
-    console.error('Catch error:', e)
     return NextResponse.json({ 
       success: false, 
       error: 'Erro: ' + e.message 
