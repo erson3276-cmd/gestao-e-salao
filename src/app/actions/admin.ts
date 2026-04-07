@@ -1,11 +1,16 @@
 'use server'
 
-import { supabaseAdmin as supabase } from '@/lib/supabaseAdmin'
+import { supabaseClientAdmin as supabaseClient } from '@/lib/supabaseClientAdmin'
 import { revalidatePath } from 'next/cache'
 import { cookies } from 'next/headers'
 import { SALON_COOKIE_NAME, SUPER_ADMIN_COOKIE_NAME } from '@/lib/auth'
 import { getSalonSession, getSuperAdminSession } from '@/app/actions/salon-auth'
-import { baileys } from '@/lib/baileys'
+
+if (!supabaseClient) {
+  throw new Error('Supabase not configured')
+}
+
+const supabaseClientClient = supabaseClient!
 
 async function getSalonId(): Promise<string | null> {
   const session = await getSalonSession()
@@ -33,7 +38,7 @@ export async function sendWhatsAppMessage(message: string, phone: string) {
     let instanceId: string | null = null
     
     if (salonId) {
-      const { data: salon } = await supabase
+      const { data: salon } = await supabaseClient
         .from('salons')
         .select('whatsapp_instance_id')
         .eq('id', salonId)
@@ -115,12 +120,12 @@ export async function checkAdminAuth() {
 
 export async function getProfile() {
   const salonId = await getSalonId()
-  const baseQuery = supabase.from('profiles').select('*')
+  const baseQuery = supabaseClient.from('profiles').select('*')
   const query = salonId ? baseQuery.eq('salon_id', salonId) : baseQuery
   const { data } = await query.limit(1).maybeSingle()
   
   if (!data) {
-    const { data: d2 } = await supabase.from('perfil').select('*').limit(1).maybeSingle()
+    const { data: d2 } = await supabaseClient.from('perfil').select('*').limit(1).maybeSingle()
     return d2
   }
   return data
@@ -130,7 +135,7 @@ export async function updateProfile(profileData: any) {
   const salonId = await getSalonId()
   const updateData = salonId ? { ...profileData, salon_id: salonId } : profileData
   
-  const { data, error } = await supabase
+  const { data, error } = await supabaseClient
     .from('profiles')
     .update(updateData)
     .eq('id', profileData.id)
@@ -157,7 +162,7 @@ export async function uploadProfileImage(formData: FormData) {
     
     const fileName = `profile-${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`
     
-    const { data, error } = await supabase.storage
+    const { data, error } = await supabaseClient.storage
       .from('profiles')
       .upload(fileName, buffer, {
         contentType: file.type,
@@ -169,7 +174,7 @@ export async function uploadProfileImage(formData: FormData) {
       throw new Error(error.message)
     }
     
-    const { data: urlData } = supabase.storage
+    const { data: urlData } = supabaseClient.storage
       .from('profiles')
       .getPublicUrl(fileName)
     
@@ -189,7 +194,7 @@ export async function processTemplate(templateKey: string, data: any) {
 
 export async function validateVIP(whatsapp: string) {
   const salonId = await getSalonId()
-  const baseQuery = supabase.from('customers').select('active').eq('whatsapp', whatsapp)
+  const baseQuery = supabaseClient.from('customers').select('active').eq('whatsapp', whatsapp)
   const query = salonId ? baseQuery.eq('salon_id', salonId) : baseQuery
   const { data } = await query.single()
   
@@ -210,7 +215,7 @@ export async function sendManagerTalkMessage(phone: string, message: string) {
 
 export async function getAppointments() {
   const salonId = await getSalonId()
-  const baseQuery = supabase
+  const baseQuery = supabaseClient
     .from('appointments')
     .select('*, customers:customer_id(name, whatsapp), services:service_id(name, price, duration_minutes)')
     .order('start_time', { ascending: true })
@@ -234,7 +239,7 @@ export async function addAppointment(appointmentData: any) {
     throw new Error('Não é possível agendar em horários passados')
   }
 
-  const baseConflictQuery = supabase
+  const baseConflictQuery = supabaseClient
     .from('appointments')
     .select('id')
     .neq('status', 'cancelado')
@@ -248,7 +253,7 @@ export async function addAppointment(appointmentData: any) {
   }
 
   const insertData = salonId ? { ...appointmentData, salon_id: salonId } : appointmentData
-  const { data, error } = await supabase
+  const { data, error } = await supabaseClient
     .from('appointments')
     .insert([insertData])
     .select()
@@ -257,13 +262,13 @@ export async function addAppointment(appointmentData: any) {
   if (error) throw new Error('Falha ao criar agendamento')
 
   try {
-    const { data: customer } = await supabase
+    const { data: customer } = await supabaseClient
       .from('customers')
       .select('name, whatsapp')
       .eq('id', appointmentData.customer_id)
       .single()
     
-    const { data: service } = await supabase
+    const { data: service } = await supabaseClient
       .from('services')
       .select('name')
       .eq('id', appointmentData.service_id)
@@ -272,7 +277,7 @@ export async function addAppointment(appointmentData: any) {
     let salonName = 'Gestão E Salão'
     let instanceId: string | null = null
     if (salonId) {
-      const { data: salon } = await supabase
+      const { data: salon } = await supabaseClient
         .from('salons')
         .select('name, whatsapp_instance_id')
         .eq('id', salonId)
@@ -290,7 +295,7 @@ export async function addAppointment(appointmentData: any) {
       
       const message = `Olá *${customer.name}*! ✨\n\nSeu agendamento de *${serviceName}* no *${salonName}* foi confirmado! ✅\n\n🗓️ *Data:* ${dateStr}\n🕒 *Horário:* ${timeStr}\n\nTe esperamos! 🌸`
       
-      await supabase
+      await supabaseClient
         .from('whatsapp_messages')
         .insert({
           phone: customer.whatsapp.replace(/\D/g, ''),
@@ -321,7 +326,7 @@ export async function addAppointment(appointmentData: any) {
 
 export async function updateAppointmentStatus(id: string, status: string) {
   const salonId = await getSalonId()
-  const baseQuery = supabase.from('appointments').update({ status }).eq('id', id)
+  const baseQuery = supabaseClient.from('appointments').update({ status }).eq('id', id)
   const query = salonId ? baseQuery.eq('salon_id', salonId) : baseQuery
   
   const { error } = await query
@@ -334,7 +339,7 @@ export async function updateAppointmentStatus(id: string, status: string) {
 
 export async function deleteAppointment(id: string) {
   const salonId = await getSalonId()
-  const baseQuery = supabase.from('appointments').delete().eq('id', id)
+  const baseQuery = supabaseClient.from('appointments').delete().eq('id', id)
   const query = salonId ? baseQuery.eq('salon_id', salonId) : baseQuery
   
   const { error } = await query
@@ -349,7 +354,7 @@ export async function completeAppointmentCheckout(appointmentId: string, saleDat
   const salonId = await getSalonId()
   const insertData = salonId ? { ...saleData, salon_id: salonId } : saleData
   
-  await supabase.from('vendas').insert([insertData])
+  await supabaseClient.from('vendas').insert([insertData])
   await updateAppointmentStatus(appointmentId, 'finalizado')
   
   await revalidateAdmin()
@@ -361,7 +366,7 @@ export async function completeAppointmentCheckout(appointmentId: string, saleDat
 
 export async function getCustomers() {
   const salonId = await getSalonId()
-  const baseQuery = supabase.from('customers').select('*').order('name', { ascending: true })
+  const baseQuery = supabaseClient.from('customers').select('*').order('name', { ascending: true })
   const query = salonId ? baseQuery.eq('salon_id', salonId) : baseQuery
   
   const { data } = await query
@@ -372,7 +377,7 @@ export async function addCustomer(customerData: any) {
   const salonId = await getSalonId()
   const insertData = salonId ? { ...customerData, salon_id: salonId } : customerData
   
-  const { data, error } = await supabase
+  const { data, error } = await supabaseClient
     .from('customers')
     .insert([insertData])
     .select()
@@ -387,7 +392,7 @@ export async function addCustomer(customerData: any) {
 
 export async function updateCustomer(id: string, customerData: any) {
   const salonId = await getSalonId()
-  const baseQuery = supabase.from('customers').update(customerData).eq('id', id)
+  const baseQuery = supabaseClient.from('customers').update(customerData).eq('id', id)
   const query = salonId ? baseQuery.eq('salon_id', salonId) : baseQuery
   
   const { data, error } = await query.select().single()
@@ -401,7 +406,7 @@ export async function updateCustomer(id: string, customerData: any) {
 
 export async function deleteCustomer(id: string) {
   const salonId = await getSalonId()
-  const baseQuery = supabase.from('customers').delete().eq('id', id)
+  const baseQuery = supabaseClient.from('customers').delete().eq('id', id)
   const query = salonId ? baseQuery.eq('salon_id', salonId) : baseQuery
   
   const { error } = await query
@@ -414,7 +419,7 @@ export async function deleteCustomer(id: string) {
 
 export async function toggleBlockCustomer(id: string, blocked: boolean) {
   const salonId = await getSalonId()
-  const baseQuery = supabase.from('customers').update({ active: !blocked }).eq('id', id)
+  const baseQuery = supabaseClient.from('customers').update({ active: !blocked }).eq('id', id)
   const query = salonId ? baseQuery.eq('salon_id', salonId) : baseQuery
   
   const { error } = await query
@@ -429,7 +434,7 @@ export async function toggleBlockCustomer(id: string, blocked: boolean) {
 
 export async function getServices() {
   const salonId = await getSalonId()
-  const baseQuery = supabase.from('services').select('*').order('name', { ascending: true })
+  const baseQuery = supabaseClient.from('services').select('*').order('name', { ascending: true })
   const query = salonId ? baseQuery.eq('salon_id', salonId) : baseQuery
   
   const { data } = await query
@@ -440,7 +445,7 @@ export async function addService(serviceData: any) {
   const salonId = await getSalonId()
   const insertData = salonId ? { ...serviceData, salon_id: salonId } : serviceData
   
-  const { data, error } = await supabase
+  const { data, error } = await supabaseClient
     .from('services')
     .insert([insertData])
     .select()
@@ -455,7 +460,7 @@ export async function addService(serviceData: any) {
 
 export async function updateService(id: string, serviceData: any) {
   const salonId = await getSalonId()
-  const baseQuery = supabase.from('services').update(serviceData).eq('id', id)
+  const baseQuery = supabaseClient.from('services').update(serviceData).eq('id', id)
   const query = salonId ? baseQuery.eq('salon_id', salonId) : baseQuery
   
   const { data, error } = await query.select().single()
@@ -469,7 +474,7 @@ export async function updateService(id: string, serviceData: any) {
 
 export async function deleteService(id: string) {
   const salonId = await getSalonId()
-  const baseQuery = supabase.from('services').delete().eq('id', id)
+  const baseQuery = supabaseClient.from('services').delete().eq('id', id)
   const query = salonId ? baseQuery.eq('salon_id', salonId) : baseQuery
   
   const { error } = await query
@@ -484,7 +489,7 @@ export async function deleteService(id: string) {
 
 export async function getExpenses(month?: number, year?: number, category?: string, paid?: boolean) {
   const salonId = await getSalonId()
-  let q: any = supabase.from('despesas').select('*').order('date', { ascending: false })
+  let q: any = supabaseClient.from('despesas').select('*').order('date', { ascending: false })
   
   if (salonId) q = q.eq('salon_id', salonId)
   if (month && year) {
@@ -517,7 +522,7 @@ export async function addExpense(expenseData: {
   const salonId = await getSalonId()
   const insertData = salonId ? { ...expenseData, salon_id: salonId, amount: Number(expenseData.amount), paid: expenseData.paid || false, paid_date: expenseData.paid ? new Date().toISOString().split('T')[0] : null } : { ...expenseData, amount: Number(expenseData.amount), paid: expenseData.paid || false, paid_date: expenseData.paid ? new Date().toISOString().split('T')[0] : null }
   
-  const { data, error } = await supabase
+  const { data, error } = await supabaseClient
     .from('despesas')
     .insert([insertData])
     .select()
@@ -547,7 +552,7 @@ export async function updateExpense(id: string, expenseData: {
     updateData.paid_date = expenseData.paid_date || new Date().toISOString().split('T')[0]
   }
   
-  const baseQuery = supabase.from('despesas').update(updateData).eq('id', id)
+  const baseQuery = supabaseClient.from('despesas').update(updateData).eq('id', id)
   const query = salonId ? baseQuery.eq('salon_id', salonId) : baseQuery
   
   const { data, error } = await query.select().single()
@@ -561,7 +566,7 @@ export async function updateExpense(id: string, expenseData: {
 
 export async function deleteExpense(id: string) {
   const salonId = await getSalonId()
-  const baseQuery = supabase.from('despesas').delete().eq('id', id)
+  const baseQuery = supabaseClient.from('despesas').delete().eq('id', id)
   const query = salonId ? baseQuery.eq('salon_id', salonId) : baseQuery
   
   const { error } = await query
@@ -574,7 +579,7 @@ export async function deleteExpense(id: string) {
 
 export async function toggleExpensePaid(id: string, paid: boolean) {
   const salonId = await getSalonId()
-  const baseQuery = supabase.from('despesas').update({
+  const baseQuery = supabaseClient.from('despesas').update({
     paid,
     paid_date: paid ? new Date().toISOString().split('T')[0] : null
   }).eq('id', id)
@@ -592,7 +597,7 @@ export async function toggleExpensePaid(id: string, paid: boolean) {
 
 export async function getSales() {
   const salonId = await getSalonId()
-  const baseQuery = supabase.from('vendas').select('*, customers:customer_id(name), services:service_id(name)').order('created_at', { ascending: false })
+  const baseQuery = supabaseClient.from('vendas').select('*, customers:customer_id(name), services:service_id(name)').order('created_at', { ascending: false })
   const query = salonId ? baseQuery.eq('salon_id', salonId) : baseQuery
   
   const { data } = await query
@@ -603,7 +608,7 @@ export async function addSale(saleData: any) {
   const salonId = await getSalonId()
   const insertData = salonId ? { ...saleData, salon_id: salonId } : saleData
   
-  const { data, error } = await supabase
+  const { data, error } = await supabaseClient
     .from('vendas')
     .insert([insertData])
     .select()
@@ -618,7 +623,7 @@ export async function addSale(saleData: any) {
 
 export async function updateSale(id: string, saleData: any) {
   const salonId = await getSalonId()
-  const baseQuery = supabase.from('vendas').update(saleData).eq('id', id)
+  const baseQuery = supabaseClient.from('vendas').update(saleData).eq('id', id)
   const query = salonId ? baseQuery.eq('salon_id', salonId) : baseQuery
   
   const { data, error } = await query.select().single()
@@ -632,7 +637,7 @@ export async function updateSale(id: string, saleData: any) {
 
 export async function deleteSale(id: string) {
   const salonId = await getSalonId()
-  const baseQuery = supabase.from('vendas').delete().eq('id', id)
+  const baseQuery = supabaseClient.from('vendas').delete().eq('id', id)
   const query = salonId ? baseQuery.eq('salon_id', salonId) : baseQuery
   
   const { error } = await query
