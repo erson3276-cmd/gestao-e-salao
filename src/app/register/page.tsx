@@ -12,7 +12,7 @@ import {
   Lock,
   ArrowRight
 } from 'lucide-react'
-import { trackLead, trackInitiateCheckout, trackCompleteRegistration, trackPurchase } from './components/FacebookPixel'
+import { trackLead, trackInitiateCheckout } from './components/FacebookPixel'
 
 const plans = [
   { id: 'monthly', label: 'Mensal', price: 49, total: 49 },
