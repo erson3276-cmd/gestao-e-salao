@@ -10,7 +10,7 @@ import {
   QrCode, 
   CreditCard, 
   Barcode,
-  Pix,
+  Pi,
   ArrowLeft,
   Lock,
   Shield
@@ -234,7 +234,7 @@ export default function CheckoutPage() {
                 selectedMethod === 'PIX' ? 'border-purple-500 bg-purple-500/10' : 'border-white/10 hover:border-white/20'
               }`}
             >
-              <Pix className="w-8 h-8 text-purple-400" />
+              <Pi className="w-8 h-8 text-purple-400" />
               <span className="text-sm font-medium">PIX</span>
             </button>
             <button
