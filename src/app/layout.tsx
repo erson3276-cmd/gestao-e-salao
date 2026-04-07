@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { GoogleAnalytics } from "./components/GoogleAnalytics";
+import { FacebookPixel } from "./components/FacebookPixel";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -44,6 +45,7 @@ export default function RootLayout({
     >
       <head>
         <GoogleAnalytics />
+        <FacebookPixel />
       </head>
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
