@@ -5,11 +5,17 @@ import { supabaseAdmin } from '@/lib/supabaseAdmin'
 
 export async function POST(request: Request) {
   try {
+    console.log('=== REGISTER DEBUG ===')
+    console.log('SUPABASE_URL:', process.env.NEXT_PUBLIC_SUPABASE_URL)
+    console.log('SUPABASE_KEY exists:', !!process.env.SUPABASE_SERVICE_KEY)
+    console.log('supabaseAdmin exists:', !!supabaseAdmin)
+
     if (!supabaseAdmin) {
       return NextResponse.json({ success: false, error: 'Sistema em manutencao. Tente novamente mais tarde.' }, { status: 503 })
     }
 
     const { salonName, ownerName, ownerEmail, ownerPassword, ownerPhone, ownerCpf } = await request.json()
+    console.log('Register attempt:', ownerEmail)
 
     if (!salonName || !ownerName || !ownerEmail || !ownerPassword) {
       return NextResponse.json({ success: false, error: 'Preencha todos os campos obrigatorios.' }, { status: 400 })
@@ -22,6 +28,7 @@ export async function POST(request: Request) {
       .single()
 
     if (existing) {
+      console.log('Email already exists:', ownerEmail)
       return NextResponse.json({ success: false, error: 'Este email ja esta cadastrado' }, { status: 409 })
     }
 
@@ -47,6 +54,8 @@ export async function POST(request: Request) {
       console.error('Register error:', error)
       return NextResponse.json({ success: false, error: 'Erro ao criar conta. Tente novamente.' }, { status: 500 })
     }
+
+    console.log('Created salon:', salon.id)
 
     const session: SalonSession = {
       salonId: salon.id,
