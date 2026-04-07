@@ -1,26 +1,26 @@
 import { NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
-import { SALON_COOKIE_NAME, hashPassword, type SalonSession } from '@/lib/auth'
 import { supabaseAdmin } from '@/lib/supabaseAdmin'
 
 export async function POST(request: Request) {
   try {
-    console.log('=== REGISTER DEBUG ===')
-    console.log('SUPABASE_URL:', process.env.NEXT_PUBLIC_SUPABASE_URL)
-    console.log('SUPABASE_KEY exists:', !!process.env.SUPABASE_SERVICE_KEY)
-    console.log('supabaseAdmin exists:', !!supabaseAdmin)
+    const body = await request.json()
+    const { salonName, ownerName, ownerEmail, ownerPassword, ownerPhone, ownerCpf } = body
 
-    if (!supabaseAdmin) {
-      return NextResponse.json({ success: false, error: 'Sistema em manutencao. Tente novamente mais tarde.' }, { status: 503 })
+    // Test Supabase connection
+    const { data: test, error: testError } = await supabaseAdmin
+      .from('salons')
+      .select('id')
+      .limit(1)
+
+    if (testError) {
+      console.error('Supabase test error:', testError)
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Erro de conexão: ' + testError.message 
+      }, { status: 500 })
     }
 
-    const { salonName, ownerName, ownerEmail, ownerPassword, ownerPhone, ownerCpf } = await request.json()
-    console.log('Register attempt:', ownerEmail)
-
-    if (!salonName || !ownerName || !ownerEmail || !ownerPassword) {
-      return NextResponse.json({ success: false, error: 'Preencha todos os campos obrigatorios.' }, { status: 400 })
-    }
-
+    // Check if email exists
     const { data: existing } = await supabaseAdmin
       .from('salons')
       .select('id')
@@ -28,19 +28,20 @@ export async function POST(request: Request) {
       .single()
 
     if (existing) {
-      console.log('Email already exists:', ownerEmail)
-      return NextResponse.json({ success: false, error: 'Este email ja esta cadastrado' }, { status: 409 })
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Este email já está cadastrado' 
+      }, { status: 409 })
     }
 
-    const hashedPassword = hashPassword(ownerPassword)
-
-    const { data: salon, error } = await supabaseAdmin
+    // Create salon
+    const { data: salon, error: insertError } = await supabaseAdmin
       .from('salons')
       .insert([{
         name: salonName,
         owner_name: ownerName,
         owner_email: ownerEmail,
-        owner_password: hashedPassword,
+        owner_password: ownerPassword,
         owner_phone: ownerPhone || null,
         owner_cpf: ownerCpf || null,
         plan: 'pending',
@@ -50,33 +51,24 @@ export async function POST(request: Request) {
       .select()
       .single()
 
-    if (error) {
-      console.error('Register error:', error)
-      return NextResponse.json({ success: false, error: 'Erro ao criar conta. Tente novamente.' }, { status: 500 })
+    if (insertError) {
+      console.error('Insert error:', insertError)
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Erro ao criar: ' + insertError.message 
+      }, { status: 500 })
     }
 
-    console.log('Created salon:', salon.id)
-
-    const session: SalonSession = {
-      salonId: salon.id,
-      salonName: salon.name,
-      ownerEmail: salon.owner_email,
-      plan: salon.plan,
-      subscriptionEndsAt: salon.subscription_ends_at || ''
-    }
-
-    const cookieStore = await cookies()
-    cookieStore.set(SALON_COOKIE_NAME, JSON.stringify(session), {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7,
-      path: '/'
+    return NextResponse.json({ 
+      success: true, 
+      message: 'Conta criada!',
+      salonId: salon?.id 
     })
-
-    return NextResponse.json({ success: true, redirect: '/admin/gestao' })
   } catch (e: any) {
-    console.error('Register catch error:', e)
-    return NextResponse.json({ success: false, error: 'Erro ao conectar ao servidor' }, { status: 500 })
+    console.error('Catch error:', e)
+    return NextResponse.json({ 
+      success: false, 
+      error: 'Erro: ' + e.message 
+    }, { status: 500 })
   }
 }
