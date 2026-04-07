@@ -14,7 +14,7 @@ async function salonsTableExists(): Promise<boolean> {
 
 export async function POST(request: Request) {
   try {
-    const { salonName, ownerName, ownerEmail, ownerPassword, ownerPhone } = await request.json()
+    const { salonName, ownerName, ownerEmail, ownerPassword, ownerPhone, ownerCpf } = await request.json()
 
     const tableExists = await salonsTableExists()
     if (!tableExists) {
