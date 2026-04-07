@@ -165,6 +165,7 @@ export default function Home() {
           <div className="hidden md:flex items-center gap-8">
             <a href="#problema" className="text-sm text-gray-400 hover:text-white transition-colors">Problema</a>
             <a href="#solucao" className="text-sm text-gray-400 hover:text-white transition-colors">Solução</a>
+            <a href="#video" className="text-sm text-gray-400 hover:text-white transition-colors">Vídeo</a>
             <a href="#resultados" className="text-sm text-gray-400 hover:text-white transition-colors">Resultados</a>
             <a href="#preco" className="text-sm text-gray-400 hover:text-white transition-colors">Preço</a>
           </div>
@@ -215,7 +216,7 @@ export default function Home() {
                 Assinar Agora
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Link>
-              <a href="#solucao" className="w-full sm:w-auto px-8 sm:px-10 py-4 sm:py-5 bg-white/5 border border-white/10 text-white rounded-2xl font-bold text-sm sm:text-base flex items-center justify-center gap-3 hover:bg-white/10 transition-all backdrop-blur-sm">
+              <a href="#video" className="w-full sm:w-auto px-8 sm:px-10 py-4 sm:py-5 bg-white/5 border border-white/10 text-white rounded-2xl font-bold text-sm sm:text-base flex items-center justify-center gap-3 hover:bg-white/10 transition-all backdrop-blur-sm">
                 <Play className="w-5 h-5" />
                 Ver como funciona
               </a>
@@ -339,6 +340,38 @@ export default function Home() {
                 <p className="text-sm sm:text-base text-gray-400">{feature.desc}</p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Video Section */}
+      <section id="video" className="relative py-16 sm:py-24 z-10">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6">
+          <div className="text-center mb-12 sm:mb-16">
+            <span className="inline-block px-4 py-2 bg-purple-500/10 border border-purple-500/20 rounded-full text-purple-400 text-xs sm:text-sm font-bold uppercase tracking-widest mb-4">
+              Veja como funciona
+            </span>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tighter">
+              <span className="bg-gradient-to-r from-white to-gray-500 bg-clip-text text-transparent">
+                Assista o vídeo e veja
+              </span>
+              <br />
+              <span className="bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
+                como é simples
+              </span>
+            </h2>
+          </div>
+          
+          <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden border border-white/10 bg-black">
+            <video 
+              src="/video-sem-audio.mp4" 
+              controls 
+              controlsList="nodownload"
+              className="w-full aspect-video"
+              playsInline
+            >
+              Seu navegador não suporta vídeo.
+            </video>
           </div>
         </div>
       </section>
