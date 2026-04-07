@@ -115,7 +115,6 @@ export async function getSubscriptions() {
 export async function createCheckout(customerId: string, name: string, email: string, cpfCnpj: string, items: {name: string, value: number}[]) {
   return asaasFetch('/checkouts', 'POST', {
     billingTypes: ['PIX', 'CREDIT_CARD', 'BOLETO'],
-    customerData: true,
     customer: customerId,
     items: items.map(item => ({
       name: item.name,
