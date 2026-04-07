@@ -364,7 +364,7 @@ export default function Home() {
           
           <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden border border-white/10 bg-black">
             <video 
-              src="/video-sem-audio.mp4" 
+              src="/video sem audio.mp4" 
               controls 
               controlsList="nodownload"
               className="w-full aspect-video"
