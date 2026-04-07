@@ -57,6 +57,10 @@ function LoginForm() {
   }
 
   const handleGoogleLogin = async () => {
+    if (!supabaseClient) {
+      setError('Configuração incompleta')
+      return
+    }
     setGoogleLoading(true)
     setError('')
     try {

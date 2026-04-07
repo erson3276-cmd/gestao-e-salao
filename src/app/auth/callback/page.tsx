@@ -1,11 +1,11 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useEffect, useState, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { supabaseClient } from '@/lib/supabaseClient'
 import { Loader2, ArrowRight } from 'lucide-react'
 
-export default function AuthCallbackPage() {
+function AuthCallbackContent() {
   const [status, setStatus] = useState<'loading' | 'redirecting' | 'error'>('loading')
   const [error, setError] = useState('')
   const [redirectUrl, setRedirectUrl] = useState('')
@@ -13,6 +13,13 @@ export default function AuthCallbackPage() {
 
   useEffect(() => {
     async function handleCallback() {
+      if (!supabaseClient) {
+        setStatus('error')
+        setError('Configuração incompleta')
+        setTimeout(() => router.push('/login'), 3000)
+        return
+      }
+
       try {
         const hash = window.location.hash.substring(1)
         if (!hash) {
@@ -123,5 +130,13 @@ export default function AuthCallbackPage() {
         )}
       </div>
     </main>
+  )
+}
+
+export default function AuthCallbackPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center"><div className="w-8 h-8 border-2 border-[#5E41FF]/30 border-t-[#5E41FF] rounded-full animate-spin" /></div>}>
+      <AuthCallbackContent />
+    </Suspense>
   )
 }
