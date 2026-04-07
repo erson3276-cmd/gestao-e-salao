@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ShieldCheck, ArrowRight, Mail, User, Phone, Building2, Eye, EyeOff, Lock, Loader2 } from 'lucide-react'
+import { ShieldCheck, ArrowRight, Mail, User, Phone, Building2, Eye, EyeOff, Lock } from 'lucide-react'
 
 export default function RegisterPage() {
   const [salonName, setSalonName] = useState('')
@@ -15,9 +15,6 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
-  const searchParams = useSearchParams()
-  const redirectTo = searchParams.get('redirect') === 'checkout' ? '/checkout' : '/admin/gestao'
-  const selectedPlan = searchParams.get('plan') || 'monthly'
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -26,12 +23,6 @@ export default function RegisterPage() {
 
     if (ownerPassword.length < 6) {
       setError('A senha deve ter pelo menos 6 caracteres')
-      setLoading(false)
-      return
-    }
-
-    if (!ownerPhone || ownerPhone.length < 10) {
-      setError('WhatsApp é obrigatório para contato com clientes')
       setLoading(false)
       return
     }
@@ -45,7 +36,7 @@ export default function RegisterPage() {
       const data = await res.json()
       
       if (data.success) {
-        router.push(redirectTo)
+        router.push(data.redirect || '/admin/gestao')
         router.refresh()
       } else {
         setError(data.error || 'Erro ao criar conta')
@@ -67,11 +58,7 @@ export default function RegisterPage() {
           </div>
           <div>
             <h1 className="text-3xl font-black tracking-tighter italic uppercase text-white/90">Gestão<span className="text-[#5E41FF]">E</span>Salão</h1>
-            <p className="text-[10px] uppercase font-bold tracking-[0.4em] text-gray-500 mt-2">
-              {selectedPlan === 'monthly' && 'Plano Mensal - R$ 49/mês'}
-              {selectedPlan === 'semiannual' && 'Plano Semestral - R$ 249,90'}
-              {selectedPlan === 'annual' && 'Plano Anual - R$ 449,90'}
-            </p>
+            <p className="text-[10px] uppercase font-bold tracking-[0.4em] text-gray-500 mt-2">Cadastre seu Salão Grátis</p>
           </div>
         </div>
 
@@ -104,12 +91,12 @@ export default function RegisterPage() {
               </div>
 
               <div className="space-y-2">
-                  <label className="text-[10px] uppercase font-bold tracking-widest text-gray-400 px-1">WhatsApp (obrigatório)</label>
-                  <div className="relative group">
-                     <Phone className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-600 group-focus-within:text-[#5E41FF] transition-colors" size={20} />
-                     <input type="tel" value={ownerPhone} onChange={(e) => setOwnerPhone(e.target.value)} placeholder="(11) 99999-9999" required className="w-full pl-14 pr-6 py-4 bg-black/40 border border-white/5 rounded-2xl outline-none focus:border-[#5E41FF]/50 focus:ring-1 focus:ring-[#5E41FF]/20 transition-all text-white placeholder:text-gray-800" />
-                  </div>
-               </div>
+                 <label className="text-[10px] uppercase font-bold tracking-widest text-gray-400 px-1">WhatsApp (opcional)</label>
+                 <div className="relative group">
+                    <Phone className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-600 group-focus-within:text-[#5E41FF] transition-colors" size={20} />
+                    <input type="tel" value={ownerPhone} onChange={(e) => setOwnerPhone(e.target.value)} placeholder="(11) 99999-9999" className="w-full pl-14 pr-6 py-4 bg-black/40 border border-white/5 rounded-2xl outline-none focus:border-[#5E41FF]/50 focus:ring-1 focus:ring-[#5E41FF]/20 transition-all text-white placeholder:text-gray-800" />
+                 </div>
+              </div>
 
               <div className="space-y-2">
                  <label className="text-[10px] uppercase font-bold tracking-widest text-gray-400 px-1">Senha</label>
@@ -130,7 +117,7 @@ export default function RegisterPage() {
 
               <button 
                 type="submit"
-                disabled={loading || !salonName || !ownerName || !ownerEmail || !ownerPassword || !ownerPhone}
+                disabled={loading || !salonName || !ownerName || !ownerEmail || !ownerPassword}
                 className="w-full py-5 bg-[#5E41FF] text-white rounded-2xl font-black uppercase tracking-widest text-xs flex items-center justify-center gap-3 shadow-xl shadow-[#5E41FF]/20 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 group border-b-4 border-[#3D28B8]"
               >
                  {loading ? <div className="w-5 h-5 border-3 border-white border-t-transparent rounded-full animate-spin" /> : (

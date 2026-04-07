@@ -74,6 +74,7 @@ export async function POST(request: Request) {
         status: payment.status,
         value: payment.value,
         dueDate: payment.dueDate,
+        billingType: 'CONFIRMED'
       }
     })
   } catch (e: any) {

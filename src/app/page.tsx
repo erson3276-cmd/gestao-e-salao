@@ -74,10 +74,10 @@ const features = [
 
 const testimonials = [
   { 
-    name: "Ana Paula Silva", 
-    salon: "Studio Ana Paula - São Paulo",
-    text: "Minha vida mudou completamente. Antes eu vivia no WhatsApp confirmando horários. Agora meus clientes agendam sozinhos e eu foco no que amo: transformar pessoas.",
-    photo: "https://images.unsplash.com/photo-1580618672591-eb180b1a973f?w=200&h=200&fit=crop&crop=face",
+    name: "Roberto Santos", 
+    salon: "Barbearia Classic - São Paulo",
+    text: "Minha vida mudou completamente. Antes eu vivia no WhatsApp confirmando horários. Agora meus clientes agendam sozinhos e eu foco no que amo: barbear com qualidade.",
+    photo: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop&crop=face",
     stars: 5,
     result: "+40% em agendamentos"
   },
@@ -90,10 +90,10 @@ const testimonials = [
     result: "R$ 2.800/mês economizado"
   },
   { 
-    name: "Fernanda Costa", 
-    salon: "Beauty Lab - Belo Horizonte", 
-    text: "Tinha 3 funcionárias e era uma bagunça. Agora cada uma vê sua agenda, suas comissões. Time feliz, clientes felizes, eu feliz.",
-    photo: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=200&h=200&fit=crop&crop=face",
+    name: "Marcos Oliveira", 
+    salon: "Studio Hair Pro - Belo Horizonte", 
+    text: "Tinha 3 profissionais e era uma bagunça. Agora cada um vê sua agenda, suas comissões. Time feliz, clientes felizes.",
+    photo: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&h=200&fit=crop&crop=face",
     stars: 5,
     result: "80% menos ligações"
   },
@@ -211,8 +211,8 @@ export default function Home() {
             
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mb-8">
-              <Link href="/register" className="w-full sm:w-auto group px-8 sm:px-10 py-4 sm:py-5 bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 bg-[length:200%_100%] text-white rounded-2xl font-black text-sm sm:text-base flex items-center justify-center gap-3 hover:shadow-2xl hover:shadow-purple-500/40 hover:bg-[position:100%_0] transition-all duration-500">
-                Começar 14 Dias Grátis
+              <Link href="/assine" className="w-full sm:w-auto group px-8 sm:px-10 py-4 sm:py-5 bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 bg-[length:200%_100%] text-white rounded-2xl font-black text-sm sm:text-base flex items-center justify-center gap-3 hover:shadow-2xl hover:shadow-purple-500/40 hover:bg-[position:100%_0] transition-all duration-500">
+                Assinar Agora
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Link>
               <a href="#solucao" className="w-full sm:w-auto px-8 sm:px-10 py-4 sm:py-5 bg-white/5 border border-white/10 text-white rounded-2xl font-bold text-sm sm:text-base flex items-center justify-center gap-3 hover:bg-white/10 transition-all backdrop-blur-sm">
@@ -221,7 +221,7 @@ export default function Home() {
               </a>
             </div>
             
-            <p className="text-xs sm:text-sm text-gray-600">Sem cartão de crédito • Cancele quando quiser • Acesso imediato</p>
+            <p className="text-xs sm:text-sm text-gray-600">R$ 49/mês • PIX, cartão ou boleto • Cancele quando quiser</p>
           </div>
           
           {/* Hero Image/Preview */}

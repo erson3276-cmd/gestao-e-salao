@@ -1,0 +1,6 @@
+tree 3fa5ce53b8c1c95ba7cd8e3a3315c7dda6be1295
+parent 808431d99db953f3095fd4e33bb2f05162b9fec9
+author Dev Moca <dev@moca.com> 1775264970 -0300
+committer Dev Moca <dev@moca.com> 1775264970 -0300
+
+feat: multi-salon WhatsApp with individual QR code per salon
