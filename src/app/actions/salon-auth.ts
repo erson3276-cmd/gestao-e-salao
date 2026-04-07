@@ -3,39 +3,15 @@
 import { cookies } from 'next/headers'
 import { SALON_COOKIE_NAME, SUPER_ADMIN_COOKIE_NAME, SUPER_ADMIN_EMAIL, SUPER_ADMIN_PASSWORD, hashPassword, verifyPassword, type SalonSession } from '@/lib/auth'
 
-async function salonsTableExists(): Promise<boolean> {
-  try {
-    const { supabaseAdmin } = await import('@/lib/supabaseAdmin')
-    if (!supabaseAdmin) return false
-    const { error } = await supabaseAdmin.from('salons').select('id', { count: 'exact', head: true })
-    return !error
-  } catch {
-    return false
-  }
-}
-
 export async function salonLogin(email: string, password: string) {
   try {
-    if (email === SUPER_ADMIN_EMAIL && password === SUPER_ADMIN_PASSWORD) {
-      const cookieStore = await cookies()
-      cookieStore.delete(SALON_COOKIE_NAME)
-      cookieStore.set(SUPER_ADMIN_COOKIE_NAME, 'authenticated', {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        maxAge: 60 * 60 * 24 * 7,
-        path: '/'
-      })
-      return { success: true, redirect: '/super-admin' }
-    }
-
-    const tableExists = await salonsTableExists()
-    if (!tableExists) {
+    const { supabaseAdmin } = await import('@/lib/supabaseAdmin')
+    if (!supabaseAdmin) {
       return { success: false, error: 'Sistema em manutencao. Tente novamente mais tarde.' }
     }
+    const supabase = supabaseAdmin!
 
-    const { supabaseAdmin } = await import('@/lib/supabaseAdmin')
-    const { data: salon, error } = await supabaseAdmin
+    const { data: salon, error } = await supabase
       .from('salons')
       .select('*')
       .eq('owner_email', email)
@@ -56,7 +32,7 @@ export async function salonLogin(email: string, password: string) {
     const now = new Date()
     const expiresAt = new Date(salon.subscription_ends_at)
     if (now > expiresAt && salon.status !== 'blocked') {
-      await supabaseAdmin
+      await supabase
         .from('salons')
         .update({ status: 'inactive', updated_at: new Date().toISOString() })
         .eq('id', salon.id)
@@ -100,13 +76,13 @@ export async function salonRegister(data: {
   ownerPhone?: string
 }) {
   try {
-    const tableExists = await salonsTableExists()
-    if (!tableExists) {
+    const { supabaseAdmin } = await import('@/lib/supabaseAdmin')
+    if (!supabaseAdmin) {
       return { success: false, error: 'Sistema em manutencao. Tente novamente mais tarde.' }
     }
+    const supabase = supabaseAdmin!
 
-    const { supabaseAdmin } = await import('@/lib/supabaseAdmin')
-    const { data: existing } = await supabaseAdmin
+    const { data: existing } = await supabase
       .from('salons')
       .select('id')
       .eq('owner_email', data.ownerEmail)
@@ -118,7 +94,7 @@ export async function salonRegister(data: {
 
     const hashedPassword = hashPassword(data.ownerPassword)
 
-    const { data: salon, error } = await supabaseAdmin
+    const { data: salon, error } = await supabase
       .from('salons')
       .insert([{
         name: data.salonName,
@@ -158,7 +134,7 @@ export async function salonRegister(data: {
     return { success: true, redirect: '/admin/gestao' }
   } catch (error) {
     console.error('Salon register error:', error)
-    return { success: false, error: 'Erro ao conectar ao servidor' }
+    return { success: false, error: 'Erro ao criar conta. Tente novamente.' }
   }
 }
 
