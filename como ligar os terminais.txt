@@ -1,0 +1,13 @@
+como ligar os terminais
+
+dashboard=streamlit run dashboard.py
+
+cérebro= python motor_cerebro.py
+
+Olheiro= python olheiro_btc.py
+
+Sniper= python terminal_quant.py
+
+Coletor Painel= python coletor_invisivel.py
+
+Ligar Túnel NGrok= ngrok http 8501

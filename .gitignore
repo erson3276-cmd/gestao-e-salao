@@ -1,0 +1,6 @@
+.vercel
+.node_modules
+.next
+.git-rewrite
+*.log
+.env.local

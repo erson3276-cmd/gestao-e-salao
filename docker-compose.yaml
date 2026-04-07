@@ -1,0 +1,28 @@
+services:
+  postgres:
+    image: postgres:15
+    container_name: evolution-postgres
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres123
+      - POSTGRES_DB=evolution
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  evolution-api:
+    image: atendai/evolution-api:latest
+    container_name: evolution-api
+    ports:
+      - "8080:8080"
+    env_file:
+      - ./evolution.env
+    volumes:
+      - ./evolution_data:/evolution/instances
+    depends_on:
+      - postgres
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  evolution_data:
