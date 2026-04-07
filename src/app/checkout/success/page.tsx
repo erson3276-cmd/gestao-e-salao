@@ -4,7 +4,12 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { CheckCircle2, Loader2 } from 'lucide-react'
-import { trackPurchase } from '../components/FacebookPixel'
+
+declare global {
+  interface Window {
+    fbq: any
+  }
+}
 
 export default function CheckoutSuccessPage() {
   const router = useRouter()
@@ -12,7 +17,14 @@ export default function CheckoutSuccessPage() {
   const [error, setError] = useState('')
 
   useEffect(() => {
-    trackPurchase(49, 'BRL')
+    if (typeof window !== 'undefined' && window.fbq) {
+      window.fbq('track', 'Purchase', {
+        value: 49,
+        currency: 'BRL',
+        content_type: 'subscription',
+        content_name: 'Gestão E Salão'
+      })
+    }
     checkPayment()
   }, [])
 

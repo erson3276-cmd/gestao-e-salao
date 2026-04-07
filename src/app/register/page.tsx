@@ -217,7 +217,13 @@ export default function RegisterCheckoutPage() {
                 disabled={loading}
                 className="w-full p-4 bg-[#5E41FF] text-white rounded-2xl font-black flex items-center justify-center gap-2 disabled:opacity-50"
               >
-                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <>{'Pagar agora'} <ArrowRight className="w-5 h-5" />}</>
+                {loading ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <span className="flex items-center gap-2">
+                    Pagar agora <ArrowRight className="w-5 h-5" />
+                  </span>
+                )}
               </button>
             </div>
 

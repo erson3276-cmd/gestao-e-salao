@@ -42,9 +42,10 @@ export async function POST(request: Request) {
         owner_email: ownerEmail,
         owner_password: hashedPassword,
         owner_phone: ownerPhone || null,
-        plan: 'profissional',
-        status: 'active',
-        subscription_ends_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+        owner_cpf: ownerCpf || null,
+        plan: 'pending',
+        status: 'pending',
+        subscription_ends_at: null
       }])
       .select()
       .single()
