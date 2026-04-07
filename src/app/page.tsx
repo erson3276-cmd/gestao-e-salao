@@ -107,7 +107,7 @@ const stats = [
 
 const faqs = [
   { q: "Preciso instalar algo?", a: "Não. 100% online, navegador ou celular. Sem downloads, sem atualizações." },
-  { q: "Posso testar antes de pagar?", a: "Sim! 14 dias grátis com acesso completo. Sem cartão de crédito." },
+  { q: "Preciso pagar no cartão?", a: "Não! Aceitamos PIX, cartão de crédito ou boleto bancário." },
   { q: "Funciona para barbearia?", a: "Sim! Serve para qualquer segmento: beleza, barba, estética, unhas." },
   { q: "E se eu quiser cancelar?", a: "Sem multa. Cancele quando quiser, 1 clique." },
 ]
@@ -172,7 +172,7 @@ export default function Home() {
           <div className="flex items-center gap-3">
             <Link href="/login" className="text-xs sm:text-sm font-bold text-gray-400 hover:text-white transition-colors hidden sm:block">Entrar</Link>
             <Link href="/register" className="px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-purple-500 via-pink-500 to-purple-500 bg-[length:200%_100%] text-white rounded-xl text-xs sm:text-sm font-bold hover:shadow-lg hover:shadow-purple-500/30 hover:bg-[position:100%_0] transition-all duration-300">
-              Testar Grátis
+              Assinar Agora
             </Link>
           </div>
         </div>
@@ -211,7 +211,7 @@ export default function Home() {
             
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mb-8">
-              <Link href="/assine" className="w-full sm:w-auto group px-8 sm:px-10 py-4 sm:py-5 bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 bg-[length:200%_100%] text-white rounded-2xl font-black text-sm sm:text-base flex items-center justify-center gap-3 hover:shadow-2xl hover:shadow-purple-500/40 hover:bg-[position:100%_0] transition-all duration-500">
+              <Link href="/register" className="w-full sm:w-auto group px-8 sm:px-10 py-4 sm:py-5 bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 bg-[length:200%_100%] text-white rounded-2xl font-black text-sm sm:text-base flex items-center justify-center gap-3 hover:shadow-2xl hover:shadow-purple-500/40 hover:bg-[position:100%_0] transition-all duration-500">
                 Assinar Agora
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Link>
@@ -221,7 +221,7 @@ export default function Home() {
               </a>
             </div>
             
-            <p className="text-xs sm:text-sm text-gray-600">R$ 49/mês • PIX, cartão ou boleto • Cancele quando quiser</p>
+            <p className="text-xs sm:text-sm text-gray-600">R$ 49/mês • PIX, cartão ou boleto • Pagamento único</p>
           </div>
           
           {/* Hero Image/Preview */}
@@ -491,8 +491,8 @@ export default function Home() {
                     <Crown className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                   </div>
                   <div>
-                    <p className="font-bold text-white">14 dias grátis para testar</p>
-                    <p className="text-sm text-gray-400">Sem compromisso. Sem cartão de crédito.</p>
+                    <p className="font-bold text-white">Plano profissional completo</p>
+                    <p className="text-sm text-gray-400">Tudo que você precisa para gestão do seu salão</p>
                   </div>
                 </div>
               </div>
@@ -520,11 +520,11 @@ export default function Home() {
               
               {/* CTA */}
               <Link href="/register" className="w-full py-4 sm:py-5 bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 bg-[length:200%_100%] text-white rounded-xl sm:rounded-2xl font-black text-sm sm:text-base flex items-center justify-center gap-3 hover:shadow-2xl hover:shadow-purple-500/40 hover:bg-[position:100%_0] transition-all duration-500">
-                Começar Teste Grátis Agora
+                Assinar Agora
                 <ArrowRight className="w-5 h-5" />
               </Link>
               
-              <p className="text-center text-xs sm:text-sm text-gray-500 mt-4">Após 14 dias, R$ 49,90/mês. Cancele quando quiser.</p>
+              <p className="text-center text-xs sm:text-sm text-gray-500 mt-4">R$ 49/mês. PIX, cartão ou boleto.</p>
             </div>
           </div>
         </div>
@@ -578,10 +578,10 @@ export default function Home() {
                 Seus clientes estão prontos para agendar. Seu concorrente já automatizou. E você?
               </p>
               <Link href="/register" className="inline-flex items-center gap-3 px-8 sm:px-12 py-4 sm:py-5 bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 bg-[length:200%_100%] text-white rounded-2xl font-black text-sm sm:text-base hover:shadow-2xl hover:shadow-purple-500/40 hover:bg-[position:100%_0] transition-all duration-500">
-                Começar 14 Dias Grátis
+                Assinar Agora
                 <ArrowRight className="w-5 h-5" />
               </Link>
-              <p className="text-sm text-gray-500 mt-4">Leva menos de 2 minutos para começar</p>
+              <p className="text-sm text-gray-500 mt-4">Pronto para usar em 2 minutos</p>
             </div>
           </div>
         </div>

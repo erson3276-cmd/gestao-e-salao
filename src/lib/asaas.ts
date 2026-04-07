@@ -112,11 +112,19 @@ export async function getSubscriptions() {
   return asaasFetch('/subscriptions')
 }
 
-export async function createPlan(name: string, value: number, cycle: 'MONTHLY' | 'SEMESTERLY' | 'YEARLY') {
-  return asaasFetch('/plans', 'POST', {
-    name,
-    value,
-    cycle,
-    active: true
+export async function createCheckout(customerId: string, name: string, email: string, cpfCnpj: string, items: {name: string, value: number}[]) {
+  return asaasFetch('/checkouts', 'POST', {
+    billingTypes: ['PIX', 'CREDIT_CARD', 'BOLETO'],
+    customerData: true,
+    customer: customerId,
+    items: items.map(item => ({
+      name: item.name,
+      quantity: 1,
+      value: item.value
+    })),
+    callback: {
+      successUrl: `${process.env.NEXT_PUBLIC_APP_URL}/checkout/success`,
+      cancelUrl: `${process.env.NEXT_PUBLIC_APP_URL}/checkout/cancel`
+    }
   })
 }
