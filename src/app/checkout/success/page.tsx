@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { CheckCircle2, Loader2 } from 'lucide-react'
+import { trackPurchase } from '../components/FacebookPixel'
 
 export default function CheckoutSuccessPage() {
   const router = useRouter()
@@ -11,6 +12,7 @@ export default function CheckoutSuccessPage() {
   const [error, setError] = useState('')
 
   useEffect(() => {
+    trackPurchase(49, 'BRL')
     checkPayment()
   }, [])
 

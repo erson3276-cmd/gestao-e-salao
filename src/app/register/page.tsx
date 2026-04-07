@@ -12,6 +12,7 @@ import {
   Lock,
   ArrowRight
 } from 'lucide-react'
+import { trackLead, trackInitiateCheckout, trackCompleteRegistration, trackPurchase } from './components/FacebookPixel'
 
 const plans = [
   { id: 'monthly', label: 'Mensal', price: 49, total: 49 },
@@ -64,6 +65,8 @@ export default function RegisterCheckoutPage() {
       const data = await res.json()
       
       if (data.success) {
+        trackLead()
+        trackInitiateCheckout(plan.total)
         setStep(2)
       } else {
         setError(data.error || 'Erro ao criar conta')
