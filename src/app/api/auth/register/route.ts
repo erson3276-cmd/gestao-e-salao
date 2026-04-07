@@ -1,27 +1,20 @@
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
-import { SALON_COOKIE_NAME, SUPER_ADMIN_COOKIE_NAME, hashPassword, type SalonSession } from '@/lib/auth'
-
-async function salonsTableExists(): Promise<boolean> {
-  try {
-    const { supabaseAdmin } = await import('@/lib/supabaseAdmin')
-    const { error } = await supabaseAdmin.from('salons').select('id', { count: 'exact', head: true })
-    return !error
-  } catch {
-    return false
-  }
-}
+import { SALON_COOKIE_NAME, hashPassword, type SalonSession } from '@/lib/auth'
+import { supabaseAdmin } from '@/lib/supabaseAdmin'
 
 export async function POST(request: Request) {
   try {
-    const { salonName, ownerName, ownerEmail, ownerPassword, ownerPhone, ownerCpf } = await request.json()
-
-    const tableExists = await salonsTableExists()
-    if (!tableExists) {
+    if (!supabaseAdmin) {
       return NextResponse.json({ success: false, error: 'Sistema em manutencao. Tente novamente mais tarde.' }, { status: 503 })
     }
 
-    const { supabaseAdmin } = await import('@/lib/supabaseAdmin')
+    const { salonName, ownerName, ownerEmail, ownerPassword, ownerPhone, ownerCpf } = await request.json()
+
+    if (!salonName || !ownerName || !ownerEmail || !ownerPassword) {
+      return NextResponse.json({ success: false, error: 'Preencha todos os campos obrigatorios.' }, { status: 400 })
+    }
+
     const { data: existing } = await supabaseAdmin
       .from('salons')
       .select('id')
@@ -51,6 +44,7 @@ export async function POST(request: Request) {
       .single()
 
     if (error) {
+      console.error('Register error:', error)
       return NextResponse.json({ success: false, error: 'Erro ao criar conta. Tente novamente.' }, { status: 500 })
     }
 
@@ -73,6 +67,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true, redirect: '/admin/gestao' })
   } catch (e: any) {
+    console.error('Register catch error:', e)
     return NextResponse.json({ success: false, error: 'Erro ao conectar ao servidor' }, { status: 500 })
   }
 }
