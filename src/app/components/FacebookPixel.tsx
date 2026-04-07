@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { usePathname, useSearchParams } from 'next/navigation'
 
 declare global {
@@ -9,7 +9,7 @@ declare global {
   }
 }
 
-export function FacebookPixel() {
+function FacebookPixelContent() {
   const pathname = usePathname()
   const searchParams = useSearchParams()
 
@@ -18,6 +18,16 @@ export function FacebookPixel() {
       window.fbq('track', 'PageView')
     }
   }, [pathname, searchParams])
+
+  return null
+}
+
+export function FacebookPixel() {
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   return (
     <>
@@ -50,39 +60,13 @@ export function FacebookPixel() {
           src="https://www.facebook.com/tr?id=1309818977869718&ev=PageView&noscript=1"
         />
       </noscript>
+      {mounted && (
+        <Suspense fallback={null}>
+          <FacebookPixelContent />
+        </Suspense>
+      )}
     </>
   )
-}
-
-export function useFacebookPixel() {
-  const pathname = usePathname()
-  const searchParams = useSearchParams()
-
-  useEffect(() => {
-    if (typeof window !== 'undefined' && window.fbq) {
-      window.fbq('track', 'PageView')
-    }
-  }, [pathname, searchParams])
-
-  const trackEvent = (eventName: string, data?: Record<string, any>) => {
-    if (typeof window !== 'undefined' && window.fbq) {
-      window.fbq('track', eventName, data)
-    }
-  }
-
-  return { trackEvent }
-}
-
-export function FacebookPixelProvider({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname()
-
-  useEffect(() => {
-    if (typeof window !== 'undefined' && window.fbq) {
-      window.fbq('track', 'PageView')
-    }
-  }, [pathname])
-
-  return <>{children}</>
 }
 
 export function trackPurchase(value: number, currency: string = 'BRL') {
