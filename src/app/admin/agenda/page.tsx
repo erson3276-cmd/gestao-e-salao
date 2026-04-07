@@ -23,6 +23,7 @@ import {
   parseISO
 } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
+import { getDateStrBrazil, formatTimeBrazil, toBrazilTz } from '@/lib/brazil-tz'
 
 interface Service {
   id: string
@@ -67,15 +68,6 @@ const START_HOUR = 7
 const END_HOUR = 21
 const HOUR_HEIGHT = 80
 
-const getBrasiliaDateStr = (date: Date) => {
-  return date.toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' })
-}
-
-const getBrasiliaTimeStr = (dateStr: string) => {
-  const d = new Date(dateStr)
-  return d.toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit', hour12: false })
-}
-
 const timeToMinutes = (timeStr: string) => {
   const [h, m] = timeStr.split(':').map(Number)
   return h * 60 + m
@@ -111,7 +103,8 @@ export default function AgendaPage() {
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
   const [selectedApt, setSelectedApt] = useState<Appointment | null>(null)
   
-  const [formData, setFormData] = useState({ customerId: '', serviceId: '', date: '', time: '' })
+  const [formData, setFormData] = useState({ customerId: '', customerName: '', serviceId: '', date: '', time: '' })
+  const [foundCustomer, setFoundCustomer] = useState<{id: string, name: string} | null>(null)
   const [tipAmount, setTipAmount] = useState('')
   const [paymentMethod, setPaymentMethod] = useState('dinheiro')
 
@@ -143,19 +136,32 @@ export default function AgendaPage() {
 
   useEffect(() => { loadData() }, [loadData])
 
+  useEffect(() => {
+    if (formData.customerName) {
+      const found = customers.find(c => c.name.toLowerCase().includes(formData.customerName.toLowerCase()))
+      setFoundCustomer(found || null)
+      if (found) {
+        setFormData(prev => ({ ...prev, customerId: found.id }))
+      }
+    } else {
+      setFoundCustomer(null)
+    }
+  }, [formData.customerName, customers])
+
   const getAppointmentsForDate = (date: Date) => {
-    const dateStr = getBrasiliaDateStr(date)
+    const dateStr = getDateStrBrazil(date)
     return appointments
       .filter(a => {
         if (a.status === 'cancelado') return false
-        const aptDateStr = getBrasiliaDateStr(parseISO(a.start_time))
+        const aptDate = toBrazilTz(a.start_time)
+        const aptDateStr = getDateStrBrazil(aptDate)
         return aptDateStr === dateStr
       })
       .sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime())
   }
 
   const toggleBlockSlot = async (date: Date, time: string) => {
-    const dateStr = getBrasiliaDateStr(date)
+    const dateStr = getDateStrBrazil(date)
     const endMin = timeToMinutes(time) + 30
     const endTime = minutesToTime(endMin)
     
@@ -177,7 +183,7 @@ export default function AgendaPage() {
 
   const handleSlotClick = (date: Date, hour: number, minute: number) => {
     const timeStr = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`
-    const dateStr = getBrasiliaDateStr(date)
+    const dateStr = getDateStrBrazil(date)
     
     // Check if blocked
     const isBlocked = blockedSlots.some(b => 
@@ -192,9 +198,10 @@ export default function AgendaPage() {
     // Check if there's an appointment
     const apt = appointments.find(a => {
       if (a.status === 'cancelado') return false
-      const aptDateStr = getBrasiliaDateStr(parseISO(a.start_time))
+      const aptDate = toBrazilTz(a.start_time)
+      const aptDateStr = getDateStrBrazil(aptDate)
       if (aptDateStr !== dateStr) return false
-      const aptTime = getBrasiliaTimeStr(a.start_time)
+      const aptTime = toBrazilTz(a.start_time).toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit', hour12: false })
       return aptTime === timeStr
     })
     
@@ -202,7 +209,7 @@ export default function AgendaPage() {
       setSelectedApt(apt)
       setIsCheckoutOpen(true)
     } else {
-      setFormData({ customerId: '', serviceId: '', date: dateStr, time: timeStr })
+      setFormData({ customerId: '', customerName: '', serviceId: '', date: dateStr, time: timeStr })
       setIsModalOpen(true)
     }
   }
@@ -210,6 +217,10 @@ export default function AgendaPage() {
   const handleCreate = async () => {
     if (!formData.customerId || !formData.serviceId || !formData.date || !formData.time) {
       alert('Preencha todos os campos')
+      return
+    }
+    if (!foundCustomer) {
+      alert('Cliente não encontrado. Cadastre-o primeiro na aba Clientes.')
       return
     }
     setSaving(true)
@@ -236,7 +247,8 @@ export default function AgendaPage() {
       const data = await res.json()
       if (data.success) {
         setIsModalOpen(false)
-        setFormData({ customerId: '', serviceId: '', date: '', time: '' })
+        setFormData({ customerId: '', customerName: '', serviceId: '', date: '', time: '' })
+        setFoundCustomer(null)
         loadData()
       } else {
         alert(data.error || 'Erro ao criar')
@@ -361,7 +373,7 @@ export default function AgendaPage() {
 
             {/* Day columns */}
             {days.map((day, dayIndex) => {
-              const dateStr = getBrasiliaDateStr(day)
+              const dateStr = getDateStrBrazil(day)
               const dayApts = getAppointmentsForDate(day)
               const dayOfWeek = getDay(day)
               const wh = workingHours.find(w => w.day_of_week === dayOfWeek)
@@ -377,7 +389,7 @@ export default function AgendaPage() {
                   {wh?.is_active && hours.map(h => [0, 30].map(min => {
                     const timeStr = `${String(h).padStart(2, '0')}:${String(min).padStart(2, '0')}`
                     const isBlocked = blockedSlots.some(b => b.date === dateStr && b.start_time === timeStr)
-                    const apt = dayApts.find(a => getBrasiliaTimeStr(a.start_time) === timeStr)
+                    const apt = dayApts.find(a => formatTimeBrazil(a.start_time) === timeStr)
                     
                     return (
                       <div
@@ -415,8 +427,8 @@ export default function AgendaPage() {
 
                   {/* Appointments */}
                   {dayApts.map(apt => {
-                    const startTime = getBrasiliaTimeStr(apt.start_time)
-                    const endTime = getBrasiliaTimeStr(apt.end_time)
+                    const startTime = formatTimeBrazil(apt.start_time)
+                    const endTime = formatTimeBrazil(apt.end_time)
                     const startMin = timeToMinutes(startTime)
                     const endMin = timeToMinutes(endTime)
                     const top = ((startMin - START_HOUR * 60) / 60) * HOUR_HEIGHT
@@ -457,28 +469,26 @@ export default function AgendaPage() {
             <div className="space-y-3">
               <div>
                 <label className="text-xs text-gray-400 mb-1 block">Cliente</label>
-                <div className="bg-white/5 border border-white/10 rounded-xl overflow-hidden">
-                  <div className="max-h-32 overflow-y-auto">
-                    {customers.length === 0 ? (
-                      <p className="p-3 text-gray-500 text-sm text-center">Nenhum cliente cadastrado</p>
-                    ) : (
-                      customers.map(c => (
-                        <button
-                          key={c.id}
-                          type="button"
-                          onClick={() => setFormData({...formData, customerId: c.id})}
-                          className={`w-full p-3 text-left text-sm transition-all ${
-                            formData.customerId === c.id
-                              ? 'bg-emerald-500/20 text-white font-bold'
-                              : 'text-gray-300 hover:bg-white/5'
-                          }`}
-                        >
-                          {c.name}
-                        </button>
-                      ))
-                    )}
-                  </div>
-                </div>
+                <input 
+                  type="text" 
+                  value={formData.customerName || ''} 
+                  onChange={e => {
+                    const name = e.target.value
+                    setFormData({...formData, customerName: name, customerId: ''})
+                  }}
+                  placeholder="Digite o nome do cliente"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-emerald-500"
+                />
+                {formData.customerName && !foundCustomer && (
+                  <p className="text-xs text-red-400 mt-1">
+                    Cliente não encontrado. Cadastre-o primeiro na aba Clientes.
+                  </p>
+                )}
+                {foundCustomer && (
+                  <p className="text-xs text-emerald-400 mt-1">
+                    ✓ Cliente encontrado: {foundCustomer.name}
+                  </p>
+                )}
               </div>
               <div>
                 <label className="text-xs text-gray-400 mb-1 block">Serviço</label>
@@ -537,7 +547,7 @@ export default function AgendaPage() {
                 <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center"><User size={16} className="text-emerald-400" /></div>
                 <div>
                   <p className="text-sm font-medium text-white">{selectedApt.customers?.name}</p>
-                  <p className="text-xs text-gray-400">{selectedApt.services?.name} • {getBrasiliaTimeStr(selectedApt.start_time)}</p>
+                  <p className="text-xs text-gray-400">{selectedApt.services?.name} • {formatTimeBrazil(selectedApt.start_time)}</p>
                 </div>
               </div>
               <div className="flex gap-2">
@@ -595,7 +605,7 @@ export default function AgendaPage() {
       )}
 
       {/* FAB */}
-      <button onClick={() => { setFormData({ customerId: '', serviceId: '', date: getBrasiliaDateStr(new Date()), time: '' }); setIsModalOpen(true) }} className="fixed bottom-6 right-6 w-14 h-14 bg-emerald-500 rounded-full flex items-center justify-center shadow-lg hover:brightness-110 transition-all">
+      <button onClick={() => { setFormData({ customerId: '', customerName: '', serviceId: '', date: getDateStrBrazil(new Date()), time: '' }); setIsModalOpen(true) }} className="fixed bottom-6 right-6 w-14 h-14 bg-emerald-500 rounded-full flex items-center justify-center shadow-lg hover:brightness-110 transition-all">
         <Plus size={24} className="text-white" />
       </button>
 

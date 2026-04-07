@@ -3,14 +3,13 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ShieldCheck, ArrowRight, Mail, User, Phone, Building2, Eye, EyeOff, Lock, Loader2, CreditCard } from 'lucide-react'
+import { ShieldCheck, ArrowRight, Mail, User, Phone, Building2, Eye, EyeOff, Lock, Loader2 } from 'lucide-react'
 
 export default function RegisterPage() {
   const [salonName, setSalonName] = useState('')
   const [ownerName, setOwnerName] = useState('')
   const [ownerEmail, setOwnerEmail] = useState('')
   const [ownerPhone, setOwnerPhone] = useState('')
-  const [ownerCpf, setOwnerCpf] = useState('')
   const [ownerPassword, setOwnerPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -28,8 +27,8 @@ export default function RegisterPage() {
       return
     }
 
-    if (!ownerCpf || ownerCpf.length < 11) {
-      setError('CPF e obrigatorio para pagamento')
+    if (!ownerPhone || ownerPhone.length < 10) {
+      setError('WhatsApp é obrigatório para contato com clientes')
       setLoading(false)
       return
     }
@@ -38,7 +37,7 @@ export default function RegisterPage() {
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ salonName, ownerName, ownerEmail, ownerPassword, ownerPhone, ownerCpf })
+        body: JSON.stringify({ salonName, ownerName, ownerEmail, ownerPassword, ownerPhone })
       })
       const data = await res.json()
       
@@ -98,20 +97,12 @@ export default function RegisterPage() {
               </div>
 
               <div className="space-y-2">
-                 <label className="text-[10px] uppercase font-bold tracking-widest text-gray-400 px-1">CPF (obrigatorio para pagamento)</label>
-                 <div className="relative group">
-                    <CreditCard className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-600 group-focus-within:text-[#5E41FF] transition-colors" size={20} />
-                    <input type="text" value={ownerCpf} onChange={(e) => setOwnerCpf(e.target.value.replace(/\D/g, ''))} placeholder="000.000.000-00" required maxLength={11} className="w-full pl-14 pr-6 py-4 bg-black/40 border border-white/5 rounded-2xl outline-none focus:border-[#5E41FF]/50 focus:ring-1 focus:ring-[#5E41FF]/20 transition-all text-white placeholder:text-gray-800" />
-                 </div>
-              </div>
-
-              <div className="space-y-2">
-                 <label className="text-[10px] uppercase font-bold tracking-widest text-gray-400 px-1">WhatsApp (opcional)</label>
-                 <div className="relative group">
-                    <Phone className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-600 group-focus-within:text-[#5E41FF] transition-colors" size={20} />
-                    <input type="tel" value={ownerPhone} onChange={(e) => setOwnerPhone(e.target.value)} placeholder="(11) 99999-9999" className="w-full pl-14 pr-6 py-4 bg-black/40 border border-white/5 rounded-2xl outline-none focus:border-[#5E41FF]/50 focus:ring-1 focus:ring-[#5E41FF]/20 transition-all text-white placeholder:text-gray-800" />
-                 </div>
-              </div>
+                  <label className="text-[10px] uppercase font-bold tracking-widest text-gray-400 px-1">WhatsApp (obrigatório)</label>
+                  <div className="relative group">
+                     <Phone className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-600 group-focus-within:text-[#5E41FF] transition-colors" size={20} />
+                     <input type="tel" value={ownerPhone} onChange={(e) => setOwnerPhone(e.target.value)} placeholder="(11) 99999-9999" required className="w-full pl-14 pr-6 py-4 bg-black/40 border border-white/5 rounded-2xl outline-none focus:border-[#5E41FF]/50 focus:ring-1 focus:ring-[#5E41FF]/20 transition-all text-white placeholder:text-gray-800" />
+                  </div>
+               </div>
 
               <div className="space-y-2">
                  <label className="text-[10px] uppercase font-bold tracking-widest text-gray-400 px-1">Senha</label>
@@ -132,7 +123,7 @@ export default function RegisterPage() {
 
               <button 
                 type="submit"
-                disabled={loading || !salonName || !ownerName || !ownerEmail || !ownerPassword}
+                disabled={loading || !salonName || !ownerName || !ownerEmail || !ownerPassword || !ownerPhone}
                 className="w-full py-5 bg-[#5E41FF] text-white rounded-2xl font-black uppercase tracking-widest text-xs flex items-center justify-center gap-3 shadow-xl shadow-[#5E41FF]/20 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 group border-b-4 border-[#3D28B8]"
               >
                  {loading ? <div className="w-5 h-5 border-3 border-white border-t-transparent rounded-full animate-spin" /> : (

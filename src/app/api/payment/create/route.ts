@@ -36,22 +36,32 @@ export async function POST(request: Request) {
     }
 
     // Find or create Asaas customer
+    console.log('Looking for customer:', salon.owner_email)
     let asaasCustomer = await findCustomerByEmail(salon.owner_email)
+    console.log('Found customer:', asaasCustomer)
+    
     if (!asaasCustomer) {
+      console.log('Creating new customer for:', salon.owner_email)
       asaasCustomer = await createCustomer(
         salon.owner_name,
         salon.owner_email,
         salon.owner_phone || undefined,
         salon.cpf_cnpj || undefined
       )
+      console.log('Created customer:', asaasCustomer)
     } else if (salon.cpf_cnpj && !asaasCustomer.cpfCnpj) {
       // Update customer with CPF if not set
       await updateCustomer(asaasCustomer.id, salon.owner_name, salon.cpf_cnpj)
       asaasCustomer.cpfCnpj = salon.cpf_cnpj
     }
 
+    if (!asaasCustomer?.id) {
+      return NextResponse.json({ success: false, error: 'Falha ao criar/obter cliente Asaas' }, { status: 500 })
+    }
+
     // Create payment
     const dueDate = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+    console.log('Creating payment:', { customerId: asaasCustomer.id, billingType: billingType || 'PIX', planPrice: plan.price, dueDate })
     const payment = await createPayment(
       asaasCustomer.id,
       plan.price,
@@ -59,6 +69,7 @@ export async function POST(request: Request) {
       `Gestão E Salão - ${plan.label}`,
       billingType || 'PIX'
     )
+    console.log('Payment created:', payment)
 
     return NextResponse.json({
       success: true,
@@ -74,6 +85,7 @@ export async function POST(request: Request) {
       }
     })
   } catch (e: any) {
-    return NextResponse.json({ success: false, error: e.message }, { status: 500 })
+    console.error('Payment error:', e)
+    return NextResponse.json({ success: false, error: e.message, details: e.stack }, { status: 500 })
   }
 }

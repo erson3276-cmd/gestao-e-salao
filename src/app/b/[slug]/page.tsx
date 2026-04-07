@@ -45,6 +45,7 @@ export default function BookingPage() {
   const [selectedService, setSelectedService] = useState<Service | null>(null)
   const [selectedDate, setSelectedDate] = useState(addDays(startOfToday(), 1))
   const [selectedTime, setSelectedTime] = useState<string | null>(null)
+  const [occupiedSlots, setOccupiedSlots] = useState<string[]>([])
   const [name, setName] = useState('')
   const [whatsapp, setWhatsapp] = useState('')
   const [bookingLoading, setBookingLoading] = useState(false)
@@ -64,25 +65,48 @@ export default function BookingPage() {
 
   async function loadData() {
     try {
-      const [salonRes, servicesRes, whRes] = await Promise.all([
+      const [salonRes, servicesRes, whRes, occupiedRes] = await Promise.all([
         fetch(`/api/public/salon-by-slug/${slug}`),
         fetch(`/api/public/services-by-slug/${slug}`),
-        fetch(`/api/public/working-hours-by-slug/${slug}`)
+        fetch(`/api/public/working-hours-by-slug/${slug}`),
+        fetch(`/api/public/occupied-slots?slug=${slug}&date=${format(selectedDate, 'yyyy-MM-dd')}`)
       ])
 
       const salonData = await salonRes.json()
       const servicesData = await servicesRes.json()
       const whData = await whRes.json()
+      const occupiedData = await occupiedRes.json()
 
       if (salonData.salon) setSalon(salonData.salon)
       if (servicesData.services) setServices(servicesData.services)
       if (whData.workingHours) setWorkingHours(whData.workingHours)
+      if (occupiedData.occupiedSlots) setOccupiedSlots(occupiedData.occupiedSlots)
     } catch (e) {
       console.error('Error loading data:', e)
     } finally {
       setLoading(false)
     }
   }
+
+  // Reload occupied slots when date changes
+  // Also refresh every 30 seconds to keep slots updated
+  useEffect(() => {
+    if (slug && selectedDate) {
+      const fetchSlots = () => {
+        fetch(`/api/public/occupied-slots?slug=${slug}&date=${format(selectedDate, 'yyyy-MM-dd')}`)
+          .then(res => res.json())
+          .then(data => {
+            if (data.occupiedSlots) setOccupiedSlots(data.occupiedSlots)
+          })
+          .catch(console.error)
+      }
+      
+      fetchSlots()
+      const interval = setInterval(fetchSlots, 30000) // Refresh every 30s
+      
+      return () => clearInterval(interval)
+    }
+  }, [slug, selectedDate])
 
   function getDayWorkingHours(dayOfWeek: number) {
     const wh = workingHours.find(w => w.day_of_week === dayOfWeek)
@@ -134,9 +158,9 @@ export default function BookingPage() {
     try {
       const dateStr = format(selectedDate, 'yyyy-MM-dd')
       const [timeH, timeM] = selectedTime.split(':').map(Number)
-      const startDateTime = new Date(dateStr)
-      startDateTime.setHours(timeH, timeM, 0, 0)
-
+      
+      // Create date in Brasilia timezone
+      const startDateTime = new Date(`${dateStr}T${String(timeH).padStart(2, '0')}:${String(timeM).padStart(2, '0')}:00-03:00`)
       const endDateTime = new Date(startDateTime.getTime() + selectedService.duration_minutes * 60000)
 
       const res = await fetch('/api/public/book', {
@@ -156,6 +180,12 @@ export default function BookingPage() {
 
       if (data.success) {
         setStep(5)
+        // Reload occupied slots after successful booking
+        fetch(`/api/public/occupied-slots?slug=${slug}&date=${format(selectedDate, 'yyyy-MM-dd')}`)
+          .then(res => res.json())
+          .then(data => {
+            if (data.occupiedSlots) setOccupiedSlots(data.occupiedSlots)
+          })
       } else {
         alert(data.error || 'Erro ao agendar')
       }
@@ -213,7 +243,28 @@ export default function BookingPage() {
 
   const dayWh = getDayWorkingHours(selectedDate.getDay())
   const isDayClosed = !dayWh || !dayWh.is_active
-  const timeSlots = isDayClosed ? [] : generateTimeSlots(selectedDate.getDay())
+  
+  // Get current time in Brasilia
+  const now = new Date()
+  const nowBrasil = new Date(now.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }))
+  const isToday = selectedDate.toDateString() === nowBrasil.toDateString()
+  
+  const allSlots = isDayClosed ? [] : generateTimeSlots(selectedDate.getDay())
+  
+  // Filter out occupied slots and past hours (for today)
+  const timeSlots = allSlots.filter(slot => {
+    if (occupiedSlots.includes(slot)) return false
+    
+    // If it's today, filter out past hours
+    if (isToday) {
+      const [h, m] = slot.split(':').map(Number)
+      const slotTime = new Date(nowBrasil)
+      slotTime.setHours(h, m, 0, 0)
+      if (slotTime <= nowBrasil) return false
+    }
+    
+    return true
+  })
 
   return (
     <main className="min-h-screen bg-[#0A0A0A] text-[#FAFAFA] font-sans pb-8">

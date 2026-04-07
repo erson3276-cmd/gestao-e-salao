@@ -118,9 +118,9 @@ export default function BookingPage() {
     try {
       const dateStr = format(selectedDate, 'yyyy-MM-dd')
       const [timeH, timeM] = selectedTime.split(':').map(Number)
-      const startDateTime = new Date(dateStr)
-      startDateTime.setHours(timeH, timeM, 0, 0)
-
+      
+      // Create date in Brasilia timezone
+      const startDateTime = new Date(`${dateStr}T${String(timeH).padStart(2, '0')}:${String(timeM).padStart(2, '0')}:00-03:00`)
       const endDateTime = new Date(startDateTime.getTime() + selectedService.duration_minutes * 60000)
 
       const res = await fetch('/api/public/book', {

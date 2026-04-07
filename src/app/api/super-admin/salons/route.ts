@@ -1,8 +1,17 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabaseAdmin'
+import { cookies } from 'next/headers'
+import { SUPER_ADMIN_COOKIE_NAME } from '@/lib/auth'
 
 export async function GET() {
   try {
+    const cookieStore = await cookies()
+    const superAdminCookie = cookieStore.get(SUPER_ADMIN_COOKIE_NAME)
+    
+    if (!superAdminCookie || superAdminCookie.value !== 'authenticated') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const { data: salons, error } = await supabaseAdmin
       .from('salons')
       .select('*')
@@ -20,6 +29,13 @@ export async function GET() {
 
 export async function DELETE(request: Request) {
   try {
+    const cookieStore = await cookies()
+    const superAdminCookie = cookieStore.get(SUPER_ADMIN_COOKIE_NAME)
+    
+    if (!superAdminCookie || superAdminCookie.value !== 'authenticated') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')
 
@@ -49,6 +65,13 @@ export async function DELETE(request: Request) {
 
 export async function PATCH(request: Request) {
   try {
+    const cookieStore = await cookies()
+    const superAdminCookie = cookieStore.get(SUPER_ADMIN_COOKIE_NAME)
+    
+    if (!superAdminCookie || superAdminCookie.value !== 'authenticated') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const body = await request.json()
     const { id, status, extendDays } = body
 

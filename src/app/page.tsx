@@ -100,7 +100,6 @@ const testimonials = [
 ]
 
 const stats = [
-  { value: "15.000+", label: "Sallões cadastrados" },
   { value: "98%", label: "Satisfação dos usuários" },
   { value: "3 horas", label: "Economizadas por semana" },
   { value: "R$ 49", label: "Por mês apenas" },
@@ -187,7 +186,7 @@ export default function Home() {
             {/* Badge */}
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-full mb-6 sm:mb-8">
               <Flame className="w-4 h-4 text-orange-400" />
-              <span className="text-xs sm:text-sm text-gray-300 font-medium">Mais de 15.000 salões já automatizaram</span>
+              <span className="text-xs sm:text-sm text-gray-300 font-medium">Simplifique a gestão do seu salão</span>
             </div>
             
             {/* Main Headline */}
@@ -202,7 +201,7 @@ export default function Home() {
             </h1>
             
             <p className="text-lg sm:text-xl md:text-2xl text-gray-400 max-w-2xl mx-auto mb-4 leading-relaxed">
-              Deixe de perder <strong className="text-white">3 horas por dia</strong> confirmando horários. 
+              Deixe de perder <strong className="text-white">3 horas por semana</strong> confirmando horários. 
               Deixe o sistema trabalhar por você.
             </p>
             
@@ -229,23 +228,11 @@ export default function Home() {
           <div className="mt-16 sm:mt-24 relative">
             <div className="absolute inset-0 bg-gradient-to-t from-[#030014] via-transparent to-transparent z-10" />
             <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden border border-white/10 bg-gradient-to-b from-white/5 to-white/0 backdrop-blur-sm">
-              <div className="aspect-[16/9] sm:aspect-[21/9] bg-gradient-to-br from-[#121021] via-[#1a1a2e] to-[#121021] p-4 sm:p-8 flex items-center justify-center">
-                <div className="grid grid-cols-7 gap-1 sm:gap-2 w-full max-w-4xl">
-                  {Array.from({length: 35}).map((_, i) => {
-                    const isOccupied = [2, 5, 8, 12, 15, 18, 22, 26, 30].includes(i)
-                    const isBlocked = [7, 14, 21, 28].includes(i)
-                    return (
-                      <div key={i} className={`aspect-square rounded-lg sm:rounded-xl flex items-center justify-center text-[8px] sm:text-xs font-bold transition-all ${
-                        isOccupied ? 'bg-gradient-to-br from-purple-500 to-pink-500 text-white' :
-                        isBlocked ? 'bg-red-500/20 text-red-400' :
-                        'bg-white/5 text-gray-500 hover:bg-white/10'
-                      }`}>
-                        {isOccupied ? '●' : isBlocked ? '✕' : ''}
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
+              <img 
+                src="/print-agenda.png" 
+                alt="Agenda do Gestão E Salão" 
+                className="w-full aspect-[16/9] sm:aspect-[21/9] object-cover"
+              />
             </div>
             
             {/* Floating elements */}
@@ -352,6 +339,54 @@ export default function Home() {
                 <p className="text-sm sm:text-base text-gray-400">{feature.desc}</p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Relatório */}
+      <section className="relative py-16 sm:py-24 z-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="text-center mb-12 sm:mb-16">
+            <span className="inline-block px-4 py-2 bg-cyan-500/10 border border-cyan-500/20 rounded-full text-cyan-400 text-xs sm:text-sm font-bold uppercase tracking-widest mb-4">
+              Relatórios detalhados
+            </span>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tighter">
+              <span className="bg-gradient-to-r from-white to-gray-500 bg-clip-text text-transparent">
+                Veja o que funciona
+              </span>
+              <br />
+              <span className="bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">
+                e tome decisões assertivas
+              </span>
+            </h2>
+          </div>
+          
+          <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden border border-white/10">
+            <img 
+              src="/print-relatorio.png" 
+              alt="Relatórios do Gestão E Salão" 
+              className="w-full"
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* Mais imagens */}
+      <section className="relative py-16 sm:py-24 z-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+            <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden border border-white/10">
+              <img src="/print-1.png" alt="Gestão E Salão" className="w-full" />
+            </div>
+            <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden border border-white/10">
+              <img src="/print-2.png" alt="Gestão E Salão" className="w-full" />
+            </div>
+            <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden border border-white/10">
+              <img src="/print-3.png" alt="Gestão E Salão" className="w-full" />
+            </div>
+            <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden border border-white/10">
+              <img src="/print-4.png" alt="Gestão E Salão" className="w-full" />
+            </div>
           </div>
         </div>
       </section>

@@ -5,11 +5,24 @@ export async function POST(request: Request) {
   try {
     const { salonId, name, whatsapp, serviceId, startTime, endTime } = await request.json()
 
+    console.log('Received booking:', { startTime, endTime })
+
     if (!salonId || !name || !whatsapp || !serviceId || !startTime || !endTime) {
       return NextResponse.json({ success: false, error: 'Dados incompletos' }, { status: 400 })
     }
 
     const cleanWhatsapp = whatsapp.replace(/\D/g, '')
+
+    // Parse the incoming date and convert to UTC for storage
+    // The frontend sends -03:00 timezone, we need to store in UTC
+    const startDate = new Date(startTime)
+    const endDate = new Date(endTime)
+    
+    console.log('Parsed dates:', { startDate: startDate.toISOString(), endDate: endDate.toISOString() })
+    
+    // Store as UTC in database
+    const startTimeUTC = startDate.toISOString()
+    const endTimeUTC = endDate.toISOString()
 
     // Check if customer exists, create if not
     let { data: customer } = await supabaseAdmin
@@ -35,39 +48,42 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'Cliente inválido' }, { status: 500 })
     }
 
-    // Check conflicts
+    // Check conflicts using UTC times
     const { data: conflicts } = await supabaseAdmin
       .from('appointments')
       .select('id')
       .eq('salon_id', salonId)
       .neq('status', 'cancelado')
-      .lt('start_time', endTime)
-      .gt('end_time', startTime)
+      .lt('start_time', endTimeUTC)
+      .gt('end_time', startTimeUTC)
       .limit(1)
 
     if (conflicts && conflicts.length > 0) {
       return NextResponse.json({ success: false, error: 'Horário indisponível' }, { status: 409 })
     }
 
-    // Create appointment
+    // Create appointment - store in UTC
     const { data: appointment, error } = await supabaseAdmin
       .from('appointments')
       .insert({
         salon_id: salonId,
         customer_id: customer.id,
         service_id: serviceId,
-        start_time: startTime,
-        end_time: endTime,
+        start_time: startTimeUTC,
+        end_time: endTimeUTC,
         status: 'agendado'
       })
       .select()
       .single()
 
     if (error) {
+      console.error('Insert error:', error)
       return NextResponse.json({ success: false, error: 'Erro ao criar agendamento' }, { status: 500 })
     }
 
-    // Get service name for message
+    console.log('Appointment created:', appointment)
+
+    // Get service name for message - show in Brasilia timezone
     const { data: service } = await supabaseAdmin
       .from('services')
       .select('name')
@@ -80,8 +96,9 @@ export async function POST(request: Request) {
       .eq('id', salonId)
       .single()
 
-    const dateStr = new Date(startTime).toLocaleDateString('pt-BR')
-    const timeStr = new Date(startTime).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+    // Format date in Brasilia timezone for the message
+    const dateStr = new Date(startTimeUTC).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })
+    const timeStr = new Date(startTimeUTC).toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit' })
     const message = `Olá *${name}*! ✨\n\nSeu agendamento de *${service?.name}* no *${salon?.name}* foi confirmado! ✅\n\n🗓️ *Data:* ${dateStr}\n🕒 *Horário:* ${timeStr}\n\nTe esperamos! 🌸`
 
     // Save WhatsApp message

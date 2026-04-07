@@ -14,7 +14,7 @@ async function salonsTableExists(): Promise<boolean> {
 
 export async function POST(request: Request) {
   try {
-    const { salonName, ownerName, ownerEmail, ownerPassword, ownerPhone, ownerCpf } = await request.json()
+    const { salonName, ownerName, ownerEmail, ownerPassword, ownerPhone } = await request.json()
 
     const tableExists = await salonsTableExists()
     if (!tableExists) {
@@ -42,7 +42,6 @@ export async function POST(request: Request) {
         owner_email: ownerEmail,
         owner_password: hashedPassword,
         owner_phone: ownerPhone || null,
-        cpf_cnpj: ownerCpf || null,
         plan: 'profissional',
         status: 'active',
         subscription_ends_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
