@@ -6,6 +6,7 @@ import { SALON_COOKIE_NAME, SUPER_ADMIN_COOKIE_NAME, SUPER_ADMIN_EMAIL, SUPER_AD
 async function salonsTableExists(): Promise<boolean> {
   try {
     const { supabaseAdmin } = await import('@/lib/supabaseAdmin')
+    if (!supabaseAdmin) return false
     const { error } = await supabaseAdmin.from('salons').select('id', { count: 'exact', head: true })
     return !error
   } catch {
