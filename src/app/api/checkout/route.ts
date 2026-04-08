@@ -53,7 +53,8 @@ export async function POST(request: Request) {
       plan.price,
       dueDate.toISOString().split('T')[0],
       `Gestão E Salão - ${plan.label}`,
-      billingType as 'PIX' | 'CREDIT_CARD' | 'BOLETO'
+      billingType as 'PIX' | 'CREDIT_CARD' | 'BOLETO',
+      tempData.ownerCpf
     )
 
     if (!payment) {
