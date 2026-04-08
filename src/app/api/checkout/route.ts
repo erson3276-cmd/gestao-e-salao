@@ -36,7 +36,8 @@ export async function POST(request: Request) {
       asaasCustomer = await createCustomer(
         tempData.ownerName,
         tempData.ownerEmail,
-        tempData.ownerPhone
+        tempData.ownerPhone,
+        tempData.ownerCpf
       )
     }
 
