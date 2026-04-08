@@ -54,7 +54,7 @@ function RegisterContent() {
   const plan = plans.find(p => p.id === selectedPlan)!
 
   async function handleRegister() {
-    if (!formData.salonName || !formData.ownerName || !formData.ownerEmail || !formData.ownerPhone || !formData.ownerPassword) {
+    if (!formData.salonName || !formData.ownerName || !formData.ownerEmail || !formData.ownerPhone || !formData.ownerPassword || !formData.cpf) {
       setError('Preencha todos os campos')
       return
     }
@@ -72,6 +72,7 @@ function RegisterContent() {
           ownerEmail: formData.ownerEmail,
           ownerPassword: formData.ownerPassword,
           ownerPhone: formData.ownerPhone,
+          ownerCpf: formData.cpf
           ownerCpf: formData.cpf
         })
       })
@@ -197,7 +198,7 @@ function RegisterContent() {
                 type="text"
                 value={formData.cpf}
                 onChange={e => setFormData({...formData, cpf: e.target.value})}
-                placeholder="CPF (opcional)"
+                placeholder="CPF ou CNPJ *"
                 className="w-full p-4 bg-black/40 border border-white/5 rounded-2xl text-white placeholder:text-gray-800"
               />
               <input
