@@ -10,7 +10,9 @@ import {
   Pi,
   Barcode,
   Lock,
-  ArrowRight
+  ArrowRight,
+  Copy,
+  QrCode
 } from 'lucide-react'
 import { trackLead, trackInitiateCheckout } from '../components/FacebookPixel'
 
@@ -36,6 +38,9 @@ function RegisterContent() {
   const [error, setError] = useState('')
   
   const [selectedPlan, setSelectedPlan] = useState(searchParams.get('plan') || 'monthly')
+  const [selectedMethod, setSelectedMethod] = useState<'PIX' | 'CREDIT_CARD' | 'BOLETO'>('PIX')
+  const [paymentData, setPaymentData] = useState<any>(null)
+  const [copied, setCopied] = useState(false)
   
   const [formData, setFormData] = useState({
     salonName: '',
@@ -92,12 +97,15 @@ function RegisterContent() {
       const res = await fetch('/api/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ planId: selectedPlan })
+        body: JSON.stringify({ 
+          planId: selectedPlan,
+          billingType: selectedMethod 
+        })
       })
       const data = await res.json()
       
-      if (data.success && data.checkoutUrl) {
-        window.location.href = data.checkoutUrl
+      if (data.success && data.payment) {
+        setPaymentData(data.payment)
       } else {
         setError(data.error || 'Erro ao criar pagamento')
       }
@@ -105,6 +113,14 @@ function RegisterContent() {
       setError(e.message)
     } finally {
       setLoading(false)
+    }
+  }
+
+  function copyPix() {
+    if (paymentData?.pixCopiaECola) {
+      navigator.clipboard.writeText(paymentData.pixCopiaECola)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 3000)
     }
   }
 
@@ -203,7 +219,7 @@ function RegisterContent() {
           </div>
         )}
 
-        {step === 2 && (
+        {step === 2 && !paymentData && (
           <div className="bg-[#121021]/50 border border-white/5 rounded-3xl p-8">
             <h2 className="text-xl font-bold text-white mb-4">Resumo do pedido</h2>
             
@@ -220,6 +236,37 @@ function RegisterContent() {
 
             <div className="space-y-3 mb-6">
               <p className="text-gray-400 text-sm">Escolha a forma de pagamento:</p>
+              
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  onClick={() => setSelectedMethod('PIX')}
+                  className={`p-3 rounded-xl border-2 text-center transition-all ${
+                    selectedMethod === 'PIX' ? 'border-[#5E41FF] bg-[#5E41FF]/10' : 'border-white/10'
+                  }`}
+                >
+                  <Pi className="w-6 h-6 mx-auto mb-1 text-[#5E41FF]" />
+                  <span className="text-xs text-gray-400">PIX</span>
+                </button>
+                <button
+                  onClick={() => setSelectedMethod('CREDIT_CARD')}
+                  className={`p-3 rounded-xl border-2 text-center transition-all ${
+                    selectedMethod === 'CREDIT_CARD' ? 'border-[#5E41FF] bg-[#5E41FF]/10' : 'border-white/10'
+                  }`}
+                >
+                  <CreditCard className="w-6 h-6 mx-auto mb-1 text-[#5E41FF]" />
+                  <span className="text-xs text-gray-400">Cartão</span>
+                </button>
+                <button
+                  onClick={() => setSelectedMethod('BOLETO')}
+                  className={`p-3 rounded-xl border-2 text-center transition-all ${
+                    selectedMethod === 'BOLETO' ? 'border-[#5E41FF] bg-[#5E41FF]/10' : 'border-white/10'
+                  }`}
+                >
+                  <Barcode className="w-6 h-6 mx-auto mb-1 text-[#5E41FF]" />
+                  <span className="text-xs text-gray-400">Boleto</span>
+                </button>
+              </div>
+
               <button
                 onClick={handlePayment}
                 disabled={loading}
@@ -246,6 +293,91 @@ function RegisterContent() {
             >
               ← Voltar para editar dados
             </button>
+          </div>
+        )}
+
+        {step === 2 && paymentData && (
+          <div className="bg-[#121021]/50 border border-white/5 rounded-3xl p-8">
+            <h2 className="text-xl font-bold text-white mb-4">Pagamento via {selectedMethod === 'CREDIT_CARD' ? 'Cartão' : selectedMethod === 'PIX' ? 'PIX' : 'Boleto'}</h2>
+            
+            {selectedMethod === 'PIX' && (
+              <div className="space-y-4">
+                {paymentData.pixQrCode && (
+                  <div className="bg-white p-4 rounded-xl text-center">
+                    <img src={`data:image/png;base64,${paymentData.pixQrCode}`} alt="PIX QR" className="w-48 h-48 mx-auto" />
+                  </div>
+                )}
+                {paymentData.pixCopiaECola && (
+                  <div>
+                    <p className="text-gray-400 text-sm mb-2">Copie o código PIX:</p>
+                    <div className="flex gap-2">
+                      <input 
+                        readOnly 
+                        value={paymentData.pixCopiaECola} 
+                        className="flex-1 p-3 bg-black/40 border border-white/5 rounded-xl text-white text-sm"
+                      />
+                      <button 
+                        onClick={copyPix}
+                        className="p-3 bg-[#5E41FF] rounded-xl"
+                      >
+                        {copied ? <CheckCircle2 className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
+                      </button>
+                    </div>
+                  </div>
+                )}
+                <p className="text-gray-400 text-sm text-center">
+                  Valor: R$ {paymentData.value?.toFixed(2).replace('.', ',')}<br/>
+                  Vencimento: {paymentData.dueDate}
+                </p>
+              </div>
+            )}
+
+            {selectedMethod === 'CREDIT_CARD' && (
+              <div className="space-y-4">
+                <p className="text-gray-400 text-center">
+                 链接 para pagamento com cartão será exibido aqui.<br/>
+                  Em produção, redirecione para: {paymentData.creditCardLink}
+                </p>
+                {paymentData.invoiceUrl && (
+                  <a 
+                    href={paymentData.invoiceUrl} 
+                    target="_blank"
+                    className="block w-full p-4 bg-[#5E41FF] text-white text-center rounded-xl font-black"
+                  >
+                    Pagar com Cartão
+                  </a>
+                )}
+              </div>
+            )}
+
+            {selectedMethod === 'BOLETO' && (
+              <div className="space-y-4">
+                {paymentData.invoiceUrl && (
+                  <a 
+                    href={paymentData.invoiceUrl} 
+                    target="_blank"
+                    className="block w-full p-4 bg-[#5E41FF] text-white text-center rounded-xl font-black"
+                  >
+                    Visualizar Boleto
+                  </a>
+                )}
+                <p className="text-gray-400 text-sm text-center">
+                  Valor: R$ {paymentData.value?.toFixed(2).replace('.', ',')}<br/>
+                  Vencimento: {paymentData.dueDate}
+                </p>
+              </div>
+            )}
+
+            <button
+              onClick={() => window.location.reload()}
+              className="w-full mt-6 p-4 border border-white/10 text-gray-400 rounded-xl font-bold"
+            >
+              Já realizei o pagamento
+            </button>
+
+            <p className="text-center text-gray-600 text-xs mt-4">
+              Após a confirmação do pagamento, você receberá acesso ao sistema.
+            </p>
           </div>
         )}
 

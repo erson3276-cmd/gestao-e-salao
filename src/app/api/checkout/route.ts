@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { SALON_COOKIE_NAME, hashPassword, type SalonSession } from '@/lib/auth'
 import { supabaseAdmin } from '@/lib/supabaseAdmin'
-import { createCustomer, findCustomerByEmail, createCheckout } from '@/lib/asaas'
+import { createCustomer, findCustomerByEmail, createPayment } from '@/lib/asaas'
 
 const plans = {
   monthly: { price: 49, label: 'Plano Mensal', months: 1 },
@@ -12,7 +12,7 @@ const plans = {
 
 export async function POST(request: Request) {
   try {
-    const { planId } = await request.json()
+    const { planId, billingType = 'PIX' } = await request.json()
     const plan = plans[planId as keyof typeof plans]
     
     if (!plan) {
@@ -44,22 +44,36 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'Erro ao processar pagamento. Tente novamente.' }, { status: 500 })
     }
 
-    // Create checkout payment with Asaas checkout
-    const checkout = await createCheckout(
+    // Create payment directly with billing type
+    const dueDate = new Date()
+    dueDate.setDate(dueDate.getDate() + 3) // Due in 3 days
+
+    const payment = await createPayment(
       asaasCustomer.id,
-      tempData.salonName,
-      tempData.ownerEmail,
-      tempData.ownerCpf || '',
-      [{ name: plan.label, value: plan.price }]
+      plan.price,
+      dueDate.toISOString().split('T')[0],
+      `Gestão E Salão - ${plan.label}`,
+      billingType as 'PIX' | 'CREDIT_CARD' | 'BOLETO'
     )
 
-    if (!checkout || !checkout.checkoutUrl) {
+    if (!payment) {
       return NextResponse.json({ success: false, error: 'Erro ao criar pagamento. Tente novamente.' }, { status: 500 })
     }
 
+    // Return payment data for display
     return NextResponse.json({ 
       success: true, 
-      checkoutUrl: checkout.checkoutUrl
+      payment: {
+        id: payment.id,
+        value: payment.value,
+        dueDate: payment.dueDate,
+        billingType: payment.billingType,
+        pixQrCode: payment.pixQrCode,
+        pixCopiaECola: payment.pixCopiaECola,
+        invoiceUrl: payment.invoiceUrl,
+        bankSlipLink: payment.bankSlipLink,
+        creditCardLink: payment.creditCardLink
+      }
     })
   } catch (e: any) {
     console.error('Checkout error:', e)
