@@ -54,8 +54,8 @@ export async function createSubscription(customerId: string, planId: string) {
   })
 }
 
-export async function createPayment(customerId: string, value: number, dueDate: string, description: string, billingType: 'PIX' | 'CREDIT_CARD' | 'BOLETO' = 'PIX', cpfCnpj?: string) {
-  console.log('Creating payment with:', { customerId, billingType, value, dueDate, description, cpfCnpj })
+export async function createPayment(customerId: string, value: number, dueDate: string, description: string, billingType: 'PIX' | 'CREDIT_CARD' | 'BOLETO' = 'PIX', cpf?: string) {
+  console.log('Creating payment with:', { customerId, billingType, value, dueDate, description, cpf })
   const data = await asaasFetch('/payments', 'POST', {
     customer: customerId,
     billingType,
@@ -63,7 +63,7 @@ export async function createPayment(customerId: string, value: number, dueDate: 
     dueDate,
     description,
     cycle: 'NONE',
-    cpfCnpj: cpfCnpj || undefined
+    cpf: cpf || undefined
   })
   console.log('Asaas payment response:', data)
   return data
