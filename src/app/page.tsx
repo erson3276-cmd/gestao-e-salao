@@ -261,16 +261,17 @@ export default function Home() {
               </div>
             </div>
             
-            {/* Imagem/Direita Video - Stack em mobile */}
+            {/* Video - Tamanho original */}
             <div className="relative order-first lg:order-last">
               <div className="absolute -inset-1 bg-gradient-to-r from-purple-500 via-pink-500 to-cyan-500 rounded-3xl blur-xl opacity-50" />
-              <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden border border-white/10 bg-[#0a0a14] h-[280px] sm:h-[350px] md:h-[450px] lg:h-[500px]">
+              <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden border border-white/10 bg-[#0a0a14]">
                 <video 
                   src="/video sem audio.mp4" 
                   controls 
                   controlsList="nodownload"
-                  className="w-full h-full object-cover"
+                  className="w-auto h-auto max-w-full"
                   playsInline
+                  preload="metadata"
                   poster="/video-poster.jpg"
                 />
               </div>
@@ -315,14 +316,12 @@ export default function Home() {
             </h2>
           </div>
           
-          {/* Video ou Screenshots */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+          {/* Screenshots - Tamanho original */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
             <div className="relative group">
               <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl opacity-30 group-hover:opacity-60 transition-opacity" />
-              <div className="relative rounded-xl overflow-hidden border border-white/10 bg-[#0a0a14] h-[400px] sm:h-[500px]">
-                <div className="relative w-full h-full">
-                  <Image src="/print-2.png" alt="Agenda" fill className="object-contain p-4" loading="lazy" />
-                </div>
+              <div className="relative rounded-xl overflow-hidden border border-white/10 bg-[#0a0a14]">
+                <Image src="/print-2.png" alt="Agenda" width={350} height={600} className="w-full h-auto" loading="lazy" />
                 <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
                   <p className="text-white font-bold">Agenda Online 24h</p>
                 </div>
@@ -330,10 +329,8 @@ export default function Home() {
             </div>
             <div className="relative group">
               <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-2xl opacity-30 group-hover:opacity-60 transition-opacity" />
-              <div className="relative rounded-xl overflow-hidden border border-white/10 bg-[#0a0a14] h-[400px] sm:h-[500px]">
-                <div className="relative w-full h-full">
-                  <Image src="/print-1.png" alt="Financeiro" fill className="object-contain p-4" loading="lazy" />
-                </div>
+              <div className="relative rounded-xl overflow-hidden border border-white/10 bg-[#0a0a14]">
+                <Image src="/print-1.png" alt="Financeiro" width={350} height={600} className="w-full h-auto" loading="lazy" />
                 <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
                   <p className="text-white font-bold">Controle Financeiro</p>
                 </div>
@@ -341,10 +338,8 @@ export default function Home() {
             </div>
             <div className="relative group">
               <div className="absolute -inset-0.5 bg-gradient-to-r from-emerald-500 to-cyan-500 rounded-2xl opacity-30 group-hover:opacity-60 transition-opacity" />
-              <div className="relative rounded-xl overflow-hidden border border-white/10 bg-[#0a0a14] h-[400px] sm:h-[500px]">
-                <div className="relative w-full h-full">
-                  <Image src="/print-relatorio.png" alt="Relatórios" fill className="object-contain p-4" loading="lazy" />
-                </div>
+              <div className="relative rounded-xl overflow-hidden border border-white/10 bg-[#0a0a14]">
+                <Image src="/print-relatorio.png" alt="Relatórios" width={350} height={600} className="w-full h-auto" loading="lazy" />
                 <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
                   <p className="text-white font-bold">Relatórios Automáticos</p>
                 </div>
@@ -513,16 +508,15 @@ export default function Home() {
             {/* Vendas */}
             <div className="relative group">
               <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-500 to-pink-500 rounded-3xl opacity-30 group-hover:opacity-60 transition-opacity blur-sm" />
-              <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden border border-white/10 bg-[#0a0a14] h-[350px] sm:h-[450px] md:h-[500px]">
-                <div className="relative w-full h-full p-4">
-                  <Image 
-                    src="/print-2.png" 
-                    alt="Tela de Vendas" 
-                    fill
-                    className="object-contain"
-                    loading="lazy"
-                  />
-                </div>
+              <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden border border-white/10 bg-[#0a0a14]">
+                <Image 
+                  src="/print-2.png" 
+                  alt="Tela de Vendas" 
+                  width={350}
+                  height={600}
+                  className="w-full h-auto"
+                  loading="lazy"
+                />
                 <div className="p-4 sm:p-6 text-center">
                   <h3 className="font-black text-lg text-white mb-2">Vendas</h3>
                   <p className="text-sm text-gray-400">Venda registrada em 3 cliques</p>
@@ -533,16 +527,15 @@ export default function Home() {
             {/* Despesas */}
             <div className="relative group">
               <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-3xl opacity-30 group-hover:opacity-60 transition-opacity blur-sm" />
-              <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden border border-white/10 bg-[#0a0a14] h-[350px] sm:h-[450px] md:h-[500px]">
-                <div className="relative w-full h-full p-4">
-                  <Image 
-                    src="/print-1.png" 
-                    alt="Tela de Despesas" 
-                    fill
-                    className="object-contain"
-                    loading="lazy"
-                  />
-                </div>
+              <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden border border-white/10 bg-[#0a0a14]">
+                <Image 
+                  src="/print-1.png" 
+                  alt="Tela de Despesas" 
+                  width={350}
+                  height={600}
+                  className="w-full h-auto"
+                  loading="lazy"
+                />
                 <div className="p-4 sm:p-6 text-center">
                   <h3 className="font-black text-lg text-white mb-2">Despesas</h3>
                   <p className="text-sm text-gray-400">Controle o que entra e o que sai</p>
@@ -553,16 +546,15 @@ export default function Home() {
             {/* Relatórios */}
             <div className="relative group">
               <div className="absolute -inset-0.5 bg-gradient-to-r from-emerald-500 to-cyan-500 rounded-3xl opacity-30 group-hover:opacity-60 transition-opacity blur-sm" />
-              <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden border border-white/10 bg-[#0a0a14] h-[350px] sm:h-[450px] md:h-[500px]">
-                <div className="relative w-full h-full p-4">
-                  <Image 
-                    src="/print-relatorio.png" 
-                    alt="Tela de Relatórios" 
-                    fill
-                    className="object-contain"
-                    loading="lazy"
-                  />
-                </div>
+              <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden border border-white/10 bg-[#0a0a14]">
+                <Image 
+                  src="/print-relatorio.png" 
+                  alt="Tela de Relatórios" 
+                  width={350}
+                  height={600}
+                  className="w-full h-auto"
+                  loading="lazy"
+                />
                 <div className="p-4 sm:p-6 text-center">
                   <h3 className="font-black text-lg text-white mb-2">Relatórios</h3>
                   <p className="text-sm text-gray-400">Saiba seu lucro real em segundos</p>
@@ -625,16 +617,15 @@ export default function Home() {
             </h2>
           </div>
           
-          <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden border border-white/10 bg-[#0a0a14] h-[300px] sm:h-[400px] md:h-[500px]">
-            <div className="relative w-full h-full p-4 sm:p-8">
-              <Image 
-                src="/print-relatorio.png" 
-                alt="Relatórios do Gestão E Salão" 
-                fill
-                className="object-contain"
-                loading="lazy"
-              />
-            </div>
+          <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden border border-white/10 bg-[#0a0a14]">
+            <Image 
+              src="/print-relatorio.png" 
+              alt="Relatórios do Gestão E Salão" 
+              width={800}
+              height={500}
+              className="w-full h-auto"
+              loading="lazy"
+            />
           </div>
         </div>
       </section>
@@ -642,18 +633,18 @@ export default function Home() {
       {/* Mais imagens */}
       <section className="relative py-16 sm:py-24 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-            <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden border border-white/10 bg-[#0a0a14] h-[300px] sm:h-[350px]">
-              <Image src="/print-1.png" alt="Gestão E Salão" fill className="object-contain p-4" loading="lazy" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden border border-white/10 bg-[#0a0a14]">
+              <Image src="/print-1.png" alt="Gestão E Salão" width={500} height={350} className="w-full h-auto" loading="lazy" />
             </div>
-            <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden border border-white/10 bg-[#0a0a14] h-[300px] sm:h-[350px]">
-              <Image src="/print-2.png" alt="Gestão E Salão" fill className="object-contain p-4" loading="lazy" />
+            <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden border border-white/10 bg-[#0a0a14]">
+              <Image src="/print-2.png" alt="Gestão E Salão" width={500} height={350} className="w-full h-auto" loading="lazy" />
             </div>
-            <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden border border-white/10 bg-[#0a0a14] h-[300px] sm:h-[350px]">
-              <Image src="/print-3.png" alt="Gestão E Salão" fill className="object-contain p-4" loading="lazy" />
+            <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden border border-white/10 bg-[#0a0a14]">
+              <Image src="/print-3.png" alt="Gestão E Salão" width={500} height={350} className="w-full h-auto" loading="lazy" />
             </div>
-            <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden border border-white/10 bg-[#0a0a14] h-[300px] sm:h-[350px]">
-              <Image src="/print-4.png" alt="Gestão E Salão" fill className="object-contain p-4" loading="lazy" />
+            <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden border border-white/10 bg-[#0a0a14]">
+              <Image src="/print-4.png" alt="Gestão E Salão" width={500} height={350} className="w-full h-auto" loading="lazy" />
             </div>
           </div>
         </div>
