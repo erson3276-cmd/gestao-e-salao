@@ -135,9 +135,10 @@ export async function getPixQrCode(paymentId: string) {
   return data
 }
 
-export async function refundPayment(paymentId: string, value?: number) {
+export async function refundPayment(paymentId: string, value?: number, reason?: string) {
   return asaasFetch('/refunds', 'POST', {
     payment: paymentId,
-    value: value || undefined
+    value: value || undefined,
+    reason: reason || undefined
   })
 }
