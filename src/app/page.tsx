@@ -696,7 +696,6 @@ export default function Home() {
               <p className="text-center text-xs sm:text-sm text-gray-500 mt-4">
                 <span className="text-emerald-400 font-bold">🔒 7 dias de garantia</span> • PIX, cartão ou boleto • Cancele quando quiser
               </p>
-              </p>
               
               {/* Garantia muito visível */}
               <div className="mt-6 p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl flex items-center justify-center gap-3">
