@@ -129,3 +129,15 @@ export async function createCheckout(customerId: string, name: string, email: st
     }
   })
 }
+
+export async function getPixQrCode(paymentId: string) {
+  const data = await asaasFetch(`/payments/${paymentId}/pixQrCode`)
+  return data
+}
+
+export async function refundPayment(paymentId: string, value?: number) {
+  return asaasFetch('/refunds', 'POST', {
+    payment: paymentId,
+    value: value || undefined
+  })
+}
