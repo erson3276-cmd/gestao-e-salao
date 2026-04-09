@@ -55,8 +55,7 @@ function RegisterContent() {
           ownerName: formData.ownerName,
           ownerEmail: formData.ownerEmail,
           ownerPassword: formData.ownerPassword,
-          ownerPhone: formData.ownerPhone,
-          ownerCpf: formData.cpfCnpj
+          ownerPhone: formData.ownerPhone
         })
       })
       const data = await res.json()
