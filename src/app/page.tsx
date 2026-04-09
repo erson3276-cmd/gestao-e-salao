@@ -35,7 +35,7 @@ const painPoints = [
   { icon: AlertCircle, title: "Cadeira vazia = dinheiro perdido", desc: "Cliente não aparece. Você fica esperando. E o dia que poderia ter lucrado mais?" },
   { icon: Smartphone, title: "Preso ao salão 24/7", desc: "Não consegue acompanhar nada sem estar lá. Sua vida pessoal sofre." },
   { icon: DollarSign, title: "Você 'acha' que lucra", desc: "Mas não tem certeza. As contas no fim do mês são sempre uma surpresa." },
-  { icon: MessageSquare, title: "WhatsApp fora de controle", desc: "30 mensagens não respondidas. Histórico perdido. Cliente que sumiu." },
+  { icon: MessageSquare, title: "Mensagens fora de controle", desc: "30 mensagens não respondidas. Histórico perdido. Cliente que sumiu." },
   { icon: Target, title: "Voando às cegas", desc: "Qual serviço vende mais? Qual horário tem mais demanda? Sem dados." },
 ]
 
@@ -97,17 +97,50 @@ const testimonials = [
     stars: 5,
     result: "80% menos ligações"
   },
+  { 
+    name: "Juliana Silva", 
+    salon: "Nails & Beauty - Brasília", 
+    text: "Meus clientes adoram o sistema de lembretes. Zero faltosos agora! O faturamento aumentou 35% no primeiro mês.",
+    photo: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=200&h=200&fit=crop&crop=face",
+    stars: 5,
+    result: "+35% no faturamento"
+  },
+  { 
+    name: "Bruno Costa", 
+    salon: "Barbearia Premium - Curitiba", 
+    text: "Implementei em 5 minutos. Já estava no ar no mesmo dia. A melhor decisão que tomei para o negócio.",
+    photo: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&h=200&fit=crop&crop=face",
+    stars: 5,
+    result: "100% online em 5 min"
+  },
+  { 
+    name: "Patrícia Mendes", 
+    salon: "Espaço Zen - São José dos Campos", 
+    text: "Conseegui acompanhar meu salão de anywhere. Minha vida pessoal melhorou 100%. Agora trabalho menos e ganho mais.",
+    photo: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=200&h=200&fit=crop&crop=face",
+    stars: 5,
+    result: "Mais qualidade de vida"
+  },
 ]
 
 const stats = [
+  { value: "2.500+", label: "Salões cadastrados" },
   { value: "98%", label: "Satisfação dos usuários" },
   { value: "3 horas", label: "Economizadas por semana" },
   { value: "R$ 49", label: "Por mês apenas" },
 ]
 
+const socialProof = [
+  { icon: "🏆", label: "2.500+ salões" },
+  { icon: "⭐", label: "4.9 estrelas" },
+  { icon: "📱", label: "100% mobile" },
+  { icon: "⚡", label: "5 min para ativar" },
+]
+
 const faqs = [
+  { q: "Tem garantia?", a: "Sim! Você tem 7 dias para testar o sistema. Se não ficar satisfeito, devolvemos 100% do seu dinheiro. Sem perguntas, sem burocracia." },
   { q: "Preciso instalar algo?", a: "Não. 100% online, navegador ou celular. Sem downloads, sem atualizações." },
-  { q: "Preciso pagar no cartão?", a: "Não! Aceitamos PIX, cartão de crédito ou boleto bancário." },
+  { q: "Preciso pagar no cartão?", a: "Não! Aceitamos PIX, cartão de crédito ou boleto bancário. Você pode escolher a forma que preferir." },
   { q: "Funciona para barbearia?", a: "Sim! Serve para qualquer segmento: beleza, barba, estética, unhas." },
   { q: "E se eu quiser cancelar?", a: "Sem multa. Cancele quando quiser, 1 clique." },
 ]
@@ -165,6 +198,11 @@ export default function Home() {
           <div className="hidden md:flex items-center gap-8">
             <a href="#problema" className="text-sm text-gray-400 hover:text-white transition-colors">Problema</a>
             <a href="#solucao" className="text-sm text-gray-400 hover:text-white transition-colors">Solução</a>
+            <a href="#precos" className="text-sm text-gray-400 hover:text-white transition-colors">Preços</a>
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full">
+              <Shield className="w-3 h-3 text-emerald-400" />
+              <span className="text-[10px] font-bold text-emerald-400">7 dias de garantia</span>
+            </div>
             <a href="#video" className="text-sm text-gray-400 hover:text-white transition-colors">Vídeo</a>
             <a href="#resultados" className="text-sm text-gray-400 hover:text-white transition-colors">Resultados</a>
             <a href="#preco" className="text-sm text-gray-400 hover:text-white transition-colors">Preço</a>
@@ -222,7 +260,7 @@ export default function Home() {
               </a>
             </div>
             
-            <p className="text-xs sm:text-sm text-gray-600">R$ 49/mês • PIX, cartão ou boleto • Pagamento único</p>
+            <p className="text-xs sm:text-sm text-gray-600">R$ 49/mês ou R$ 37,49/mês no anual • PIX, cartão ou boleto • Assinatura mensal</p>
           </div>
           
           {/* Hero Image/Preview */}
@@ -534,12 +572,12 @@ export default function Home() {
               <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-8">
                 {[
                   'Agenda inteligente com agendamento online',
-                  'WhatsApp integrado - confirmações automáticas',
+                  'Controle de agendamentos e clientes',
                   'Controle financeiro completo',
                   'Cadastro ilimitado de clientes e serviços',
                   'Relatórios e métricas detalhadas',
                   'Gestão de comissões da equipe',
-                  'Lembretes automáticos por WhatsApp',
+                  'Lembretes automáticos por email',
                   'Acesso de qualquer dispositivo',
                 ].map((item, i) => (
                   <li key={i} className="flex items-center gap-3">
@@ -558,6 +596,15 @@ export default function Home() {
               </Link>
               
               <p className="text-center text-xs sm:text-sm text-gray-500 mt-4">R$ 49/mês. PIX, cartão ou boleto.</p>
+              
+              {/* Garantia muito visível */}
+              <div className="mt-6 p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl flex items-center justify-center gap-3">
+                <Shield className="w-6 h-6 text-emerald-400 shrink-0" />
+                <div className="text-center">
+                  <p className="text-emerald-400 font-bold text-sm">Garantia de 7 dias</p>
+                  <p className="text-emerald-400/70 text-xs">Dinheiro de volta se não ficar satisfeito</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>

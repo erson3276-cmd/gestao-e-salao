@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { SALON_COOKIE_NAME, hashPassword, type SalonSession } from '@/lib/auth'
 import { supabaseAdmin } from '@/lib/supabaseAdmin'
-import { createCustomer, findCustomerByEmail, createPayment } from '@/lib/asaas'
+import { createCustomer, findCustomerByEmail, createPayment, updateCustomer, getPayment, getPixQrCode } from '@/lib/asaas'
 
 const plans = {
   monthly: { price: 49, label: 'Plano Mensal', months: 1 },
@@ -39,6 +39,10 @@ export async function POST(request: Request) {
         tempData.ownerPhone,
         tempData.ownerCpf
       )
+    } else if (tempData.ownerCpf && !asaasCustomer.cpfCnpj) {
+      // Update customer with CPF if not set
+      await updateCustomer(asaasCustomer.id, tempData.ownerName, tempData.ownerCpf)
+      asaasCustomer.cpfCnpj = tempData.ownerCpf
     }
 
     if (!asaasCustomer) {
@@ -62,19 +66,38 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'Erro ao criar pagamento. Tente novamente.' }, { status: 500 })
     }
 
+    // Fetch payment details
+    const paymentDetails = await getPayment(payment.id)
+
+    // For PIX, get the specific QR Code endpoint
+    let pixQrCode = null
+    let pixCopiaECola = null
+    
+    if (billingType === 'PIX') {
+      try {
+        const pixData = await getPixQrCode(payment.id)
+        if (pixData) {
+          pixQrCode = pixData.encodedImage
+          pixCopiaECola = pixData.payload
+        }
+      } catch (e) {
+        console.error('Error getting PIX QR code:', e)
+      }
+    }
+
     // Return payment data for display
     return NextResponse.json({ 
       success: true, 
       payment: {
-        id: payment.id,
-        value: payment.value,
-        dueDate: payment.dueDate,
-        billingType: payment.billingType,
-        pixQrCode: payment.pixQrCode,
-        pixCopiaECola: payment.pixCopiaECola,
-        invoiceUrl: payment.invoiceUrl,
-        bankSlipLink: payment.bankSlipLink,
-        creditCardLink: payment.creditCardLink
+        id: paymentDetails.id,
+        value: paymentDetails.value,
+        dueDate: paymentDetails.dueDate,
+        billingType: paymentDetails.billingType,
+        pixQrCode: pixQrCode,
+        pixCopiaECola: pixCopiaECola,
+        invoiceUrl: paymentDetails.invoiceUrl,
+        bankSlipLink: paymentDetails.bankSlipLink,
+        creditCardLink: paymentDetails.creditCardLink
       }
     })
   } catch (e: any) {

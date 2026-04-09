@@ -89,7 +89,9 @@ export async function POST(request: Request) {
           owner_cpf: tempData.ownerCpf || null,
           plan: 'profissional',
           status: 'active',
-          subscription_ends_at: subscriptionEndsAt
+          subscription_ends_at: subscriptionEndsAt,
+          payment_id: payment?.id || null,
+          payment_date: new Date().toISOString()
         }])
         .select()
         .single()

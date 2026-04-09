@@ -7,14 +7,15 @@ import {
   CheckCircle2, 
   Loader2, 
   Copy, 
-  QrCode, 
   CreditCard, 
   Barcode,
   Pi,
   ArrowLeft,
   Lock,
+  RefreshCw,
   Shield
 } from 'lucide-react'
+import { trackInitiateCheckout } from '@/lib/meta-pixel'
 
 interface PaymentData {
   id: string
@@ -27,66 +28,61 @@ interface PaymentData {
 }
 
 const plans = [
-  { id: 'monthly', label: 'Mensal', price: 49, period: 'mês' },
-  { id: 'semiannual', label: 'Semestral', price: 249.90, period: '6 meses' },
-  { id: 'annual', label: 'Anual', price: 449.90, period: '12 meses' },
+  { id: 'monthly', label: 'Mensal', price: 49, total: 49, savings: '0%' },
+  { id: 'semiannual', label: 'Semestral', price: 41.65, total: 249.90, savings: '15% OFF' },
+  { id: 'annual', label: 'Anual', price: 37.49, total: 449.90, savings: '23% OFF' },
 ]
 
-const errorMessages: Record<string, string> = {
-  missing_code: 'Erro na autenticação. Tente novamente.',
-  auth_failed: 'Falha na autenticação Google. Tente novamente.',
-  no_email: 'Não foi possível obter seu email do Google.',
-  blocked: 'Sua conta está bloqueada. Entre em contato com o suporte.',
-  server_error: 'Erro no servidor. Tente novamente.',
+export default function CheckoutPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center"><div className="w-8 h-8 border-2 border-[#5E41FF]/30 border-t-[#5E41FF] rounded-full animate-spin" /></div>}>
+      <CheckoutContent />
+    </Suspense>
+  )
 }
 
 function CheckoutContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [loading, setLoading] = useState(true)
-  const [processingPayment, setProcessingPayment] = useState(false)
   const [paymentData, setPaymentData] = useState<PaymentData | null>(null)
   const [selectedPlan, setSelectedPlan] = useState(searchParams.get('plan') || 'monthly')
   const [selectedMethod, setSelectedMethod] = useState<'PIX' | 'CREDIT_CARD' | 'BOLETO'>('PIX')
   const [error, setError] = useState('')
   const [copied, setCopied] = useState(false)
-  const [cardForm, setCardForm] = useState({ number: '', expiry: '', cvv: '', name: '', cpf: '' })
-  const [cardError, setCardError] = useState('')
+  const [checkingPayment, setCheckingPayment] = useState(false)
+
+  const plan = plans.find(p => p.id === selectedPlan)!
 
   useEffect(() => {
-    checkSession()
-  }, [])
+    generatePayment()
+  }, [selectedMethod])
 
-  async function checkSession() {
-    try {
-      const res = await fetch('/api/session')
-      const data = await res.json()
-      if (!data.salonId) {
-        router.push('/register?plan=' + selectedPlan)
-        return
-      }
-      createPayment()
-    } catch (e) {
-      router.push('/register?plan=' + selectedPlan)
-    }
-  }
-
-  async function createPayment() {
+  async function generatePayment() {
     setLoading(true)
     setError('')
+    setPaymentData(null)
     try {
-      const res = await fetch('/api/payment/create', {
+      const res = await fetch('/api/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ planId: selectedPlan, billingType: selectedMethod })
+        body: JSON.stringify({ 
+          planId: selectedPlan,
+          billingType: selectedMethod
+        })
       })
       const data = await res.json()
-      if (data.success) {
+      
+      console.log('Checkout response:', data)
+      
+      if (data.success && data.payment) {
         setPaymentData(data.payment)
+        trackInitiateCheckout(plan.total)
       } else {
         setError(data.error || 'Erro ao criar pagamento')
       }
     } catch (e: any) {
+      console.error('Checkout error:', e)
       setError(e.message)
     } finally {
       setLoading(false)
@@ -95,60 +91,6 @@ function CheckoutContent() {
 
   async function changeMethod(method: 'PIX' | 'CREDIT_CARD' | 'BOLETO') {
     setSelectedMethod(method)
-    setPaymentData(null)
-    setLoading(true)
-    setCardError('')
-    try {
-      const res = await fetch('/api/payment/create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ planId: selectedPlan, billingType: method })
-      })
-      const data = await res.json()
-      if (data.success) {
-        setPaymentData(data.payment)
-      } else {
-        setError(data.error || 'Erro ao criar pagamento')
-      }
-    } catch (e: any) {
-      setError(e.message)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  async function processCardPayment() {
-    if (!cardForm.number || !cardForm.expiry || !cardForm.cvv || !cardForm.name || !cardForm.cpf) {
-      setCardError('Preencha todos os campos')
-      return
-    }
-    setProcessingPayment(true)
-    setCardError('')
-    try {
-      const res = await fetch('/api/payment/card', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          planId: selectedPlan,
-          card: {
-            holderName: cardForm.name,
-            number: cardForm.number,
-            expiryDate: cardForm.expiry,
-            cvv: cardForm.cvv
-          }
-        })
-      })
-      const data = await res.json()
-      if (data.success) {
-        setPaymentData(data.payment)
-      } else {
-        setCardError(data.error || 'Erro no cartão')
-      }
-    } catch (e: any) {
-      setCardError(e.message)
-    } finally {
-      setProcessingPayment(false)
-    }
   }
 
   function copyPix() {
@@ -159,44 +101,48 @@ function CheckoutContent() {
     }
   }
 
-  const plan = plans.find(p => p.id === selectedPlan)!
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-[#030014] flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="w-12 h-12 text-purple-500 animate-spin mx-auto mb-4" />
-          <p className="text-gray-400">Criando pagamento...</p>
-        </div>
-      </div>
-    )
+  async function checkPaymentStatus() {
+    if (!paymentData?.id) return
+    
+    setCheckingPayment(true)
+    try {
+      const res = await fetch('/api/payment/check-status?paymentId=' + paymentData.id)
+      const data = await res.json()
+      
+      if (data.status === 'CONFIRMED' || data.status === 'RECEIVED') {
+        router.push('/checkout/success')
+      } else {
+        setError('Pagamento ainda não confirmado. Realize o pagamento e tente novamente.')
+      }
+    } catch (e: any) {
+      setError(e.message)
+    } finally {
+      setCheckingPayment(false)
+    }
   }
 
-  if (paymentData?.billingType === 'CONFIRMED') {
+  if (error && !paymentData) {
     return (
-      <div className="min-h-screen bg-[#030014] flex items-center justify-center p-6">
+      <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center p-6">
         <div className="max-w-md w-full text-center">
-          <div className="w-20 h-20 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
-            <CheckCircle2 className="w-10 h-10 text-emerald-500" />
+          <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Lock className="w-8 h-8 text-red-500" />
           </div>
-          <h1 className="text-3xl font-black text-white mb-4">Pagamento Confirmado!</h1>
-          <p className="text-gray-400 mb-8">
-            Obrigado! Seu pagamento foi processado com sucesso.
-          </p>
-          <Link href="/admin/gestao" className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-2xl font-black">
-            Acessar meu salão
-            <ArrowLeft className="w-5 h-5" />
-          </Link>
+          <h2 className="text-xl font-black text-white mb-2">Erro no checkout</h2>
+          <p className="text-gray-400 mb-6">{error}</p>
+          <button onClick={generatePayment} className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#5E41FF] text-white rounded-xl font-bold">
+            Tentar novamente
+          </button>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-[#030014] text-white">
-      <header className="fixed top-0 left-0 right-0 z-50 bg-[#030014]/80 backdrop-blur-lg border-b border-white/5">
-        <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
-          <Link href="/assine" className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
+    <div className="min-h-screen bg-[#0A0A0A] text-white">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-[#0A0A0A]/80 backdrop-blur-lg border-b border-white/5">
+        <div className="max-w-lg mx-auto px-4 py-4 flex items-center justify-between">
+          <Link href="/register" className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
             <ArrowLeft className="w-4 h-4" />
             <span className="text-sm">Voltar</span>
           </Link>
@@ -207,195 +153,242 @@ function CheckoutContent() {
         </div>
       </header>
 
-      <div className="pt-24 pb-12 px-4">
-        <div className="max-w-4xl mx-auto">
-          <h1 className="text-2xl font-black text-center mb-8">
-            Finalize sua assinatura
+      <div className="pt-20 pb-8 px-4">
+        <div className="max-w-lg mx-auto">
+          <h1 className="text-2xl font-black text-center mb-6">
+            Pagamento
           </h1>
 
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-6 mb-8">
+          <div className="bg-[#121021]/50 border border-white/5 rounded-2xl p-4 mb-6">
             <div className="flex justify-between items-center">
               <div>
-                <p className="text-gray-400 text-sm">Plano selecionado</p>
-                <p className="text-xl font-black">{plan.label}</p>
+                <p className="text-gray-400 text-sm">Plano</p>
+                <p className="text-lg font-bold">{plan.label}</p>
+                {plan.savings !== '0%' && (
+                  <span className="inline-block px-2 py-1 bg-emerald-500/20 text-emerald-400 text-xs rounded mt-1">
+                    {plan.savings}
+                  </span>
+                )}
               </div>
               <div className="text-right">
-                <p className="text-2xl font-black text-purple-400">R$ {plan.price.toFixed(2).replace('.', ',')}</p>
-                <p className="text-gray-400 text-sm">/{plan.period}</p>
+                <p className="text-2xl font-black text-[#5E41FF]">R$ {plan.total.toFixed(2).replace('.', ',')}</p>
+                <p className="text-gray-400 text-xs">R$ {plan.price.toFixed(2).replace('.', ',')}/mês</p>
               </div>
             </div>
           </div>
 
           {error && (
-            <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 mb-6 text-red-400 text-center">
+            <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 mb-4 text-red-400 text-center text-sm">
               {error}
             </div>
           )}
 
-          <div className="grid grid-cols-3 gap-3 mb-8">
-            <button
-              onClick={() => changeMethod('PIX')}
-              className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${
-                selectedMethod === 'PIX' ? 'border-purple-500 bg-purple-500/10' : 'border-white/10 hover:border-white/20'
-              }`}
-            >
-              <Pi className="w-8 h-8 text-purple-400" />
-              <span className="text-sm font-medium">PIX</span>
-            </button>
-            <button
-              onClick={() => changeMethod('CREDIT_CARD')}
-              className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${
-                selectedMethod === 'CREDIT_CARD' ? 'border-purple-500 bg-purple-500/10' : 'border-white/10 hover:border-white/20'
-              }`}
-            >
-              <CreditCard className="w-8 h-8 text-purple-400" />
-              <span className="text-sm font-medium">Cartão</span>
-            </button>
-            <button
-              onClick={() => changeMethod('BOLETO')}
-              className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${
-                selectedMethod === 'BOLETO' ? 'border-purple-500 bg-purple-500/10' : 'border-white/10 hover:border-white/20'
-              }`}
-            >
-              <Barcode className="w-8 h-8 text-purple-400" />
-              <span className="text-sm font-medium">Boleto</span>
-            </button>
+          <div className="bg-[#121021]/50 border border-white/5 rounded-2xl p-4 mb-6">
+            <p className="text-gray-400 text-sm mb-3">Forma de pagamento:</p>
+            <div className="grid grid-cols-3 gap-2">
+              <button
+                onClick={() => changeMethod('PIX')}
+                className={`p-3 rounded-xl border-2 transition-all flex flex-col items-center gap-1 ${
+                  selectedMethod === 'PIX' 
+                    ? 'border-[#5E41FF] bg-[#5E41FF]/10' 
+                    : 'border-white/10 hover:border-white/20'
+                }`}
+              >
+                <Pi className="w-6 h-6 text-[#5E41FF]" />
+                <span className="text-xs text-gray-400">PIX</span>
+              </button>
+              <button
+                onClick={() => changeMethod('CREDIT_CARD')}
+                className={`p-3 rounded-xl border-2 transition-all flex flex-col items-center gap-1 ${
+                  selectedMethod === 'CREDIT_CARD' 
+                    ? 'border-[#5E41FF] bg-[#5E41FF]/10' 
+                    : 'border-white/10 hover:border-white/20'
+                }`}
+              >
+                <CreditCard className="w-6 h-6 text-[#5E41FF]" />
+                <span className="text-xs text-gray-400">Cartão</span>
+              </button>
+              <button
+                onClick={() => changeMethod('BOLETO')}
+                className={`p-3 rounded-xl border-2 transition-all flex flex-col items-center gap-1 ${
+                  selectedMethod === 'BOLETO' 
+                    ? 'border-[#5E41FF] bg-[#5E41FF]/10' 
+                    : 'border-white/10 hover:border-white/20'
+                }`}
+              >
+                <Barcode className="w-6 h-6 text-[#5E41FF]" />
+                <span className="text-xs text-gray-400">Boleto</span>
+              </button>
+            </div>
           </div>
 
           {loading ? (
             <div className="text-center py-12">
-              <Loader2 className="w-8 h-8 text-purple-500 animate-spin mx-auto" />
+              <Loader2 className="w-10 h-10 text-[#5E41FF] animate-spin mx-auto mb-4" />
+              <p className="text-gray-400">Gerando pagamento...</p>
             </div>
           ) : paymentData ? (
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+            <div className="space-y-4">
               {selectedMethod === 'PIX' && (
-                <div className="text-center">
-                  <p className="text-gray-400 mb-4">Escaneie o QR Code ou copie o código:</p>
-                  {paymentData.pixQrCode && (
-                    <div className="bg-white p-4 rounded-xl inline-block mb-4">
-                      <img src={`data:image/png;base64,${paymentData.pixQrCode}`} alt="PIX QR Code" className="w-48 h-48" />
-                    </div>
-                  )}
-                  {paymentData.pixCopiaECola && (
-                    <div className="mb-4">
-                      <p className="text-gray-400 text-sm mb-2">Código PIX:</p>
-                      <div className="flex items-center gap-2 bg-black/40 rounded-xl p-3">
-                        <input 
-                          readOnly 
-                          value={paymentData.pixCopiaECola} 
-                          className="flex-1 bg-transparent text-sm text-gray-300 outline-none"
-                        />
-                        <button onClick={copyPix} className="p-2 bg-purple-500/20 rounded-lg hover:bg-purple-500/30">
-                          {copied ? <CheckCircle2 className="w-5 h-5 text-emerald-400" /> : <Copy className="w-5 h-5 text-purple-400" />}
-                        </button>
+                <div className="bg-[#121021]/50 border border-white/5 rounded-2xl p-4">
+                  <div className="text-center">
+                    <p className="text-lg font-bold text-white mb-4">Pagamento via PIX</p>
+                    
+                    {paymentData.pixQrCode ? (
+                      <div className="bg-white p-4 rounded-xl inline-block mb-4">
+                        <img src={`data:image/png;base64,${paymentData.pixQrCode}`} alt="PIX QR Code" className="w-48 h-48" />
                       </div>
-                    </div>
-                  )}
-                  <p className="text-gray-500 text-sm">
-                    Valor: <strong className="text-white">R$ {paymentData.value.toFixed(2).replace('.', ',')}</strong>
-                  </p>
-                  <p className="text-gray-500 text-xs mt-2">
-                    Vencimento: {new Date(paymentData.dueDate).toLocaleDateString('pt-BR')}
-                  </p>
-                </div>
-              )}
-
-              {selectedMethod === 'BOLETO' && (
-                <div className="text-center">
-                  <p className="text-gray-400 mb-4">Baixe ou visualize o boleto:</p>
-                  <a 
-                    href={paymentData.invoiceUrl} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-purple-600 rounded-xl font-bold hover:bg-purple-700 transition-colors"
-                  >
-                    <Barcode className="w-5 h-5" />
-                    Visualizar Boleto
-                  </a>
-                  <p className="text-gray-500 text-sm mt-4">
-                    Valor: <strong className="text-white">R$ {paymentData.value.toFixed(2).replace('.', ',')}</strong>
-                  </p>
+                    ) : (
+                      <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-4 mb-4 text-yellow-400">
+                        QR Code não disponível
+                      </div>
+                    )}
+                    
+                    {paymentData.pixCopiaECola ? (
+                      <div className="mb-4">
+                        <p className="text-gray-400 text-sm mb-2">Código PIX:</p>
+                        <div className="flex items-center gap-2 bg-black/40 rounded-xl p-3">
+                          <input 
+                            readOnly 
+                            value={paymentData.pixCopiaECola} 
+                            className="flex-1 bg-transparent text-sm text-gray-300 outline-none"
+                          />
+                          <button onClick={copyPix} className="p-2 bg-[#5E41FF]/20 rounded-lg hover:bg-[#5E41FF]/30">
+                            {copied ? <CheckCircle2 className="w-5 h-5 text-emerald-400" /> : <Copy className="w-5 h-5 text-[#5E41FF]" />}
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-3 mb-4 text-red-400 text-sm">
+                        Código PIX não disponível
+                      </div>
+                    )}
+                    
+                    <p className="text-gray-400 text-sm">
+                      Valor: <strong className="text-white">R$ {paymentData.value?.toFixed(2).replace('.', ',')}</strong>
+                    </p>
+                    <p className="text-gray-500 text-xs mt-1">
+                      Vencimento: {new Date(paymentData.dueDate).toLocaleDateString('pt-BR')}
+                    </p>
+                  </div>
                 </div>
               )}
 
               {selectedMethod === 'CREDIT_CARD' && (
-                <div className="space-y-4">
-                  <div>
-                    <label className="text-gray-400 text-sm block mb-2">Nome do titular</label>
-                    <input 
-                      value={cardForm.name}
-                      onChange={e => setCardForm({...cardForm, name: e.target.value})}
-                      placeholder="Nome como está no cartão"
-                      className="w-full p-3 bg-black/40 border border-white/10 rounded-xl text-white"
-                    />
+                <div className="bg-[#121021]/50 border border-white/5 rounded-2xl p-4">
+                  <div className="text-center">
+                    <p className="text-lg font-bold text-white mb-4">Pagamento via Cartão</p>
+                    {paymentData.invoiceUrl ? (
+                      <a 
+                        href={paymentData.invoiceUrl} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#5E41FF] rounded-xl font-bold hover:bg-[#5E41FF]/80 transition-colors"
+                      >
+                        <CreditCard className="w-5 h-5" />
+                        Pagar com Cartão
+                      </a>
+                    ) : (
+                      <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-4 text-yellow-400">
+                        Link de pagamento não disponível
+                      </div>
+                    )}
+                    <p className="text-gray-400 text-sm mt-4">
+                      Valor: <strong className="text-white">R$ {paymentData.value?.toFixed(2).replace('.', ',')}</strong>
+                    </p>
                   </div>
-                  <div>
-                    <label className="text-gray-400 text-sm block mb-2">Número do cartão</label>
-                    <input 
-                      value={cardForm.number}
-                      onChange={e => setCardForm({...cardForm, number: e.target.value})}
-                      placeholder="0000 0000 0000 0000"
-                      className="w-full p-3 bg-black/40 border border-white/10 rounded-xl text-white"
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-gray-400 text-sm block mb-2">Validade</label>
-                      <input 
-                        value={cardForm.expiry}
-                        onChange={e => setCardForm({...cardForm, expiry: e.target.value})}
-                        placeholder="MM/AA"
-                        className="w-full p-3 bg-black/40 border border-white/10 rounded-xl text-white"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-gray-400 text-sm block mb-2">CVV</label>
-                      <input 
-                        value={cardForm.cvv}
-                        onChange={e => setCardForm({...cardForm, cvv: e.target.value})}
-                        placeholder="123"
-                        className="w-full p-3 bg-black/40 border border-white/10 rounded-xl text-white"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="text-gray-400 text-sm block mb-2">CPF do titular</label>
-                    <input 
-                      value={cardForm.cpf}
-                      onChange={e => setCardForm({...cardForm, cpf: e.target.value})}
-                      placeholder="000.000.000-00"
-                      className="w-full p-3 bg-black/40 border border-white/10 rounded-xl text-white"
-                    />
-                  </div>
-                  {cardError && (
-                    <p className="text-red-400 text-sm">{cardError}</p>
-                  )}
-                  <button 
-                    onClick={processCardPayment}
-                    disabled={processingPayment}
-                    className="w-full py-4 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl font-black flex items-center justify-center gap-2"
-                  >
-                    {processingPayment ? <Loader2 className="w-5 h-5 animate-spin" /> : <>Pagar R$ {paymentData.value.toFixed(2).replace('.', ',')}</>}
-                  </button>
                 </div>
               )}
+
+              {selectedMethod === 'BOLETO' && (
+                <div className="bg-[#121021]/50 border border-white/5 rounded-2xl p-4">
+                  <div className="text-center">
+                    <p className="text-lg font-bold text-white mb-4">Pagamento via Boleto</p>
+                    {paymentData.invoiceUrl ? (
+                      <a 
+                        href={paymentData.invoiceUrl} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#5E41FF] rounded-xl font-bold hover:bg-[#5E41FF]/80 transition-colors"
+                      >
+                        <Barcode className="w-5 h-5" />
+                        Visualizar Boleto
+                      </a>
+                    ) : (
+                      <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-4 text-yellow-400">
+                        Boleto não disponível
+                      </div>
+                    )}
+                    <p className="text-gray-400 text-sm mt-4">
+                      Valor: <strong className="text-white">R$ {paymentData.value?.toFixed(2).replace('.', ',')}</strong>
+                    </p>
+                    <p className="text-gray-500 text-xs mt-1">
+                      Vencimento: {new Date(paymentData.dueDate).toLocaleDateString('pt-BR')}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              <button
+                onClick={checkPaymentStatus}
+                disabled={checkingPayment}
+                className="w-full py-4 bg-gradient-to-r from-emerald-600 to-emerald-500 text-white rounded-2xl font-black flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                {checkingPayment ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <>
+                    <RefreshCw className="w-5 h-5" />
+                    Verificar pagamento
+                  </>
+                )}
+              </button>
             </div>
           ) : null}
 
-          <div className="flex items-center justify-center gap-2 mt-8 text-gray-600 text-sm">
-            <Shield className="w-4 h-4" />
+          <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 mt-4">
+            <p className="text-blue-400 text-sm text-center">
+              💡 Após realizar o pagamento, clique em "Verificar pagamento" para confirmar e acessar o sistema.
+            </p>
+          </div>
+
+          {/* Garantias e Políticas */}
+          <div className="mt-6 space-y-3">
+            <div className="flex items-center gap-3 text-gray-500 text-xs">
+              <div className="w-8 h-8 bg-emerald-500/10 rounded-full flex items-center justify-center">
+                <Shield className="w-4 h-4 text-emerald-500" />
+              </div>
+              <div>
+                <strong className="text-gray-400">Garantia de 7 dias</strong>
+                <p className="text-gray-600">Direito de arrependimento conforme CDC</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 text-gray-500 text-xs">
+              <div className="w-8 h-8 bg-purple-500/10 rounded-full flex items-center justify-center">
+                <Lock className="w-4 h-4 text-purple-500" />
+              </div>
+              <div>
+                <strong className="text-gray-400">Pagamento 100% seguro</strong>
+                <p className="text-gray-600">Seus dados protegidos pelo Asaas</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 text-gray-500 text-xs">
+              <div className="w-8 h-8 bg-cyan-500/10 rounded-full flex items-center justify-center">
+                <CheckCircle2 className="w-4 h-4 text-cyan-500" />
+              </div>
+              <div>
+                <strong className="text-gray-400">Suporte prioritário</strong>
+                <p className="text-gray-600">Equipe pronta para ajudar você</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-center gap-2 mt-4 text-gray-600 text-xs">
+            <Lock className="w-3 h-3" />
             <span>Pagamento processado por Asaas</span>
           </div>
         </div>
       </div>
     </div>
-  )
-}
-
-export default function CheckoutPage() {
-  return (
-    <Suspense fallback={<div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center"><div className="w-8 h-8 border-2 border-[#5E41FF]/30 border-t-[#5E41FF] rounded-full animate-spin" /></div>}>
-      <CheckoutContent />
-    </Suspense>
   )
 }

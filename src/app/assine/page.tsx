@@ -24,7 +24,9 @@ const plans = [
     price: 49, 
     total: 49,
     periodPrice: "R$ 49/mês",
-    popular: false 
+    popular: false,
+    savings: "0%",
+    savingsDesc: ""
   },
   { 
     id: "semiannual",
@@ -33,7 +35,8 @@ const plans = [
     total: 249.90,
     periodPrice: "R$ 41,65/mês",
     popular: true,
-    savings: "Economize R$ 44,10"
+    savings: "15%",
+    savingsDesc: "Economize R$ 44,10"
   },
   { 
     id: "annual",
@@ -42,7 +45,8 @@ const plans = [
     total: 449.90,
     periodPrice: "R$ 37,49/mês",
     popular: false,
-    savings: "Economize R$ 138,10"
+    savings: "23%",
+    savingsDesc: "Economize R$ 138,10"
   },
 ]
 
@@ -79,7 +83,7 @@ export default function VendasPage() {
           <Link href="/" className="text-xl font-black italic">
             Gestão<span className="text-purple-500">E</span>Salão
           </Link>
-          <Link href="/login" className="text-sm text-gray-400 hover:text-white transition-colors">
+          <Link href="https://gestaoesalao.vercel.app/login" className="text-sm text-gray-400 hover:text-white transition-colors">
             Já tem conta? Fazer login
           </Link>
         </div>
@@ -130,9 +134,9 @@ export default function VendasPage() {
                   <p className="text-gray-500 text-sm mb-2">
                     Total: R$ {plan.total.toFixed(2).replace('.', ',')}
                   </p>
-                  {plan.savings && (
+                  {plan.savings !== "0%" && (
                     <div className="inline-block px-3 py-2 bg-emerald-500/20 text-emerald-400 rounded-lg text-sm font-bold">
-                      ✅ {plan.savings}
+                      {plan.savingsDesc}
                     </div>
                   )}
                 </button>
@@ -142,7 +146,7 @@ export default function VendasPage() {
 
           {/* CTA Principal */}
           <Link 
-            href={`/register?plan=${selectedPlan}&redirect=checkout`} 
+            href={`https://gestaoesalao.vercel.app/register?plan=${selectedPlan}`}
             className="inline-flex items-center justify-center gap-3 px-12 py-5 bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 bg-[length:200%_100%] text-white rounded-2xl font-black text-lg hover:shadow-2xl hover:shadow-purple-500/40 hover:bg-[position:100%_0] transition-all duration-500"
           >
             <CreditCard className="w-6 h-6" />
@@ -237,7 +241,7 @@ export default function VendasPage() {
           </p>
           
           <Link 
-            href={`/register?plan=${selectedPlan}&redirect=checkout`}
+            href={`https://gestaoesalao.vercel.app/register?plan=${selectedPlan}`}
             className="inline-flex items-center justify-center gap-3 px-12 py-5 bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 bg-[length:200%_100%] text-white rounded-2xl font-black text-lg hover:shadow-2xl hover:shadow-purple-500/40 hover:bg-[position:100%_0] transition-all duration-500"
           >
             Assinar Agora - R$ {selected.total.toFixed(2).replace('.', ',')}

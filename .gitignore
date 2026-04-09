@@ -4,3 +4,4 @@
 .git-rewrite
 *.log
 .env.local
+node_modules

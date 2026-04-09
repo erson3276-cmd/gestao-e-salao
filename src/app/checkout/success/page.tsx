@@ -1,31 +1,29 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useEffect, useState, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { CheckCircle2, Loader2 } from 'lucide-react'
+import { trackPurchase, trackSubscribe } from '@/lib/meta-pixel'
 
-declare global {
-  interface Window {
-    fbq: any
-  }
+const plans = {
+  monthly: { price: 49, label: 'Mensal' },
+  semiannual: { price: 249.90, label: 'Semestral' },
+  annual: { price: 449.90, label: 'Anual' },
 }
 
-export default function CheckoutSuccessPage() {
+function SuccessContent() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
+  const planId = searchParams.get('plan') || 'monthly'
+  const plan = plans[planId as keyof typeof plans] || plans.monthly
+
   useEffect(() => {
-    if (typeof window !== 'undefined' && window.fbq) {
-      window.fbq('track', 'Purchase', {
-        value: 49,
-        currency: 'BRL',
-        content_type: 'subscription',
-        content_name: 'Gestão E Salão'
-      })
-    }
-    checkPayment()
+    trackPurchase(plan.price, 'BRL', planId)
+    trackSubscribe(plan.price, 'BRL', planId)
   }, [])
 
   async function checkPayment() {
@@ -85,5 +83,13 @@ export default function CheckoutSuccessPage() {
         </Link>
       </div>
     </div>
+  )
+}
+
+export default function CheckoutSuccessPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center"><Loader2 className="w-12 h-12 text-[#5E41FF] animate-spin" /></div>}>
+      <SuccessContent />
+    </Suspense>
   )
 }

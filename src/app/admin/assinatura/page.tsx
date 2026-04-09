@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { CreditCard, Calendar, CheckCircle2, Copy, Check, MessageSquare, Clock, Shield, ArrowUpRight, Zap, Loader2, QrCode, FileText, X, Lock } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { CreditCard, Calendar, CheckCircle2, Copy, Check, MessageSquare, Clock, Shield, ArrowUpRight, Zap, Loader2, QrCode, FileText, X, Lock, AlertTriangle } from 'lucide-react'
 
 const plans = [
   { id: 'monthly', label: 'Mensal', months: 1, days: 30, price: 49.90, discount: 0 },
@@ -17,6 +18,7 @@ interface CreditCardForm {
 }
 
 export default function SubscriptionPage() {
+  const router = useRouter()
   const [session, setSession] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null)
@@ -208,6 +210,29 @@ export default function SubscriptionPage() {
               {daysLeft !== null ? `${daysLeft} dias` : 'N/A'}
             </p>
           </div>
+        </div>
+      </div>
+
+      {/* Cancelamento */}
+      <div className="p-6 bg-red-500/5 border border-red-500/20 rounded-3xl">
+        <div className="flex items-start justify-between">
+          <div className="flex items-start gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center shrink-0">
+              <AlertTriangle className="text-red-500" size={20} />
+            </div>
+            <div>
+              <h3 className="text-sm font-black text-red-400 uppercase">Direito de Arrependimento</h3>
+              <p className="text-xs text-gray-500 mt-1">
+                De acordo com a legislação brasileira (CDC), você tem até 7 dias após a compra para solicitar o reembolso integral.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => router.push('/admin/cancelamento')}
+            className="px-4 py-2 bg-red-600 text-white rounded-xl font-bold text-sm hover:bg-red-700 transition-colors shrink-0"
+          >
+            Solicitar Reembolso
+          </button>
         </div>
       </div>
 

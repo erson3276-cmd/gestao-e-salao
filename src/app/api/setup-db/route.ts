@@ -55,6 +55,10 @@ export async function POST() {
       plan TEXT DEFAULT 'profissional',
       status TEXT DEFAULT 'active',
       subscription_ends_at TIMESTAMP WITH TIME ZONE,
+      payment_id TEXT,
+      payment_date TIMESTAMP WITH TIME ZONE,
+      cancellation_reason TEXT,
+      cancelled_at TIMESTAMP WITH TIME ZONE,
       created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
       updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
     )
