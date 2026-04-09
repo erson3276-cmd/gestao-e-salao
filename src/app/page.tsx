@@ -138,11 +138,11 @@ const socialProof = [
 ]
 
 const faqs = [
-  { q: "Tem garantia?", a: "Sim! Você tem 7 dias para testar o sistema. Se não ficar satisfeito, devolvemos 100% do seu dinheiro. Sem perguntas, sem burocracia." },
+  { q: "Como funciona o teste grátis?", a: "Você usa o sistema completo por 14 dias sem pagar nada. Sem cartão de crédito. Depois escolhe se quer continuar com o plano pago." },
   { q: "Preciso instalar algo?", a: "Não. 100% online, navegador ou celular. Sem downloads, sem atualizações." },
-  { q: "Preciso pagar no cartão?", a: "Não! Aceitamos PIX, cartão de crédito ou boleto bancário. Você pode escolher a forma que preferir." },
+  { q: "Preciso pagar no cartão?", a: "Não! O teste é gratuito. Quando decidir continuar, aceitamos PIX, cartão de crédito ou boleto." },
   { q: "Funciona para barbearia?", a: "Sim! Serve para qualquer segmento: beleza, barba, estética, unhas." },
-  { q: "E se eu quiser cancelar?", a: "Sem multa. Cancele quando quiser, 1 clique." },
+  { q: "E se eu quiser cancelar?", a: "Sem multa. Cancele quando quiser com 1 clique. Sem fidelidade." },
 ]
 
 export default function Home() {
@@ -196,12 +196,13 @@ export default function Home() {
           </div>
           
           <div className="hidden md:flex items-center gap-8">
+            <a href="#demonstracao" className="text-sm text-gray-400 hover:text-white transition-colors">Demonstração</a>
             <a href="#problema" className="text-sm text-gray-400 hover:text-white transition-colors">Problema</a>
             <a href="#solucao" className="text-sm text-gray-400 hover:text-white transition-colors">Solução</a>
-            <a href="#precos" className="text-sm text-gray-400 hover:text-white transition-colors">Preços</a>
+            <a href="#preco" className="text-sm text-gray-400 hover:text-white transition-colors">Planos</a>
             <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full">
-              <Shield className="w-3 h-3 text-emerald-400" />
-              <span className="text-[10px] font-bold text-emerald-400">7 dias de garantia</span>
+              <Sparkles className="w-3 h-3 text-emerald-400" />
+              <span className="text-[10px] font-bold text-emerald-400">14 dias gratis</span>
             </div>
             <a href="#video" className="text-sm text-gray-400 hover:text-white transition-colors">Vídeo</a>
             <a href="#resultados" className="text-sm text-gray-400 hover:text-white transition-colors">Resultados</a>
@@ -210,58 +211,197 @@ export default function Home() {
           
           <div className="flex items-center gap-3">
             <Link href="/login" className="text-xs sm:text-sm font-bold text-gray-400 hover:text-white transition-colors hidden sm:block">Entrar</Link>
-            <Link href="/register" className="px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-purple-500 via-pink-500 to-purple-500 bg-[length:200%_100%] text-white rounded-xl text-xs sm:text-sm font-bold hover:shadow-lg hover:shadow-purple-500/30 hover:bg-[position:100%_0] transition-all duration-300">
-              Assinar - R$ 49,90/mês
+            <Link href="/register" className="px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-emerald-500 via-green-500 to-emerald-500 bg-[length:200%_100%] text-white rounded-xl text-xs sm:text-sm font-bold hover:shadow-lg hover:shadow-emerald-500/30 hover:bg-[position:100%_0] transition-all duration-300">
+              Teste Grátis 14 Dias
             </Link>
           </div>
         </div>
       </nav>
 
-      {/* Hero Section */}
+      {/* Hero Section - Nova estrutura */}
       <section className="relative pt-24 sm:pt-32 pb-16 sm:pb-24 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="text-center max-w-4xl mx-auto">
-            
-            {/* Badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-full mb-6 sm:mb-8">
-              <Flame className="w-4 h-4 text-orange-400" />
-              <span className="text-xs sm:text-sm text-gray-300 font-medium">Simplifique a gestão do seu salão</span>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+            {/* Texto Esquerda */}
+            <div className="text-center lg:text-left">
+              {/* Badge */}
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/10 border border-emerald-500/30 rounded-full mb-6">
+                <Sparkles className="w-4 h-4 text-emerald-400" />
+                <span className="text-xs sm:text-sm text-emerald-400 font-bold">+500 salões já usam</span>
+              </div>
+              
+              {/* Headline */}
+              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-5xl font-black tracking-tighter leading-[1.1] mb-6">
+                <span className="bg-gradient-to-r from-white via-gray-200 to-gray-400 bg-clip-text text-transparent">
+                  Seu salão pode estar cheio...
+                </span>
+                <br />
+                <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent">
+                  mas você pode estar perdendo dinheiro
+                </span>
+              </h1>
+              
+              {/* Subheadline */}
+              <p className="text-lg sm:text-xl text-gray-400 max-w-xl mx-auto lg:mx-0 mb-4">
+                Organize agenda, clientes e faturamento do seu salão em menos de 5 minutos por dia.
+              </p>
+              
+              {/* Prova rápida */}
+              <p className="text-sm text-gray-500 mb-8">
+                ⭐ ⭐ ⭐ ⭐ ⭐ 4.9/5 • 100% online
+              </p>
+              
+              {/* CTA */}
+              <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
+                <Link href="/register" className="group px-8 sm:px-10 py-4 sm:py-5 bg-gradient-to-r from-emerald-500 via-green-500 to-emerald-500 bg-[length:200%_100%] text-white rounded-2xl font-black text-sm sm:text-base flex items-center justify-center gap-3 hover:shadow-2xl hover:shadow-emerald-500/40 hover:bg-[position:100%_0] transition-all duration-500">
+                  TESTE GRÁTIS POR 14 DIAS
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </Link>
+                <p className="text-xs text-gray-500">Sem cartão • Sem compromisso</p>
+              </div>
             </div>
             
-            {/* Main Headline */}
-            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tighter leading-[1.1] mb-6 sm:mb-8">
-              <span className="bg-gradient-to-r from-white via-gray-200 to-gray-400 bg-clip-text text-transparent">
-                Seu salão merece
-              </span>
-              <br />
-              <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent">
-                funcionar sozinho
-              </span>
-            </h1>
-            
-            <p className="text-lg sm:text-xl md:text-2xl text-gray-400 max-w-2xl mx-auto mb-4 leading-relaxed">
-              Deixe de perder <strong className="text-white">3 horas por semana</strong> confirmando horários. 
-              Deixe o sistema trabalhar por você.
-            </p>
-            
-            <p className="text-lg sm:text-xl text-transparent bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text font-bold mb-8 sm:mb-12">
-              +40% mais agendamentos • 80% menos ligações • 100% de controle
-            </p>
-            
-            {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mb-8">
-              <Link href="/register" className="w-full sm:w-auto group px-8 sm:px-10 py-4 sm:py-5 bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 bg-[length:200%_100%] text-white rounded-2xl font-black text-sm sm:text-base flex items-center justify-center gap-3 hover:shadow-2xl hover:shadow-purple-500/40 hover:bg-[position:100%_0] transition-all duration-500">
-                Assinar Agora - R$ 49,90/mês
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </Link>
-              <a href="#video" className="w-full sm:w-auto px-8 sm:px-10 py-4 sm:py-5 bg-white/5 border border-white/10 text-white rounded-2xl font-bold text-sm sm:text-base flex items-center justify-center gap-3 hover:bg-white/10 transition-all backdrop-blur-sm">
-                <Play className="w-5 h-5" />
-                Ver como funciona
-              </a>
+            {/* Imagem Direita */}
+            <div className="relative">
+              <div className="absolute -inset-1 bg-gradient-to-r from-purple-500 via-pink-500 to-cyan-500 rounded-3xl blur-xl opacity-50" />
+              <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden border border-white/10 bg-[#0a0a14]">
+                <Image 
+                  src="/print-agenda.png" 
+                  alt="Sistema Gestão E Salão" 
+                  width={600}
+                  height={800}
+                  className="w-full aspect-[3/4] object-cover"
+                  loading="eager"
+                  priority
+                />
+              </div>
             </div>
-            
-            <p className="text-xs sm:text-sm text-gray-600">PIX, cartão ou boleto • 7 dias de garantia</p>
           </div>
+        </div>
+      </section>
+
+      {/* Prova Social Rápida */}
+      <section className="relative py-8 z-10 bg-white/5">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="flex flex-wrap items-center justify-center gap-8 sm:gap-16">
+            <div className="flex items-center gap-2">
+              <Users className="w-6 h-6 text-purple-400" />
+              <span className="text-lg font-bold text-white">+500 salões</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Star className="w-6 h-6 text-yellow-400 fill-yellow-400" />
+              <span className="text-lg font-bold text-white">4.9/5</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Shield className="w-6 h-6 text-emerald-400" />
+              <span className="text-lg font-bold text-white">14 dias gratis</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Clock className="w-6 h-6 text-cyan-400" />
+              <span className="text-lg font-bold text-white">5 min ativar</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Demonstração do Produto */}
+      <section id="demonstracao" className="relative py-16 sm:py-24 z-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="text-center mb-12">
+            <span className="inline-block px-4 py-2 bg-purple-500/10 border border-purple-500/20 rounded-full text-purple-400 text-xs sm:text-sm font-bold uppercase tracking-widest mb-4">
+              Veja como é simples
+            </span>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tighter">
+              Organize seu salão em poucos cliques
+            </h2>
+          </div>
+          
+          {/* Video ou Screenshots */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+            <div className="relative group">
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl opacity-30 group-hover:opacity-60 transition-opacity" />
+              <div className="relative rounded-xl overflow-hidden border border-white/10 bg-[#0a0a14]">
+                <Image src="/print-2.png" alt="Agenda" width={400} height={600} className="w-full aspect-[2/3] object-cover" loading="lazy" />
+                <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
+                  <p className="text-white font-bold">Agenda Online 24h</p>
+                </div>
+              </div>
+            </div>
+            <div className="relative group">
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-2xl opacity-30 group-hover:opacity-60 transition-opacity" />
+              <div className="relative rounded-xl overflow-hidden border border-white/10 bg-[#0a0a14]">
+                <Image src="/print-1.png" alt="Financeiro" width={400} height={600} className="w-full aspect-[2/3] object-cover" loading="lazy" />
+                <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
+                  <p className="text-white font-bold">Controle Financeiro</p>
+                </div>
+              </div>
+            </div>
+            <div className="relative group">
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-emerald-500 to-cyan-500 rounded-2xl opacity-30 group-hover:opacity-60 transition-opacity" />
+              <div className="relative rounded-xl overflow-hidden border border-white/10 bg-[#0a0a14]">
+                <Image src="/print-relatorio.png" alt="Relatórios" width={400} height={600} className="w-full aspect-[2/3] object-cover" loading="lazy" />
+                <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
+                  <p className="text-white font-bold">Relatórios Automáticos</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Seção de Problema/Dores */}
+      <section id="problema" className="relative py-16 sm:py-24 z-10 bg-white/5">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="text-center mb-12">
+            <span className="inline-block px-4 py-2 bg-red-500/10 border border-red-500/20 rounded-full text-red-400 text-xs sm:text-sm font-bold uppercase tracking-widest mb-4">
+              Se você tem um salão, provavelmente já passou por isso
+            </span>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tighter">
+              Problemas que todo dono de salão enfrenta
+            </h2>
+          </div>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+            {painPoints.map((point, i) => (
+              <div key={i} className="p-6 rounded-2xl bg-white/5 border border-white/10 flex items-start gap-4">
+                <div className="w-10 h-10 rounded-xl bg-red-500/20 flex items-center justify-center shrink-0">
+                  <point.icon className="w-5 h-5 text-red-400" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-white mb-1">{point.title}</h3>
+                  <p className="text-sm text-gray-400">{point.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Seção de Solução */}
+      <section id="solucao" className="relative py-16 sm:py-24 z-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="text-center mb-12">
+            <span className="inline-block px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full text-emerald-400 text-xs sm:text-sm font-bold uppercase tracking-widest mb-4">
+              A solução
+            </span>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tighter">
+              O Gestão E Salão resolve tudo isso automaticamente
+            </h2>
+          </div>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+            {features.map((feature, i) => (
+              <div key={i} className="group p-6 sm:p-8 rounded-2xl bg-gradient-to-br from-white/5 to-transparent border border-white/5 hover:border-purple-500/30 transition-all">
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4" style={{ backgroundColor: `${feature.color}20`, border: `1px solid ${feature.color}40` }}>
+                  <feature.icon className="w-6 h-6" style={{ color: feature.color }} />
+                </div>
+                <h3 className="text-lg font-bold mb-2">{feature.title}</h3>
+                <p className="text-sm text-gray-400">{feature.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
           
           {/* Hero Image/Preview */}
           <div className="mt-16 sm:mt-24 relative">
@@ -614,27 +754,17 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Pricing */}
+      {/* Pricing - Nova estrutura com 14 dias trial */}
       <section id="preco" className="relative py-16 sm:py-24 z-10">
         <div className="max-w-4xl mx-auto px-4 sm:px-6">
-          <div className="text-center mb-12 sm:mb-16">
-            {/* Prova Social real - substituir escassez fake */}
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/10 border border-emerald-500/30 rounded-full mb-4">
-              <Users className="w-4 h-4 text-emerald-400" />
-              <span className="text-xs sm:text-sm text-emerald-400 font-bold">+2.500 salões organizados</span>
-            </div>
+          <div className="text-center mb-12">
             <span className="inline-block px-4 py-2 bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-full text-purple-400 text-xs sm:text-sm font-bold uppercase tracking-widest mb-4">
-              Preço justo
+              Plano Completo
             </span>
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tighter mb-4">
-              <span className="bg-gradient-to-r from-white to-gray-500 bg-clip-text text-transparent">
-                Menos que um
-              </span>
-              <br />
-              <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-                corte por semana
-              </span>
+              Tudo que você precisa para gerenciar seu salão
             </h2>
+            <p className="text-lg text-gray-400">Comece gratis por 14 dias. Depois escolha o plano.</p>
           </div>
           
           <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden">
@@ -642,41 +772,25 @@ export default function Home() {
             <div className="absolute -inset-[1px] bg-gradient-to-r from-purple-500 via-pink-500 to-cyan-500 rounded-3xl opacity-50 blur-sm" />
             <div className="relative bg-[#0a0a14] rounded-2xl sm:rounded-3xl p-6 sm:p-12 border border-white/10">
               
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 mb-8">
-                <div>
-                  <h3 className="text-2xl sm:text-3xl font-black mb-2">Plano Completo</h3>
-                  <p className="text-gray-400">Tudo que você precisa para gerenciar seu salão</p>
-                </div>
-                <div className="flex items-baseline gap-1">
+              <div className="text-center mb-8">
+                <p className="text-gray-400 mb-2">Depois do período de teste</p>
+                <div className="flex items-baseline justify-center gap-1">
                   <span className="text-5xl sm:text-6xl font-black bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">R$ 49,90</span>
                   <span className="text-gray-500 text-sm ml-2">/mês</span>
-                </div>
-              </div>
-              
-              {/* Trial badge */}
-              <div className="mb-8 p-4 sm:p-6 rounded-xl sm:rounded-2xl bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/20">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
-                    <Crown className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                  </div>
-                  <div>
-                    <p className="font-bold text-white">Plano profissional completo</p>
-                    <p className="text-sm text-gray-400">Tudo que você precisa para gestão do seu salão</p>
-                  </div>
                 </div>
               </div>
               
               {/* Features list */}
               <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-8">
                 {[
-                  'Agenda inteligente com agendamento online',
-                  'Controle de agendamentos e clientes',
+                  'Agenda inteligente online',
+                  'Controle de clientes',
                   'Controle financeiro completo',
-                  'Cadastro ilimitado de clientes e serviços',
-                  'Relatórios e métricas detalhadas',
-                  'Gestão de comissões da equipe',
-                  'Lembretes automáticos por email',
-                  'Acesso de qualquer dispositivo',
+                  'Cadastro ilimitado',
+                  'Relatórios automáticos',
+                  'Gestão de comissões',
+                  'Lembretes automáticos',
+                  'Acesso qualquer dispositivo',
                 ].map((item, i) => (
                   <li key={i} className="flex items-center gap-3">
                     <div className="w-6 h-6 rounded-full bg-emerald-500/20 flex items-center justify-center shrink-0">
@@ -687,24 +801,31 @@ export default function Home() {
                 ))}
               </ul>
               
-              {/* CTA com garantia */}
-              <Link href="/register" className="w-full py-4 sm:py-5 bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 bg-[length:200%_100%] text-white rounded-xl sm:rounded-2xl font-black text-sm sm:text-base flex items-center justify-center gap-3 hover:shadow-2xl hover:shadow-purple-500/40 hover:bg-[position:100%_0] transition-all duration-500">
-                Assinar Agora - R$ 49,90/mês
+              {/* CTA */}
+              <Link href="/register" className="w-full py-4 sm:py-5 bg-gradient-to-r from-emerald-500 via-green-500 to-emerald-500 bg-[length:200%_100%] text-white rounded-xl sm:rounded-2xl font-black text-sm sm:text-base flex items-center justify-center gap-3 hover:shadow-2xl hover:shadow-emerald-500/40 hover:bg-[position:100%_0] transition-all duration-500">
+                COMEÇAR TESTE GRÁTIS DE 14 DIAS
                 <ArrowRight className="w-5 h-5" />
               </Link>
-              
-              <p className="text-center text-xs sm:text-sm text-gray-500 mt-4">
-                <span className="text-emerald-400 font-bold">🔒 7 dias de garantia</span> • PIX, cartão ou boleto • Cancele quando quiser
-              </p>
-              
-              {/* Garantia muito visível */}
-              <div className="mt-6 p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl flex items-center justify-center gap-3">
-                <Shield className="w-6 h-6 text-emerald-400 shrink-0" />
-                <div className="text-center">
-                  <p className="text-emerald-400 font-bold text-sm">Garantia de 7 dias</p>
-                  <p className="text-emerald-400/70 text-xs">Dinheiro de volta se não ficar satisfeito</p>
-                </div>
-              </div>
+            </div>
+          </div>
+          
+          {/* Redução de risco */}
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-6 text-sm text-gray-500">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+              <span>14 dias gratis</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+              <span>Sem fidelidade</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+              <span>Cancele quando quiser</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Shield className="w-5 h-5 text-emerald-400" />
+              <span>Sem risco</span>
             </div>
           </div>
         </div>
@@ -765,11 +886,11 @@ export default function Home() {
               <p className="text-sm text-cyan-400 font-bold mb-8">
                 ⭐ 98% de satisfação • Nota 4.9/5
               </p>
-              <Link href="/register" className="inline-flex items-center gap-3 px-8 sm:px-12 py-4 sm:py-5 bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 bg-[length:200%_100%] text-white rounded-2xl font-black text-sm sm:text-base hover:shadow-2xl hover:shadow-purple-500/40 hover:bg-[position:100%_0] transition-all duration-500">
-                Assinar Agora - R$ 49,90/mês
+              <Link href="/register" className="inline-flex items-center gap-3 px-8 sm:px-12 py-4 sm:py-5 bg-gradient-to-r from-emerald-500 via-green-500 to-emerald-500 bg-[length:200%_100%] text-white rounded-2xl font-black text-sm sm:text-base hover:shadow-2xl hover:shadow-emerald-500/40 hover:bg-[position:100%_0] transition-all duration-500">
+                COMEÇAR TESTE GRÁTIS DE 14 DIAS
                 <ArrowRight className="w-5 h-5" />
               </Link>
-              <p className="text-sm text-gray-500 mt-4">🔒 7 dias de garantia • Cancele com 1 clique</p>
+              <p className="text-sm text-gray-500 mt-4">Sem cartão • Sem compromisso</p>
             </div>
           </div>
         </div>
