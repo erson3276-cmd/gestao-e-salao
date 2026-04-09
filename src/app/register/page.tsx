@@ -1,16 +1,10 @@
 'use client'
 
-import { useState, Suspense, useEffect } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useState, Suspense } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Loader2, ArrowRight, Lock, Check } from 'lucide-react'
+import { Loader2, Lock } from 'lucide-react'
 import { trackLead } from '@/lib/meta-pixel'
-
-const plans = [
-  { id: 'monthly', label: 'Mensal', price: 49, total: 49, savings: '0%' },
-  { id: 'semiannual', label: 'Semestral', price: 41.65, total: 249.90, savings: '15% OFF' },
-  { id: 'annual', label: 'Anual', price: 37.49, total: 449.90, savings: '23% OFF' },
-]
 
 export default function RegisterPage() {
   return (
@@ -22,12 +16,8 @@ export default function RegisterPage() {
 
 function RegisterContent() {
   const router = useRouter()
-  const searchParams = useSearchParams()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  
-  const [selectedPlan, setSelectedPlan] = useState(searchParams.get('plan') || 'monthly')
-  const plan = plans.find(p => p.id === selectedPlan)!
   
   const [formData, setFormData] = useState({
     salonName: '',
@@ -62,7 +52,7 @@ function RegisterContent() {
       
       if (data.success) {
         trackLead()
-        router.push(`/checkout?plan=${selectedPlan}`)
+        router.push('/admin')
       } else {
         setError(data.error || 'Erro ao criar conta')
       }
@@ -81,49 +71,14 @@ function RegisterContent() {
             Gestão<span className="text-[#5E41FF]">E</span>Salão
           </h1>
           <p className="text-gray-500 text-sm mt-2">
-            Crie sua conta
+            Crie sua conta grátis
           </p>
         </div>
 
         <div className="bg-[#121021]/50 border border-white/5 rounded-3xl p-6">
-          <div className="bg-purple-500/10 border border-purple-500/20 rounded-xl p-3 mb-4">
-            <p className="text-gray-400 text-sm mb-3">Escolha seu plano:</p>
-            <div className="grid grid-cols-3 gap-2">
-              {plans.map((p) => (
-                <button
-                  key={p.id}
-                  onClick={() => setSelectedPlan(p.id)}
-                  className={`p-2 rounded-xl border-2 text-center transition-all ${
-                    selectedPlan === p.id 
-                      ? 'border-[#5E41FF] bg-[#5E41FF]/10' 
-                      : 'border-white/10 hover:border-white/20'
-                  }`}
-                >
-                  <p className="text-xs font-bold text-white">{p.label}</p>
-                  <p className="text-sm font-black text-[#5E41FF]">R$ {p.price.toFixed(2).replace('.', ',')}</p>
-                  {p.savings !== '0%' && (
-                    <span className="text-xs text-emerald-400">{p.savings}</span>
-                  )}
-                </button>
-              ))}
-            </div>
-            <div className="flex justify-between items-center mt-3 pt-3 border-t border-white/10">
-              <div>
-                <span className="text-gray-400 text-sm">Plano:</span>
-                <p className="text-lg font-black text-white">{plan.label}</p>
-              </div>
-              <div className="text-right">
-                <p className="text-2xl font-black text-[#5E41FF]">R$ {plan.total.toFixed(2).replace('.', ',')}</p>
-                <p className="text-gray-400 text-xs">R$ {plan.price.toFixed(2).replace('.', ',')}/mês</p>
-              </div>
-            </div>
-            {plan.savings !== '0%' && (
-              <div className="mt-2 text-center">
-                <span className="inline-block px-3 py-1 bg-emerald-500/20 text-emerald-400 text-xs rounded-full">
-                  {plan.savings} de desconto
-                </span>
-              </div>
-            )}
+          <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4 mb-6 text-center">
+            <p className="text-emerald-400 font-black text-lg">TESTE GRÁTIS POR 14 DIAS</p>
+            <p className="text-gray-400 text-sm">Sem compromisso, sem cartão de crédito</p>
           </div>
 
           <div className="space-y-3">
@@ -162,10 +117,6 @@ function RegisterContent() {
               placeholder="Crie uma senha"
               className="w-full p-3 bg-black/40 border border-white/5 rounded-xl text-white placeholder:text-gray-600"
             />
-            
-            <p className="text-xs text-gray-500 mt-2">
-              ⚠️ CPF será solicitado no momento do pagamento
-            </p>
           </div>
 
           {error && (
@@ -177,9 +128,9 @@ function RegisterContent() {
           <button
             onClick={handleRegister}
             disabled={loading}
-            className="w-full mt-4 py-3 bg-[#5E41FF] text-white rounded-xl font-black flex items-center justify-center gap-2 disabled:opacity-50"
+            className="w-full mt-6 py-3 bg-[#5E41FF] text-white rounded-xl font-black disabled:opacity-50"
           >
-            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <>Continuar <ArrowRight className="w-5 h-5" /></>}
+            {loading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : 'CRIAR CONTA GRÁTIS'}
           </button>
 
           <div className="flex items-center justify-center gap-2 text-gray-600 text-xs mt-4">

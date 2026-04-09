@@ -6,58 +6,20 @@ import { Copy, Check, ExternalLink, Database } from 'lucide-react'
 export default function SetupPage() {
   const [copied, setCopied] = useState(false)
 
-  const sql = `-- GESTAO E SALAO - MULTI-TENANT SETUP
+  const sql = `-- GESTAO E SALAO - UPDATE TRIAL COLUMNS
 -- Execute no: https://supabase.com/dashboard/project/ssdqkvsbhebrqihoekzz/sql
 
--- 1. Criar tabela de Saloes
-CREATE TABLE IF NOT EXISTS salons (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  name TEXT NOT NULL,
-  owner_name TEXT NOT NULL,
-  owner_email TEXT UNIQUE NOT NULL,
-  owner_password TEXT NOT NULL,
-  owner_phone TEXT,
-  whatsapp_number TEXT,
-  address TEXT,
-  image_url TEXT,
-  plan TEXT DEFAULT 'profissional',
-  status TEXT DEFAULT 'active',
-  subscription_ends_at TIMESTAMP WITH TIME ZONE,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
+-- 1. Adicionar colunas de trial na tabela salons (se não existirem)
+ALTER TABLE salons ADD COLUMN IF NOT EXISTS trial_start_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();
+ALTER TABLE salons ADD COLUMN IF NOT EXISTS trial_end_at TIMESTAMP WITH TIME ZONE;
+ALTER TABLE salons ADD COLUMN IF NOT EXISTS onboarding_sent JSONB DEFAULT '{}';
 
--- 2. Adicionar salon_id em todas as tabelas
-ALTER TABLE appointments ADD COLUMN IF NOT EXISTS salon_id UUID REFERENCES salons(id);
-ALTER TABLE customers ADD COLUMN IF NOT EXISTS salon_id UUID REFERENCES salons(id);
-ALTER TABLE services ADD COLUMN IF NOT EXISTS salon_id UUID REFERENCES salons(id);
-ALTER TABLE vendas ADD COLUMN IF NOT EXISTS salon_id UUID REFERENCES salons(id);
-ALTER TABLE despesas ADD COLUMN IF NOT EXISTS salon_id UUID REFERENCES salons(id);
-ALTER TABLE comissao ADD COLUMN IF NOT EXISTS salon_id UUID REFERENCES salons(id);
-ALTER TABLE whatsapp_messages ADD COLUMN IF NOT EXISTS salon_id UUID REFERENCES salons(id);
-ALTER TABLE whatsapp_status ADD COLUMN IF NOT EXISTS salon_id UUID REFERENCES salons(id);
-ALTER TABLE blocked_slots ADD COLUMN IF NOT EXISTS salon_id UUID REFERENCES salons(id);
-ALTER TABLE working_hours ADD COLUMN IF NOT EXISTS salon_id UUID REFERENCES salons(id);
-ALTER TABLE professionals ADD COLUMN IF NOT EXISTS salon_id UUID REFERENCES salons(id);
-ALTER TABLE notes ADD COLUMN IF NOT EXISTS salon_id UUID REFERENCES salons(id);
+-- 2. Atualizar status de 'active' para 'trial' em salões que ainda não expiraram
+-- Execute apenas se quiser converter assinaturas ativas em trial
+-- UPDATE salons SET status = 'trial', trial_start_at = NOW(), trial_end_at = NOW() + INTERVAL '14 days' WHERE status = 'active' AND subscription_ends_at > NOW();
 
--- 3. Criar indices
-CREATE INDEX IF NOT EXISTS idx_appointments_salon ON appointments(salon_id);
-CREATE INDEX IF NOT EXISTS idx_customers_salon ON customers(salon_id);
-CREATE INDEX IF NOT EXISTS idx_services_salon ON services(salon_id);
-CREATE INDEX IF NOT EXISTS idx_vendas_salon ON vendas(salon_id);
-CREATE INDEX IF NOT EXISTS idx_despesas_salon ON despesas(salon_id);
-CREATE INDEX IF NOT EXISTS idx_comissao_salon ON comissao(salon_id);
-CREATE INDEX IF NOT EXISTS idx_whatsapp_messages_salon ON whatsapp_messages(salon_id);
-CREATE INDEX IF NOT EXISTS idx_blocked_slots_salon ON blocked_slots(salon_id);
-CREATE INDEX IF NOT EXISTS idx_working_hours_salon ON working_hours(salon_id);
-CREATE INDEX IF NOT EXISTS idx_professionals_salon ON professionals(salon_id);
-CREATE INDEX IF NOT EXISTS idx_notes_salon ON notes(salon_id);
-
--- 4. Criar bucket de storage
-INSERT INTO storage.buckets (id, name, public)
-VALUES ('salon-photos', 'salon-photos', true)
-ON CONFLICT (id) DO NOTHING;`
+-- 3. Criar índice para trial (opcional)
+CREATE INDEX IF NOT EXISTS idx_salons_trial_end ON salons(trial_end_at) WHERE status = 'trial';`
 
   function copySql() {
     navigator.clipboard.writeText(sql)
@@ -74,7 +36,7 @@ ON CONFLICT (id) DO NOTHING;`
           </div>
           <div>
             <h1 className="text-3xl font-black tracking-tighter italic uppercase text-white/90">Gestão<span className="text-[#5E41FF]">E</span>Salão</h1>
-            <p className="text-[10px] uppercase font-bold tracking-[0.4em] text-gray-500 mt-2">Setup do Banco de Dados</p>
+            <p className="text-[10px] uppercase font-bold tracking-[0.4em] text-gray-500 mt-2">Update Trial Columns</p>
           </div>
         </div>
 
@@ -107,7 +69,7 @@ ON CONFLICT (id) DO NOTHING;`
 
           <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
             <p className="text-emerald-400 text-xs font-bold">
-              Depois de rodar o SQL, o sistema multi-tenant estará ativado. Você já pode fechar esta página.
+              As colunas de trial serão adicionadas automaticamente.
             </p>
           </div>
         </div>

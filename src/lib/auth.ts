@@ -14,6 +14,7 @@ export interface SalonSession {
   ownerEmail: string
   plan: string
   subscriptionEndsAt: string
+  status?: string
 }
 
 export const SALON_COOKIE_NAME = 'salon_session'

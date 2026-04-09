@@ -11,12 +11,20 @@ import {
   ChevronRight,
   TrendingDown,
   CheckCircle2,
-  CalendarDays
+  CalendarDays,
+  Rocket,
+  Sparkles
 } from 'lucide-react'
 import { getAppointments, getSales, getCustomers, getExpenses } from '@/app/actions/admin'
 import { format, isToday, startOfMonth, endOfMonth, isWithinInterval, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import Link from 'next/link'
+
+interface TrialInfo {
+  daysRemaining: number
+  endDate: string
+  status: string
+}
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState({
@@ -27,6 +35,7 @@ export default function AdminDashboard() {
   })
   const [recentAppointments, setRecentAppointments] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [trialInfo, setTrialInfo] = useState<TrialInfo | null>(null)
 
   useEffect(() => {
     async function loadDashboardData() {
@@ -64,6 +73,31 @@ export default function AdminDashboard() {
         setRecentAppointments(todayApts.slice(0, 5).sort((a: any, b: any) => 
           new Date(a.start_time).getTime() - new Date(b.start_time).getTime()
         ))
+
+        const sessionData = document.cookie
+          .split('; ')
+          .find(c => c.startsWith('salon_session='))
+          ?.split('=')[1]
+        
+        if (sessionData) {
+          try {
+            const session = JSON.parse(decodeURIComponent(sessionData))
+            if (session.subscriptionEndsAt) {
+              const endDate = new Date(session.subscriptionEndsAt)
+              const today = new Date()
+              const diffTime = endDate.getTime() - today.getTime()
+              const daysRemaining = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+              
+              if (daysRemaining <= 14 && daysRemaining > 0) {
+                setTrialInfo({
+                  daysRemaining,
+                  endDate: endDate.toISOString(),
+                  status: session.status || 'trial'
+                })
+              }
+            }
+          } catch (e) {}
+        }
       } catch (error) {
         console.error("Erro ao carregar dashboard:", error)
       } finally {
@@ -86,6 +120,27 @@ export default function AdminDashboard() {
 
   return (
     <div className="space-y-10 pb-10">
+      {trialInfo && (
+        <div className="bg-gradient-to-r from-[#5E41FF]/20 to-purple-500/20 border border-[#5E41FF]/30 rounded-[2rem] p-6 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-[#5E41FF]/20 rounded-2xl flex items-center justify-center">
+              <Rocket className="text-[#5E41FF]" size={24} />
+            </div>
+            <div>
+              <p className="text-white font-black text-lg">Teste Grátis: {trialInfo.daysRemaining} dias restantes</p>
+              <p className="text-gray-400 text-sm">Aproveite todos os recursos do sistema</p>
+            </div>
+          </div>
+          <Link 
+            href="/assine" 
+            className="px-6 py-3 bg-[#5E41FF] text-white rounded-xl font-black flex items-center gap-2 hover:bg-[#5E41FF]/90 transition-all"
+          >
+            <Sparkles size={16} />
+            Assine por R$ 49,90
+          </Link>
+        </div>
+      )}
+
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
           <h1 className="text-3xl font-black italic uppercase tracking-tighter text-white">Visão Geral</h1>

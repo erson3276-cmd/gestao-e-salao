@@ -37,13 +37,13 @@ export function proxy(request: NextRequest) {
     if (salonSession) {
       try {
         const session = JSON.parse(salonSession.value)
-        if (session.subscriptionEndsAt) {
-          const expiresAt = new Date(session.subscriptionEndsAt)
-          const now = new Date()
-          if (now > expiresAt) {
-            // Subscription expired - redirect to payment/expired page
-            return NextResponse.redirect(new URL('/subscription-expired', request.url))
-          }
+        
+        const expiresAt = session.subscriptionEndsAt ? new Date(session.subscriptionEndsAt) : null
+        const now = new Date()
+        
+        // Check if trial or subscription expired
+        if (expiresAt && now > expiresAt) {
+          return NextResponse.redirect(new URL('/subscription-expired', request.url))
         }
       } catch {
         // Invalid session, let them through and server-side check will handle
