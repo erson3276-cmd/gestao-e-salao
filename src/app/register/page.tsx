@@ -4,7 +4,7 @@ import { useState, Suspense } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Loader2, Lock } from 'lucide-react'
-import { trackLead } from '@/lib/meta-pixel'
+import { trackCompleteRegistration } from '@/lib/meta-pixel'
 
 export default function RegisterPage() {
   return (
@@ -51,7 +51,7 @@ function RegisterContent() {
       const data = await res.json()
       
       if (data.success) {
-        trackLead()
+        trackCompleteRegistration()
         router.push('/admin')
       } else {
         setError(data.error || 'Erro ao criar conta')
