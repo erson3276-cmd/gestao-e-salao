@@ -430,20 +430,6 @@ export default function Home() {
       </section>
 
       {/* Stats Section */}
-      <section id="stats-section" className="relative py-16 sm:py-24 z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-8">
-            {stats.map((stat, i) => (
-              <div key={i} className="text-center p-4 sm:p-8 rounded-2xl sm:rounded-3xl bg-white/5 border border-white/5 backdrop-blur-sm">
-                <p className="text-2xl sm:text-4xl md:text-5xl font-black bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent mb-2">
-                  {stat.value}
-                </p>
-                <p className="text-xs sm:text-sm text-gray-400">{stat.label}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* Pain Points */}
       <section id="problema" className="relative py-16 sm:py-24 z-10">
