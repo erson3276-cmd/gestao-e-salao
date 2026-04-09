@@ -34,12 +34,11 @@ function RegisterContent() {
     ownerName: '',
     ownerEmail: '',
     ownerPhone: '',
-    ownerPassword: '',
-    cpfCnpj: ''
+    ownerPassword: ''
   })
 
   async function handleRegister() {
-    if (!formData.salonName || !formData.ownerName || !formData.ownerEmail || !formData.ownerPhone || !formData.ownerPassword || !formData.cpfCnpj) {
+    if (!formData.salonName || !formData.ownerName || !formData.ownerEmail || !formData.ownerPhone || !formData.ownerPassword) {
       setError('Preencha todos os campos')
       return
     }
@@ -158,19 +157,16 @@ function RegisterContent() {
               className="w-full p-3 bg-black/40 border border-white/5 rounded-xl text-white placeholder:text-gray-600"
             />
             <input
-              type="text"
-              value={formData.cpfCnpj}
-              onChange={e => setFormData({...formData, cpfCnpj: e.target.value})}
-              placeholder="CPF ou CNPJ (obrigatório para pagamento)"
-              className="w-full p-3 bg-black/40 border border-white/5 rounded-xl text-white placeholder:text-gray-600"
-            />
-            <input
               type="password"
               value={formData.ownerPassword}
               onChange={e => setFormData({...formData, ownerPassword: e.target.value})}
               placeholder="Crie uma senha"
               className="w-full p-3 bg-black/40 border border-white/5 rounded-xl text-white placeholder:text-gray-600"
             />
+            
+            <p className="text-xs text-gray-500 mt-2">
+              ⚠️ CPF será solicitado no momento do pagamento
+            </p>
           </div>
 
           {error && (

@@ -27,9 +27,7 @@ import {
   Flame,
   Crown,
   Play,
-  Quote,
-  AlertTriangle,
-  Zap
+  Quote
 } from 'lucide-react'
 
 const painPoints = [
@@ -151,54 +149,11 @@ export default function Home() {
   const [isScrolled, setIsScrolled] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [countersVisible, setCountersVisible] = useState(false)
-  const [timeLeft, setTimeLeft] = useState({ hours: 2, minutes: 45, seconds: 32 })
-  const [urgencyMessage, setUrgencyMessage] = useState(0)
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 50)
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) setCountersVisible(true) },
-      { threshold: 0.3 }
-    )
-    const el = document.getElementById('stats-section')
-    if (el) observer.observe(el)
-    return () => observer.disconnect()
-  }, [])
-
-  // Timer regressivo para urgência
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setTimeLeft(prev => {
-        if (prev.seconds > 0) {
-          return { ...prev, seconds: prev.seconds - 1 }
-        } else if (prev.minutes > 0) {
-          return { ...prev, minutes: prev.minutes - 1, seconds: 59 }
-        } else if (prev.hours > 0) {
-          return { ...prev, hours: prev.hours - 1, minutes: 59, seconds: 59 }
-        }
-        return { hours: 23, minutes: 59, seconds: 59 }
-      })
-    }, 1000)
-    return () => clearInterval(timer)
-  }, [])
-
-  // Mensagens rotativas de urgência
-  const urgencyMessages = [
-    "⚠️ 127 pessoas estão vendo esta oferta agora",
-    "🔥 осталось 8 vagas com desconto",
-    "⏰ Oferta expira em breve - Não perca o desconto!",
-  ]
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setUrgencyMessage(prev => (prev + 1) % urgencyMessages.length)
-    }, 5000)
-    return () => clearInterval(interval)
   }, [])
 
   useEffect(() => {
@@ -223,24 +178,8 @@ export default function Home() {
         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.02)_1px,transparent_1px)] bg-[size:60px_60px] hidden sm:block" />
       </div>
 
-      {/* Urgency Banner */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-red-600 via-orange-500 to-red-600 sm:animate-pulse">
-        <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-center gap-3">
-          <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 text-white sm:animate-bounce" />
-          <p className="text-xs sm:text-sm font-bold text-white">
-            {urgencyMessages[urgencyMessage]}
-          </p>
-          <div className="hidden sm:flex items-center gap-2 ml-4 px-3 py-1 bg-white/20 rounded-lg">
-            <Clock className="w-4 h-4 text-white" />
-            <span className="text-white font-black text-sm">
-              {String(timeLeft.hours).padStart(2, '0')}:{String(timeLeft.minutes).padStart(2, '0')}:{String(timeLeft.seconds).padStart(2, '0')}
-            </span>
-          </div>
-        </div>
-      </div>
-
       {/* Navbar */}
-      <nav className={`fixed top-10 sm:top-12 left-0 right-0 z-40 transition-all duration-300 ${isScrolled ? 'bg-[#030014]/90 backdrop-blur-xl border-b border-white/5' : ''}`}>
+      <nav className={`fixed top-0 left-0 right-0 z-40 transition-all duration-300 ${isScrolled ? 'bg-[#030014]/90 backdrop-blur-xl border-b border-white/5' : ''}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 sm:h-20 flex items-center justify-between">
           <div className="flex items-center gap-2 sm:gap-3">
             <div className="relative">
@@ -272,7 +211,7 @@ export default function Home() {
           <div className="flex items-center gap-3">
             <Link href="/login" className="text-xs sm:text-sm font-bold text-gray-400 hover:text-white transition-colors hidden sm:block">Entrar</Link>
             <Link href="/register" className="px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-purple-500 via-pink-500 to-purple-500 bg-[length:200%_100%] text-white rounded-xl text-xs sm:text-sm font-bold hover:shadow-lg hover:shadow-purple-500/30 hover:bg-[position:100%_0] transition-all duration-300">
-              Assinar Agora
+              Assinar - R$ 49,90/mês
             </Link>
           </div>
         </div>
@@ -312,7 +251,7 @@ export default function Home() {
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mb-8">
               <Link href="/register" className="w-full sm:w-auto group px-8 sm:px-10 py-4 sm:py-5 bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 bg-[length:200%_100%] text-white rounded-2xl font-black text-sm sm:text-base flex items-center justify-center gap-3 hover:shadow-2xl hover:shadow-purple-500/40 hover:bg-[position:100%_0] transition-all duration-500">
-                Assinar Agora
+                Assinar Agora - R$ 49,90/mês
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Link>
               <a href="#video" className="w-full sm:w-auto px-8 sm:px-10 py-4 sm:py-5 bg-white/5 border border-white/10 text-white rounded-2xl font-bold text-sm sm:text-base flex items-center justify-center gap-3 hover:bg-white/10 transition-all backdrop-blur-sm">
@@ -321,7 +260,7 @@ export default function Home() {
               </a>
             </div>
             
-            <p className="text-xs sm:text-sm text-gray-600">R$ 49/mês ou R$ 37,49/mês no anual • PIX, cartão ou boleto • Assinatura mensal</p>
+            <p className="text-xs sm:text-sm text-gray-600">PIX, cartão ou boleto • 7 dias de garantia</p>
           </div>
           
           {/* Hero Image/Preview */}
@@ -447,6 +386,88 @@ export default function Home() {
         </div>
       </section>
 
+      {/* O Sistema por Dentro - Showcase UI */}
+      <section id="sistema" className="relative py-16 sm:py-24 z-10">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6">
+          <div className="text-center mb-12 sm:mb-16">
+            <span className="inline-block px-4 py-2 bg-cyan-500/10 border border-cyan-500/20 rounded-full text-cyan-400 text-xs sm:text-sm font-bold uppercase tracking-widest mb-4">
+              O Sistema por Dentro
+            </span>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tighter">
+              <span className="bg-gradient-to-r from-white to-gray-500 bg-clip-text text-transparent">
+                Veja como é fácil
+              </span>
+              <br />
+              <span className="bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">
+                gerenciar seu salão
+              </span>
+            </h2>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
+            {/* Vendas */}
+            <div className="relative group">
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-500 to-pink-500 rounded-3xl opacity-30 group-hover:opacity-60 transition-opacity blur-sm" />
+              <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden border border-white/10 bg-[#0a0a14]">
+                <div className="aspect-[9/16] relative">
+                  <Image 
+                    src="/print-2.png" 
+                    alt="Tela de Vendas" 
+                    fill
+                    className="object-cover"
+                    loading="lazy"
+                  />
+                </div>
+                <div className="p-4 sm:p-6 text-center">
+                  <h3 className="font-black text-lg text-white mb-2">Vendas</h3>
+                  <p className="text-sm text-gray-400">Venda registrada em 3 cliques</p>
+                </div>
+              </div>
+            </div>
+            
+            {/* Despesas */}
+            <div className="relative group">
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-3xl opacity-30 group-hover:opacity-60 transition-opacity blur-sm" />
+              <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden border border-white/10 bg-[#0a0a14]">
+                <div className="aspect-[9/16] relative">
+                  <Image 
+                    src="/print-1.png" 
+                    alt="Tela de Despesas" 
+                    fill
+                    className="object-cover"
+                    loading="lazy"
+                  />
+                </div>
+                <div className="p-4 sm:p-6 text-center">
+                  <h3 className="font-black text-lg text-white mb-2">Despesas</h3>
+                  <p className="text-sm text-gray-400">Controle o que entra e o que sai</p>
+                </div>
+              </div>
+            </div>
+            
+            {/* Relatórios */}
+            <div className="relative group">
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-emerald-500 to-cyan-500 rounded-3xl opacity-30 group-hover:opacity-60 transition-opacity blur-sm" />
+              <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden border border-white/10 bg-[#0a0a14]">
+                <div className="aspect-[9/16] relative">
+                  <Image 
+                    src="/print-relatorio.png" 
+                    alt="Tela de Relatórios" 
+                    fill
+                    className="object-cover"
+                    loading="lazy"
+                  />
+                </div>
+                <div className="p-4 sm:p-6 text-center">
+                  <h3 className="font-black text-lg text-white mb-2">Relatórios</h3>
+                  <p className="text-sm text-gray-400">Saiba seu lucro real em segundos</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Video Section */}
       <section id="video" className="relative py-16 sm:py-24 z-10">
         <div className="max-w-4xl mx-auto px-4 sm:px-6">
@@ -472,6 +493,8 @@ export default function Home() {
               controlsList="nodownload"
               className="w-full aspect-video"
               playsInline
+              preload="metadata"
+              poster="/video-poster.jpg"
             >
               Seu navegador não suporta vídeo.
             </video>
@@ -595,10 +618,10 @@ export default function Home() {
       <section id="preco" className="relative py-16 sm:py-24 z-10">
         <div className="max-w-4xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-12 sm:mb-16">
-            {/* Escassez - Badge de oferta limitada */}
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-red-500/10 border border-red-500/30 rounded-full mb-4">
-              <Zap className="w-4 h-4 text-red-400" />
-              <span className="text-xs sm:text-sm text-red-400 font-bold">OFERTA ESPECIAL -Últimas 8 vagas!</span>
+            {/* Prova Social real - substituir escassez fake */}
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/10 border border-emerald-500/30 rounded-full mb-4">
+              <Users className="w-4 h-4 text-emerald-400" />
+              <span className="text-xs sm:text-sm text-emerald-400 font-bold">+2.500 salões organizados</span>
             </div>
             <span className="inline-block px-4 py-2 bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-full text-purple-400 text-xs sm:text-sm font-bold uppercase tracking-widest mb-4">
               Preço justo
@@ -612,23 +635,6 @@ export default function Home() {
                 corte por semana
               </span>
             </h2>
-            {/* Timer de oferta */}
-            <div className="mt-4 p-4 bg-red-500/10 border border-red-500/30 rounded-xl inline-flex items-center gap-4">
-              <div className="text-center">
-                <p className="text-2xl font-black text-red-400">{String(timeLeft.hours).padStart(2, '0')}</p>
-                <p className="text-xs text-gray-400">Horas</p>
-              </div>
-              <span className="text-red-400 text-xl font-bold">:</span>
-              <div className="text-center">
-                <p className="text-2xl font-black text-red-400">{String(timeLeft.minutes).padStart(2, '0')}</p>
-                <p className="text-xs text-gray-400">Min</p>
-              </div>
-              <span className="text-red-400 text-xl font-bold">:</span>
-              <div className="text-center">
-                <p className="text-2xl font-black text-red-400">{String(timeLeft.seconds).padStart(2, '0')}</p>
-                <p className="text-xs text-gray-400">Seg</p>
-              </div>
-            </div>
           </div>
           
           <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden">
@@ -642,10 +648,7 @@ export default function Home() {
                   <p className="text-gray-400">Tudo que você precisa para gerenciar seu salão</p>
                 </div>
                 <div className="flex items-baseline gap-1">
-                  {/* Preço tachado para mostrar desconto */}
-                  <span className="text-xl text-gray-500 line-through mr-2">R$ 97</span>
-                  <span className="text-5xl sm:text-6xl font-black bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">R$ 49</span>
-                  <span className="text-xl text-gray-400 font-bold">,90</span>
+                  <span className="text-5xl sm:text-6xl font-black bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">R$ 49,90</span>
                   <span className="text-gray-500 text-sm ml-2">/mês</span>
                 </div>
               </div>
@@ -684,15 +687,15 @@ export default function Home() {
                 ))}
               </ul>
               
-              {/* CTA com urgência */}
-              <Link href="/register" className="w-full py-4 sm:py-5 bg-gradient-to-r from-red-600 via-orange-500 to-red-600 bg-[length:200%_100%] text-white rounded-xl sm:rounded-2xl font-black text-sm sm:text-base flex items-center justify-center gap-3 hover:shadow-2xl hover:shadow-red-500/40 hover:bg-[position:100%_0] transition-all duration-500">
-                QUERO GARANTIR MINHA VAGA AGORA!
+              {/* CTA com garantia */}
+              <Link href="/register" className="w-full py-4 sm:py-5 bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 bg-[length:200%_100%] text-white rounded-xl sm:rounded-2xl font-black text-sm sm:text-base flex items-center justify-center gap-3 hover:shadow-2xl hover:shadow-purple-500/40 hover:bg-[position:100%_0] transition-all duration-500">
+                Assinar Agora - R$ 49,90/mês
                 <ArrowRight className="w-5 h-5" />
               </Link>
               
               <p className="text-center text-xs sm:text-sm text-gray-500 mt-4">
-                <span className="text-red-400 font-bold">49% OFF</span> • PIX, cartão ou boleto • 
-                <span className="text-emerald-400"> 7 dias de garantia</span>
+                <span className="text-emerald-400 font-bold">🔒 7 dias de garantia</span> • PIX, cartão ou boleto • Cancele quando quiser
+              </p>
               </p>
               
               {/* Garantia muito visível */}
@@ -743,32 +746,31 @@ export default function Home() {
             
             <div className="relative z-10">
               <Rocket className="w-12 h-12 sm:w-16 sm:h-16 text-purple-400 mx-auto mb-6" />
-              {/* Gatilho de perda */}
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-red-500/20 border border-red-500/40 rounded-full mb-4">
-                <AlertTriangle className="w-4 h-4 text-red-400" />
-                <span className="text-xs sm:text-sm text-red-400 font-bold">Não perca esta oportunidade</span>
+              {/* Prova social real */}
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/20 border border-emerald-500/40 rounded-full mb-4">
+                <Users className="w-4 h-4 text-emerald-400" />
+                <span className="text-xs sm:text-sm text-emerald-400 font-bold">+2.500 salões já automatizados</span>
               </div>
               <h2 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tighter mb-4 sm:mb-6">
                 <span className="bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
-                  Cada dia sem o sistema
+                  Comece hoje mesmo
                 </span>
                 <br />
                 <span className="bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
-                  é dinheiro que você deixa de ganhar
+                  a trabalhar de forma inteligente
                 </span>
               </h2>
               <p className="text-lg sm:text-xl text-gray-400 max-w-xl mx-auto mb-4">
-                Seus clientes estão prontos para agendar. Seu concorrente já automatizou. E você?
+                Mais de 2.500 proprietários de salão já melhoraram sua gestão.
               </p>
-              {/* Prova social */}
               <p className="text-sm text-cyan-400 font-bold mb-8">
-                🔥 {Math.floor(Math.random() * 20) + 15} pessoas se cadastraram nas últimas 24h
+                ⭐ 98% de satisfação • Nota 4.9/5
               </p>
-              <Link href="/register" className="inline-flex items-center gap-3 px-8 sm:px-12 py-4 sm:py-5 bg-gradient-to-r from-red-600 via-orange-500 to-red-600 bg-[length:200%_100%] text-white rounded-2xl font-black text-sm sm:text-base hover:shadow-2xl hover:shadow-red-500/40 hover:bg-[position:100%_0] transition-all duration-500">
-                GARANTIR MINHA VAGA AGORA!
+              <Link href="/register" className="inline-flex items-center gap-3 px-8 sm:px-12 py-4 sm:py-5 bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 bg-[length:200%_100%] text-white rounded-2xl font-black text-sm sm:text-base hover:shadow-2xl hover:shadow-purple-500/40 hover:bg-[position:100%_0] transition-all duration-500">
+                Assinar Agora - R$ 49,90/mês
                 <ArrowRight className="w-5 h-5" />
               </Link>
-              <p className="text-sm text-gray-500 mt-4">⏱️ Leva 2 minutos para se cadastrar • Sem compromisso</p>
+              <p className="text-sm text-gray-500 mt-4">🔒 7 dias de garantia • Cancele com 1 clique</p>
             </div>
           </div>
         </div>
