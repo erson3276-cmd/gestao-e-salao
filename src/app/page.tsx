@@ -402,32 +402,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-          
-          {/* Hero Image/Preview */}
-          <div className="mt-16 sm:mt-24 relative">
-            <div className="absolute inset-0 bg-gradient-to-t from-[#030014] via-transparent to-transparent z-10" />
-            <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden border border-white/10 bg-gradient-to-b from-white/5 to-white/0 backdrop-blur-sm">
-              <Image 
-                src="/print-agenda.png" 
-                alt="Agenda do Gestão E Salão" 
-                width={1200}
-                height={675}
-                className="w-full aspect-[16/9] sm:aspect-[21/9] object-cover"
-                loading="eager"
-                priority
-              />
-            </div>
-            
-            {/* Floating elements - only on desktop */}
-            <div className="hidden sm:block absolute top-4 right-4 sm:top-8 sm:right-8 px-3 sm:px-4 py-2 sm:py-3 bg-emerald-500/20 border border-emerald-500/30 rounded-xl sm:rounded-2xl backdrop-blur-md animate-bounce" style={{ animationDuration: '3s' }}>
-              <p className="text-emerald-400 text-xs sm:text-sm font-bold">+5 agendamentos hoje</p>
-            </div>
-            <div className="hidden sm:block absolute bottom-4 left-4 sm:bottom-8 sm:left-8 px-3 sm:px-4 py-2 sm:py-3 bg-purple-500/20 border border-purple-500/30 rounded-xl sm:rounded-2xl backdrop-blur-md animate-bounce" style={{ animationDuration: '2.5s', animationDelay: '0.5s' }}>
-              <p className="text-purple-400 text-xs sm:text-sm font-bold">R$ 1.847,00 hoje</p>
-            </div>
-          </div>
-        </div>
-      </section>
 
       {/* Stats Section */}
 
