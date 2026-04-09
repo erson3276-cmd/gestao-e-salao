@@ -29,7 +29,7 @@ import {
   Play,
   Quote,
   AlertTriangle,
-  ZapFast
+  Zap
 } from 'lucide-react'
 
 const painPoints = [
@@ -587,7 +587,7 @@ export default function Home() {
           <div className="text-center mb-12 sm:mb-16">
             {/* Escassez - Badge de oferta limitada */}
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-red-500/10 border border-red-500/30 rounded-full mb-4">
-              <ZapFast className="w-4 h-4 text-red-400" />
+              <Zap className="w-4 h-4 text-red-400" />
               <span className="text-xs sm:text-sm text-red-400 font-bold">OFERTA ESPECIAL -Últimas 8 vagas!</span>
             </div>
             <span className="inline-block px-4 py-2 bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-full text-purple-400 text-xs sm:text-sm font-bold uppercase tracking-widest mb-4">
