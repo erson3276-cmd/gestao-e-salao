@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { 
   Calendar, 
   Users, 
@@ -212,20 +213,20 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-[#030014] text-white overflow-x-hidden">
-      {/* Animated background */}
+      {/* Animated background - reduced on mobile */}
       <div className="fixed inset-0 z-0">
-        <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-purple-500/20 rounded-full blur-[150px] animate-pulse" />
-        <div className="absolute top-1/3 right-1/4 w-[600px] h-[600px] bg-cyan-500/15 rounded-full blur-[180px] animate-pulse" style={{ animationDelay: '1s' }} />
-        <div className="absolute bottom-1/4 left-1/3 w-[400px] h-[400px] bg-pink-500/15 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '2s' }} />
+        <div className="absolute top-0 left-1/4 w-[300px] h-[300px] sm:w-[500px] sm:h-[500px] bg-purple-500/20 sm:bg-purple-500/20 rounded-full blur-[100px] sm:blur-[150px] sm:animate-pulse" />
+        <div className="absolute top-1/3 right-1/4 w-[300px] h-[300px] sm:w-[600px] sm:h-[600px] bg-cyan-500/15 sm:bg-cyan-500/15 rounded-full blur-[100px] sm:blur-[180px] sm:animate-pulse hidden sm:block" style={{ animationDelay: '1s' }} />
+        <div className="absolute bottom-1/4 left-1/3 w-[250px] h-[250px] sm:w-[400px] sm:h-[400px] bg-pink-500/15 sm:bg-pink-500/15 rounded-full blur-[80px] sm:blur-[120px] sm:animate-pulse hidden sm:block" style={{ animationDelay: '2s' }} />
         
-        {/* Grid pattern */}
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.02)_1px,transparent_1px)] bg-[size:60px_60px]" />
+        {/* Grid pattern - hidden on mobile */}
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.02)_1px,transparent_1px)] bg-[size:60px_60px] hidden sm:block" />
       </div>
 
       {/* Urgency Banner */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-red-600 via-orange-500 to-red-600 animate-pulse">
+      <div className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-red-600 via-orange-500 to-red-600 sm:animate-pulse">
         <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-center gap-3">
-          <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 text-white animate-bounce" />
+          <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 text-white sm:animate-bounce" />
           <p className="text-xs sm:text-sm font-bold text-white">
             {urgencyMessages[urgencyMessage]}
           </p>
@@ -327,18 +328,22 @@ export default function Home() {
           <div className="mt-16 sm:mt-24 relative">
             <div className="absolute inset-0 bg-gradient-to-t from-[#030014] via-transparent to-transparent z-10" />
             <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden border border-white/10 bg-gradient-to-b from-white/5 to-white/0 backdrop-blur-sm">
-              <img 
+              <Image 
                 src="/print-agenda.png" 
                 alt="Agenda do Gestão E Salão" 
+                width={1200}
+                height={675}
                 className="w-full aspect-[16/9] sm:aspect-[21/9] object-cover"
+                loading="eager"
+                priority
               />
             </div>
             
-            {/* Floating elements */}
-            <div className="absolute top-4 right-4 sm:top-8 sm:right-8 px-3 sm:px-4 py-2 sm:py-3 bg-emerald-500/20 border border-emerald-500/30 rounded-xl sm:rounded-2xl backdrop-blur-md animate-bounce" style={{ animationDuration: '3s' }}>
+            {/* Floating elements - only on desktop */}
+            <div className="hidden sm:block absolute top-4 right-4 sm:top-8 sm:right-8 px-3 sm:px-4 py-2 sm:py-3 bg-emerald-500/20 border border-emerald-500/30 rounded-xl sm:rounded-2xl backdrop-blur-md animate-bounce" style={{ animationDuration: '3s' }}>
               <p className="text-emerald-400 text-xs sm:text-sm font-bold">+5 agendamentos hoje</p>
             </div>
-            <div className="absolute bottom-4 left-4 sm:bottom-8 sm:left-8 px-3 sm:px-4 py-2 sm:py-3 bg-purple-500/20 border border-purple-500/30 rounded-xl sm:rounded-2xl backdrop-blur-md animate-bounce" style={{ animationDuration: '2.5s', animationDelay: '0.5s' }}>
+            <div className="hidden sm:block absolute bottom-4 left-4 sm:bottom-8 sm:left-8 px-3 sm:px-4 py-2 sm:py-3 bg-purple-500/20 border border-purple-500/30 rounded-xl sm:rounded-2xl backdrop-blur-md animate-bounce" style={{ animationDuration: '2.5s', animationDelay: '0.5s' }}>
               <p className="text-purple-400 text-xs sm:text-sm font-bold">R$ 1.847,00 hoje</p>
             </div>
           </div>
@@ -493,10 +498,13 @@ export default function Home() {
           </div>
           
           <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden border border-white/10">
-            <img 
+            <Image 
               src="/print-relatorio.png" 
               alt="Relatórios do Gestão E Salão" 
+              width={1200}
+              height={800}
               className="w-full"
+              loading="lazy"
             />
           </div>
         </div>
@@ -507,16 +515,16 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
             <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden border border-white/10">
-              <img src="/print-1.png" alt="Gestão E Salão" className="w-full" />
+              <Image src="/print-1.png" alt="Gestão E Salão" width={600} height={400} className="w-full" loading="lazy" />
             </div>
             <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden border border-white/10">
-              <img src="/print-2.png" alt="Gestão E Salão" className="w-full" />
+              <Image src="/print-2.png" alt="Gestão E Salão" width={600} height={400} className="w-full" loading="lazy" />
             </div>
             <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden border border-white/10">
-              <img src="/print-3.png" alt="Gestão E Salão" className="w-full" />
+              <Image src="/print-3.png" alt="Gestão E Salão" width={600} height={400} className="w-full" loading="lazy" />
             </div>
             <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden border border-white/10">
-              <img src="/print-4.png" alt="Gestão E Salão" className="w-full" />
+              <Image src="/print-4.png" alt="Gestão E Salão" width={600} height={400} className="w-full" loading="lazy" />
             </div>
           </div>
         </div>
@@ -561,10 +569,13 @@ export default function Home() {
                 
                 {/* Photo and info */}
                 <div className="flex items-center gap-4 mb-4">
-                  <img 
+                  <Image 
                     src={t.photo} 
                     alt={t.name}
+                    width={64}
+                    height={64}
                     className="w-14 h-14 sm:w-16 sm:h-16 rounded-full object-cover border-2 border-purple-500/30"
+                    loading="lazy"
                   />
                   <div>
                     <p className="font-bold text-white">{t.name}</p>
