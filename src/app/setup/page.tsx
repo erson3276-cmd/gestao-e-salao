@@ -6,19 +6,22 @@ import { Copy, Check, ExternalLink, Database } from 'lucide-react'
 export default function SetupPage() {
   const [copied, setCopied] = useState(false)
 
-  const sql = `-- GESTAO E SALAO - UPDATE TRIAL COLUMNS
+  const sql = `-- GESTAO E SALAO - UPDATE TRIAL + VERIFICATION
 -- Execute no: https://supabase.com/dashboard/project/ssdqkvsbhebrqihoekzz/sql
 
--- 1. Adicionar colunas de trial na tabela salons (se não existirem)
+-- 1. Adicionar colunas de trial (se não existirem)
 ALTER TABLE salons ADD COLUMN IF NOT EXISTS trial_start_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();
 ALTER TABLE salons ADD COLUMN IF NOT EXISTS trial_end_at TIMESTAMP WITH TIME ZONE;
 ALTER TABLE salons ADD COLUMN IF NOT EXISTS onboarding_sent JSONB DEFAULT '{}';
 
--- 2. Atualizar status de 'active' para 'trial' em salões que ainda não expiraram
--- Execute apenas se quiser converter assinaturas ativas em trial
--- UPDATE salons SET status = 'trial', trial_start_at = NOW(), trial_end_at = NOW() + INTERVAL '14 days' WHERE status = 'active' AND subscription_ends_at > NOW();
+-- 2. Adicionar colunas de verificação de email
+ALTER TABLE salons ADD COLUMN IF NOT EXISTS verification_code TEXT;
+ALTER TABLE salons ADD COLUMN IF NOT EXISTS email_verified_at TIMESTAMP WITH TIME ZONE;
 
--- 3. Criar índice para trial (opcional)
+-- 3. Atualizar status de salões com pending_verification para trial (se houver)
+-- UPDATE salons SET status = 'trial' WHERE status = 'pending_verification';
+
+-- 4. Criar índice para trial (opcional)
 CREATE INDEX IF NOT EXISTS idx_salons_trial_end ON salons(trial_end_at) WHERE status = 'trial';`
 
   function copySql() {

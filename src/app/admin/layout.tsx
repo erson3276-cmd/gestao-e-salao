@@ -32,6 +32,7 @@ import { useRouter } from 'next/navigation'
 import { adminLogout } from '@/app/actions/admin'
 
 const sidebarItems = [
+  { name: 'Visão Geral', icon: BarChart3, path: '/admin' },
   { name: 'Agenda', icon: Calendar, path: '/admin/agenda' },
   { name: 'Vendas', icon: Calculator, path: '/admin/vendas' },
   { name: 'Clientes', icon: Users, path: '/admin/clientes' },
@@ -105,7 +106,7 @@ export default function AdminLayout({
       `}>
         {/* Header da Sidebar */}
         <div className="p-6 flex items-center justify-between border-b border-white/5">
-           <div className="flex items-center gap-3">
+           <Link href="/admin" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
               <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-[#5E41FF] to-[#3a28a3] flex items-center justify-center font-black italic text-white shadow-lg shadow-[#5E41FF]/20 border border-white/10">
                 {(salonSession?.salonName || 'M').charAt(0).toUpperCase()}
               </div>
@@ -113,7 +114,7 @@ export default function AdminLayout({
                 <span className="text-sm font-black tracking-tight leading-none uppercase italic">{salonSession?.salonName || 'Gestão E Salão'}</span>
                 <span className="text-[9px] text-[#5E41FF] uppercase font-black tracking-[0.2em] mt-1.5">{salonSession?.plan === 'premium' ? 'Premium' : salonSession?.plan === 'profissional' ? 'Profissional' : 'Enterprise'}</span>
              </div>
-           </div>
+           </Link>
         </div>
 
         {/* Navigation Items (Colavo Deep Mapping Order) */}

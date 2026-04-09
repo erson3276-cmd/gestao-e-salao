@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { SALON_COOKIE_NAME, hashPassword, type SalonSession } from '@/lib/auth'
 import { supabaseAdmin } from '@/lib/supabaseAdmin'
+import { generateVerificationCode, sendVerificationEmail } from '@/lib/email'
 
 const TRIAL_DAYS = 14
 
@@ -26,16 +27,31 @@ export async function POST(request: Request) {
     const body = await request.json()
     const { salonName, ownerName, ownerEmail, ownerPassword, ownerPhone } = body
 
-    const { data: existing } = await supabaseAdmin
+    if (!salonName || !ownerName || !ownerEmail || !ownerPassword || !ownerPhone) {
+      return NextResponse.json({ success: false, error: 'Preencha todos os campos obrigatórios' })
+    }
+
+    const { data: existingByEmail } = await supabaseAdmin
       .from('salons')
       .select('id')
       .eq('owner_email', ownerEmail)
       .single()
 
-    if (existing) {
+    if (existingByEmail) {
       return NextResponse.json({ success: false, error: 'Este email já está cadastrado' })
     }
 
+    const { data: existingByPhone } = await supabaseAdmin
+      .from('salons')
+      .select('id')
+      .eq('owner_phone', ownerPhone)
+      .single()
+
+    if (existingByPhone) {
+      return NextResponse.json({ success: false, error: 'Este número de WhatsApp já está cadastrado' })
+    }
+
+    const verificationCode = generateVerificationCode()
     const trialEnd = getTrialEndDate()
     const now = new Date()
 
@@ -48,7 +64,8 @@ export async function POST(request: Request) {
         owner_password: hashPassword(ownerPassword),
         owner_phone: ownerPhone || null,
         plan: 'profissional',
-        status: 'trial',
+        status: 'pending_verification',
+        verification_code: verificationCode,
         subscription_ends_at: trialEnd.toISOString(),
         trial_start_at: now.toISOString(),
         trial_end_at: trialEnd.toISOString(),
@@ -59,6 +76,58 @@ export async function POST(request: Request) {
 
     if (insertError) {
       return NextResponse.json({ success: false, error: 'Erro ao criar: ' + insertError.message })
+    }
+
+    await sendVerificationEmail(ownerEmail, verificationCode, salonName)
+
+    return NextResponse.json({ 
+      success: true, 
+      step: 'verification',
+      message: 'Enviamos um código de verificação para seu email.',
+      salonId: salon.id
+    })
+  } catch (e: any) {
+    return NextResponse.json({ 
+      success: false, 
+      error: 'Erro: ' + e.message 
+    }, { status: 500 })
+  }
+}
+
+export async function PUT(request: Request) {
+  try {
+    const body = await request.json()
+    const { salonId, code } = body
+
+    if (!salonId || !code) {
+      return NextResponse.json({ success: false, error: 'Código de verificação obrigatório' })
+    }
+
+    const { data: salon, error: fetchError } = await supabaseAdmin
+      .from('salons')
+      .select('*')
+      .eq('id', salonId)
+      .single()
+
+    if (fetchError || !salon) {
+      return NextResponse.json({ success: false, error: 'Cadastro não encontrado' })
+    }
+
+    if (salon.status === 'trial' || salon.status === 'active') {
+      return NextResponse.json({ success: true, message: 'Email já verificado', step: 'complete' })
+    }
+
+    if (salon.verification_code !== code.toUpperCase()) {
+      return NextResponse.json({ success: false, error: 'Código incorreto' })
+    }
+
+    const { error: updateError } = await supabaseAdmin
+      .from('salons')
+      .update({ status: 'trial', verification_code: null })
+      .eq('id', salonId)
+
+    if (updateError) {
+      return NextResponse.json({ success: false, error: 'Erro ao verificar: ' + updateError.message })
     }
 
     const session: SalonSession = {
@@ -81,9 +150,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ 
       success: true, 
-      message: 'Conta criada com sucesso! Você tem 14 dias de teste grátis.',
-      step: 'onboarding',
-      trialDaysRemaining: TRIAL_DAYS
+      step: 'complete',
+      message: 'Email confirmado! Bem-vindo ao Gestão E Salão.'
     })
   } catch (e: any) {
     return NextResponse.json({ 
