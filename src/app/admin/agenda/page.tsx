@@ -66,7 +66,7 @@ interface WorkingHour {
 
 const START_HOUR = 7
 const END_HOUR = 21
-const HOUR_HEIGHT = 80
+const HOUR_HEIGHT = 60
 
 const timeToMinutes = (timeStr: string) => {
   const [h, m] = timeStr.split(':').map(Number)
@@ -337,35 +337,39 @@ export default function AgendaPage() {
         <button onClick={() => setCurrentDate(addDays(currentDate, view === 'semana' ? 7 : 1))} className="p-2 bg-white/10 rounded-lg"><ChevronRight size={20} /></button>
       </div>
 
-      {/* Table Grid */}
-      <div className="w-full bg-[#121021] rounded-xl sm:rounded-2xl overflow-hidden flex flex-col h-[calc(100vh-200px)] sm:h-[calc(100vh-240px)]">
+      {/* Table Grid - Sem bordas no mobile */}
+      <div className="w-full bg-transparent sm:bg-[#121021] rounded-xl sm:rounded-2xl overflow-hidden flex flex-col h-[calc(100vh-180px)] sm:h-[calc(100vh-240px)]">
         {/* Header row */}
-        <div className="grid border-b border-white/10 flex-shrink-0" style={{ gridTemplateColumns: `40px repeat(${days.length}, 1fr)` }}>
-          <div className="p-1 sm:p-2 text-[10px] sm:text-xs text-gray-500 text-center">Hora</div>
+        <div className="grid border-b border-white/10 flex-shrink-0 bg-[#121021]" style={{ gridTemplateColumns: `30px repeat(${days.length}, 1fr)` }}>
+          <div className="p-1 sm:p-2 text-[8px] sm:text-xs text-gray-500 text-center">Hora</div>
           {days.map((day, i) => {
             const dayOfWeek = getDay(day)
             const wh = workingHours.find(w => w.day_of_week === dayOfWeek)
             return (
-              <div key={i} className={`p-1 sm:p-2 text-center border-r border-white/5 ${isToday(day) ? 'bg-emerald-500/10' : ''}`}>
-                <p className={`text-[10px] sm:text-xs font-medium ${isToday(day) ? 'text-emerald-400' : 'text-gray-400'}`}>
+              <button 
+                key={i} 
+                className={`p-1 sm:p-2 text-center border-r border-white/5 cursor-pointer hover:bg-white/5 ${isToday(day) ? 'bg-emerald-500/10' : ''}`}
+                onClick={() => { setView('dia'); setCurrentDate(day) }}
+              >
+                <p className={`text-[8px] sm:text-xs font-medium ${isToday(day) ? 'text-emerald-400' : 'text-gray-400'}`}>
                   {format(day, 'EEE', { locale: ptBR })}
                 </p>
                 <p className={`text-sm sm:text-lg font-bold ${isToday(day) ? 'text-emerald-400' : 'text-white'}`}>
                   {format(day, 'dd')}
                 </p>
                 {wh && <p className="text-[8px] sm:text-[10px] text-gray-500">{wh.is_active ? `${wh.start_time}-${wh.end_time}` : 'Fechado'}</p>}
-              </div>
+              </button>
             )
           })}
         </div>
 
         {/* Grid body */}
-        <div className="relative overflow-y-auto flex-1 w-full" style={{ overflowY: 'auto' }}>
-          <div className="w-full grid" style={{ gridTemplateColumns: `40px repeat(${days.length}, 1fr)` }}>
+        <div className="relative overflow-y-auto flex-1 w-full bg-[#121021]" style={{ overflowY: 'auto' }}>
+          <div className="w-full grid" style={{ gridTemplateColumns: `30px repeat(${days.length}, 1fr)` }}>
             {/* Hour labels */}
             <div>
               {hours.map(h => (
-                <div key={h} className="text-[8px] sm:text-[10px] text-gray-500 text-right pr-1 sm:pr-2 border-t border-white/5" style={{ height: HOUR_HEIGHT, lineHeight: `${HOUR_HEIGHT}px` }}>
+                <div key={h} className="text-[8px] text-gray-500 text-right pr-1 border-t border-white/5" style={{ height: HOUR_HEIGHT, lineHeight: `${HOUR_HEIGHT}px` }}>
                   {String(h).padStart(2, '0')}:00
                 </div>
               ))}
