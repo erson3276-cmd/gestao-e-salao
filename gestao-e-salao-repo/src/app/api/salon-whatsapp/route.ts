@@ -3,23 +3,26 @@ import { supabaseAdmin } from '@/lib/supabaseAdmin'
 import { getSalonSession } from '@/app/actions/salon-auth'
 import { whatsappManager } from '@/lib/whatsapp-manager'
 
-const API_URL = process.env.EVOLUTION_API_URL || 'http://167.234.248.199:8082'
-const API_KEY = process.env.EVOLUTION_API_KEY || 'salao2024'
+const WHATSAPP_API = process.env.WHATSAPP_API_URL || 'http://167.234.248.199:8083'
 
-async function checkEvolutionServer() {
-  if (!API_URL) return { online: false, error: 'EVOLUTION_API_URL não configurada' }
+async function checkWhatsAppServer() {
   try {
     const controller = new AbortController()
     const timeout = setTimeout(() => controller.abort(), 5000)
-    const res = await fetch(`${API_URL}/instance/connectionState/health-check`, { 
+    const res = await fetch(`${WHATSAPP_API}/health`, { 
       signal: controller.signal,
       cache: 'no-store'
     })
     clearTimeout(timeout)
-    return { online: res.ok, status: res.status, url: API_URL }
+    const data = await res.json()
+    return { online: data.status === 'ok', status: data }
   } catch (e: any) {
-    return { online: false, error: e.message, url: API_URL }
+    return { online: false, error: e.message }
   }
+}
+
+function getSessionId(salonId: string) {
+  return `salon-${salonId.slice(0, 8)}`
 }
 
 export async function GET() {
@@ -32,14 +35,12 @@ export async function GET() {
     .eq('id', session.salonId)
     .single()
 
-  if (!salon?.whatsapp_instance_id) {
-    return NextResponse.json({ connected: false, instanceId: null })
-  }
-
-  const status = await whatsappManager.status(session.salonId)
+  const sessionId = salon?.whatsapp_instance_id || getSessionId(session.salonId)
+  const status = await whatsappManager.status(sessionId)
+  
   return NextResponse.json({ 
-    instanceId: salon.whatsapp_instance_id,
-    ...status
+    instanceId: sessionId,
+    connected: status.connected
   })
 }
 
@@ -49,131 +50,51 @@ export async function POST(request: Request) {
 
   const { action, phone, message } = await request.json()
   const salonId = session.salonId
+  const sessionId = getSessionId(salonId)
 
   if (action === 'health') {
-    const check = await checkEvolutionServer()
+    const check = await checkWhatsAppServer()
     return NextResponse.json({ 
-      server: API_URL,
-      hasKey: !!API_KEY,
-      ...check
+      server: WHATSAPP_API,
+      online: check.online
     })
   }
 
-  if (action === 'createInstance') {
-    try {
-      const result = await whatsappManager.createInstance(salonId)
-      return NextResponse.json({ success: true, ...result })
-    } catch (e: any) {
-      return NextResponse.json({ success: false, error: e.message }, { status: 500 })
-    }
-  }
-
   if (action === 'connect') {
-    const serverCheck = await checkEvolutionServer()
+    const serverCheck = await checkWhatsAppServer()
     if (!serverCheck.online) {
       return NextResponse.json({ 
         success: false, 
-        error: 'Servidor WhatsApp indisponível', 
+        error: 'Servidor WhatsApp indisponível',
         details: serverCheck.error
       }, { status: 503 })
     }
 
     try {
-      const { data: salon } = await supabaseAdmin
-        .from('salons')
-        .select('whatsapp_instance_id')
-        .eq('id', salonId)
-        .single()
-
-      if (!salon?.whatsapp_instance_id) {
-        await whatsappManager.createInstance(salonId)
-        await new Promise(r => setTimeout(r, 2000))
-      }
-
-      const result = await whatsappManager.connect(salonId)
+      const result = await whatsappManager.createSession(sessionId)
       
-      const instanceName = `salon-${salonId.slice(0, 8)}`
       await supabaseAdmin
         .from('salons')
-        .update({ whatsapp_instance_id: instanceName })
+        .update({ whatsapp_instance_id: sessionId })
         .eq('id', salonId)
 
       if (result.qr) {
         return NextResponse.json({ success: true, qr: result.qr })
       }
-      if (result.code) {
-        return NextResponse.json({ success: true, code: result.code })
-      }
-      if (result.connected) {
-        return NextResponse.json({ success: true, connected: true })
-      }
       
-      return NextResponse.json({ success: false, ...result })
-    } catch (e: any) {
-      return NextResponse.json({ success: false, error: e.message }, { status: 500 })
-    }
-  }
-
-  if (action === 'pairingCode') {
-    if (!phone) return NextResponse.json({ error: 'Phone required' }, { status: 400 })
-    
-    const serverCheck = await checkEvolutionServer()
-    if (!serverCheck.online) {
-      return NextResponse.json({ 
-        success: false, 
-        error: 'Servidor indisponível'
-      }, { status: 503 })
-    }
-
-    try {
-      const { data: salon } = await supabaseAdmin
-        .from('salons')
-        .select('whatsapp_instance_id')
-        .eq('id', salonId)
-        .single()
-
-      if (!salon?.whatsapp_instance_id) {
-        await whatsappManager.createInstance(salonId)
-        await new Promise(r => setTimeout(r, 2000))
-      }
-
-      const result = await whatsappManager.pairingCode(salonId, phone)
-      
-      const instanceName = `salon-${salonId.slice(0, 8)}`
-      await supabaseAdmin
-        .from('salons')
-        .update({ whatsapp_instance_id: instanceName })
-        .eq('id', salonId)
-
-      if (result.code) {
-        return NextResponse.json({ success: true, code: result.code })
-      }
-      
-      return NextResponse.json({ success: false, ...result })
+      return NextResponse.json({ success: true, status: result.status })
     } catch (e: any) {
       return NextResponse.json({ success: false, error: e.message }, { status: 500 })
     }
   }
 
   if (action === 'sendMessage') {
-    const { phone, message } = await request.json()
-    
     if (!phone || !message) {
       return NextResponse.json({ error: 'Phone and message required' }, { status: 400 })
     }
 
-    const { data: salon } = await supabaseAdmin
-      .from('salons')
-      .select('whatsapp_instance_id')
-      .eq('id', salonId)
-      .single()
-
-    if (!salon?.whatsapp_instance_id) {
-      return NextResponse.json({ success: false, error: 'WhatsApp não conectado' }, { status: 400 })
-    }
-
     try {
-      const result = await whatsappManager.sendText(salonId, phone, message)
+      const result = await whatsappManager.sendText(sessionId, phone, message)
       return NextResponse.json({ success: !result.error, ...result })
     } catch (e: any) {
       return NextResponse.json({ success: false, error: e.message }, { status: 500 })
@@ -182,7 +103,7 @@ export async function POST(request: Request) {
 
   if (action === 'disconnect') {
     try {
-      await whatsappManager.disconnect(salonId)
+      await whatsappManager.disconnect(sessionId)
       await supabaseAdmin
         .from('salons')
         .update({ whatsapp_instance_id: null })
@@ -190,6 +111,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: true })
     } catch (e: any) {
       return NextResponse.json({ success: false, error: e.message }, { status: 500 })
+    }
+  }
+
+  if (action === 'getQR') {
+    try {
+      const result = await whatsappManager.qr(sessionId)
+      return NextResponse.json(result)
+    } catch (e: any) {
+      return NextResponse.json({ error: e.message }, { status: 500 })
     }
   }
 
