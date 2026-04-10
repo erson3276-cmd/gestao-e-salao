@@ -139,11 +139,18 @@ export default function SubscriptionExpiredPage() {
 
           <div className="space-y-3">
             <button
-              onClick={() => setShowPayment(true)}
+              onClick={() => router.push('/admin/assinatura')}
               disabled={loading}
               className="w-full py-4 bg-[#5E41FF] text-white rounded-2xl font-black uppercase tracking-widest text-xs flex items-center justify-center gap-3 hover:bg-[#5E41FF]/90 transition-all"
             >
               {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <>ASSINAR AGORA</>}
+            </button>
+
+            <button
+              onClick={() => setShowPayment(true)}
+              className="w-full py-3 bg-white/5 border border-white/10 text-gray-300 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 hover:bg-white/10"
+            >
+              Ver opções de pagamento
             </button>
 
             <button
