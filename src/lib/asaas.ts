@@ -17,7 +17,7 @@ async function asaasFetch(endpoint: string, method: string = 'GET', body?: any) 
   
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    'access_token': ASAAS_API_KEY
+    'Authorization': `Bearer ${ASAAS_API_KEY}`
   }
 
   const options: RequestInit = { method, headers, cache: 'no-store' }
