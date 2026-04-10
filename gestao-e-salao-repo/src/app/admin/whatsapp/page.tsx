@@ -9,7 +9,17 @@ export default function WhatsAppPage() {
   const [status, setStatus] = useState<any>(null)
   const [error, setError] = useState('')
   const [qrCode, setQrCode] = useState<string | null>(null)
-  const [sessionId, setSessionId] = useState<string | null>(null)
+  const [sessionId, setSessionId] = useState<string>('')
+
+  useEffect(() => {
+    const salonIdFromStorage = localStorage.getItem('salonId')
+    if (salonIdFromStorage) {
+      const id = `salon-${salonIdFromStorage.slice(0, 8)}`
+      setSessionId(id)
+    } else {
+      setSessionId('default-salon')
+    }
+  }, [])
 
   useEffect(() => {
     if (sessionId) {
