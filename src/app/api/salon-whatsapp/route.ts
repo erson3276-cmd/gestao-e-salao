@@ -123,5 +123,30 @@ export async function POST(request: Request) {
     }
   }
 
+  if (action === 'pairingCode') {
+    if (!phone) {
+      return NextResponse.json({ error: 'Phone required' }, { status: 400 })
+    }
+
+    try {
+      const cleanPhone = phone.replace(/\D/g, '')
+      const res = await fetch(`${WHATSAPP_API}/pairing/${sessionId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: cleanPhone })
+      })
+      const result = await res.json()
+      
+      await supabaseAdmin
+        .from('salons')
+        .update({ whatsapp_instance_id: sessionId })
+        .eq('id', salonId)
+
+      return NextResponse.json(result)
+    } catch (e: any) {
+      return NextResponse.json({ success: false, error: e.message }, { status: 500 })
+    }
+  }
+
   return NextResponse.json({ error: 'Invalid action' }, { status: 400 })
 }

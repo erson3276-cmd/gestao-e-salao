@@ -1,16 +1,17 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { MessageCircle, QrCode, CheckCircle2, XCircle, Loader2, RefreshCw, Smartphone, Link, Unlink } from 'lucide-react'
+import { MessageCircle, QrCode, CheckCircle2, XCircle, Loader2, RefreshCw, Smartphone, Link, Unlink, Copy } from 'lucide-react'
 
 export default function WhatsAppPage() {
   const [loading, setLoading] = useState(true)
-  const [checking, setChecking] = useState(false)
   const [connecting, setConnecting] = useState(false)
   const [status, setStatus] = useState<any>(null)
   const [error, setError] = useState('')
   const [serverHealth, setServerHealth] = useState<any>(null)
-  const [action, setAction] = useState<'connect' | 'pairing'>('connect')
+  const [phone, setPhone] = useState('')
+  const [pairingCode, setPairingCode] = useState('')
+  const [showPhoneInput, setShowPhoneInput] = useState(false)
 
   useEffect(() => {
     loadStatus()
@@ -43,6 +44,35 @@ export default function WhatsAppPage() {
     }
   }
 
+  async function handlePairingCode() {
+    if (!phone) {
+      setError('Digite o número do WhatsApp')
+      return
+    }
+
+    setConnecting(true)
+    setError('')
+    setPairingCode('')
+
+    try {
+      const res = await fetch('/api/salon-whatsapp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'pairingCode', phone })
+      })
+      const data = await res.json()
+      
+      if (data.code) {
+        setPairingCode(data.code)
+      } else {
+        setError(data.error || 'Erro ao gerar código')
+      }
+    } catch (e: any) {
+      setError(e.message)
+    }
+    setConnecting(false)
+  }
+
   async function handleConnect() {
     setConnecting(true)
     setError('')
@@ -50,7 +80,7 @@ export default function WhatsAppPage() {
       const res = await fetch('/api/salon-whatsapp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: action === 'connect' ? 'connect' : 'pairingCode', phone: '21982755539' })
+        body: JSON.stringify({ action: 'connect' })
       })
       const data = await res.json()
       
@@ -78,6 +108,10 @@ export default function WhatsAppPage() {
       setError(e.message)
     }
     setConnecting(false)
+  }
+
+  function copyCode() {
+    navigator.clipboard.writeText(pairingCode)
   }
 
   if (loading) {
@@ -151,10 +185,23 @@ export default function WhatsAppPage() {
           </div>
         )}
 
+        {pairingCode && (
+          <div className="p-6 bg-emerald-500/10 border border-emerald-500/30 rounded-xl mb-6 text-center">
+            <p className="text-sm text-gray-400 mb-2">Código de Pareamento:</p>
+            <div className="flex items-center justify-center gap-4">
+              <p className="text-4xl font-black tracking-widest text-emerald-400">{pairingCode}</p>
+              <button onClick={copyCode} className="p-2 hover:bg-white/10 rounded-lg" title="Copiar">
+                <Copy size={20} className="text-gray-400" />
+              </button>
+            </div>
+            <p className="text-xs text-gray-500 mt-4">Digite este código no seu WhatsApp</p>
+          </div>
+        )}
+
         {status?.connected ? (
           <div className="space-y-4">
             <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
-              <p className="text-sm text-emerald-400 font-bold">✓ everything funcionando!</p>
+              <p className="text-sm text-emerald-400 font-bold">✓ Funcionando!</p>
               <p className="text-xs text-gray-500 mt-1">Lembretes automáticos estão ativos.</p>
             </div>
             <button
@@ -167,29 +214,47 @@ export default function WhatsAppPage() {
           </div>
         ) : (
           <div className="space-y-6">
-            <div className="flex gap-3">
-              <button
-                onClick={() => setAction('connect')}
-                className={`flex-1 p-4 rounded-xl border flex items-center justify-center gap-2 transition-all ${action === 'connect' ? 'bg-[#5E41FF]/10 border-[#5E41FF]/40' : 'border-white/10 hover:border-white/20'}`}
-              >
-                <QrCode size={18} className={action === 'connect' ? 'text-[#5E41FF]' : 'text-gray-500'} />
-                <span className="font-bold text-sm">QR Code</span>
-              </button>
-              <button
-                onClick={() => setAction('pairing')}
-                className={`flex-1 p-4 rounded-xl border flex items-center justify-center gap-2 transition-all ${action === 'pairing' ? 'bg-[#5E41FF]/10 border-[#5E41FF]/40' : 'border-white/10 hover:border-white/20'}`}
-              >
-                <Link size={18} className={action === 'pairing' ? 'text-[#5E41FF]' : 'text-gray-500'} />
-                <span className="font-bold text-sm">Código de Pareamento</span>
-              </button>
+            {/* Phone Input for Pairing */}
+            <div className="space-y-3">
+              <label className="block text-sm font-medium text-gray-400">
+                Número do WhatsApp (apenas dígitos)
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
+                  placeholder="21999999999"
+                  className="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-[#5E41FF] transition-all"
+                />
+                <button
+                  onClick={handlePairingCode}
+                  disabled={connecting || !serverHealth?.online || phone.length < 10}
+                  className="px-6 py-3 bg-[#5E41FF] text-white rounded-xl font-bold flex items-center gap-2 hover:bg-[#5E41FF]/90 disabled:opacity-50"
+                >
+                  {connecting ? <Loader2 className="w-5 h-5 animate-spin" /> : <Link size={18} />}
+                  Gerar Código
+                </button>
+              </div>
+              <p className="text-xs text-gray-500">Digite o número com DDD, ex: 21999999999</p>
+            </div>
+
+            {/* QR Code Option */}
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-white/10"></div>
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-[#121021] px-2 text-gray-500">ou</span>
+              </div>
             </div>
 
             <button
               onClick={handleConnect}
               disabled={connecting || !serverHealth?.online}
-              className="w-full py-4 bg-[#5E41FF] text-white rounded-2xl font-black uppercase tracking-widest text-sm flex items-center justify-center gap-3 hover:bg-[#5E41FF]/90 disabled:opacity-50"
+              className="w-full py-4 bg-white/10 text-white rounded-2xl font-bold flex items-center justify-center gap-3 hover:bg-white/20 disabled:opacity-50"
             >
-              {connecting ? <Loader2 className="w-5 h-5 animate-spin" /> : <>{action === 'connect' ? <QrCode size={18} /> : <Link size={18} />} Conectar WhatsApp</>}
+              {connecting ? <Loader2 className="w-5 h-5 animate-spin" /> : <><QrCode size={18} /> Escanear QR Code</>}
             </button>
 
             {!serverHealth?.online && (
@@ -207,7 +272,7 @@ export default function WhatsAppPage() {
         <ul className="space-y-3 text-sm text-gray-400">
           <li className="flex items-start gap-3">
             <div className="w-6 h-6 rounded-full bg-[#5E41FF]/20 flex items-center justify-center text-[#5E41FF] text-xs font-bold shrink-0">1</div>
-            <span>Conecte seu WhatsApp escaneando o QR Code ou usando código de pareamento</span>
+            <span>Conecte seu WhatsApp usando código de pareamento ou QR Code</span>
           </li>
           <li className="flex items-start gap-3">
             <div className="w-6 h-6 rounded-full bg-[#5E41FF]/20 flex items-center justify-center text-[#5E41FF] text-xs font-bold shrink-0">2</div>
@@ -215,7 +280,7 @@ export default function WhatsAppPage() {
           </li>
           <li className="flex items-start gap-3">
             <div className="w-6 h-6 rounded-full bg-[#5E41FF]/20 flex items-center justify-center text-[#5E41FF] text-xs font-bold shrink-0">3</div>
-            <span>Um lembrete automático será enviado 24h antes do atendimento</span>
+            <span>Um lembrete automático será enviado 2h antes do atendimento</span>
           </li>
         </ul>
       </div>
