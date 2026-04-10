@@ -14,7 +14,7 @@ export async function POST(request: Request) {
     const cleanWhatsapp = whatsapp.replace(/\D/g, '')
 
     // Check if salon only allows registered clients
-    const { data: salon } = await supabaseAdmin
+    const { data: salonSettings } = await supabaseAdmin
       .from('salons')
       .select('only_registered_clients')
       .eq('id', salonId)
@@ -28,7 +28,7 @@ export async function POST(request: Request) {
       .eq('whatsapp', cleanWhatsapp)
       .single()
 
-    if (salon?.only_registered_clients) {
+    if (salonSettings?.only_registered_clients) {
       if (!customer) {
         return NextResponse.json({ 
           success: false, 
