@@ -1,14 +1,5 @@
-let ASAAS_API_URL = process.env.ASAAS_API_URL || 'https://api.asaas.com/v3'
-const ASAAS_API_KEY = process.env.ASAAS_API_KEY || ''
-
-// Fix base64 encoded URLs
-if (ASAAS_API_URL.includes('aHR0c') || ASAAS_API_URL.includes('base64')) {
-  try {
-    ASAAS_API_URL = Buffer.from(ASAAS_API_URL, 'base64').toString('utf-8')
-  } catch {
-    ASAAS_API_URL = 'https://api.asaas.com/v3'
-  }
-}
+const ASAAS_API_URL = process.env.ASAAS_API_URL || 'https://api.asaas.com/v3'
+const ASAAS_API_KEY = '$' + String(process.env.ASAAS_API_KEY || process.env.ASAAS_KEY_RAW || '')
 
 async function asaasFetch(endpoint: string, method: string = 'GET', body?: any) {
   if (!ASAAS_API_KEY) {
@@ -18,7 +9,7 @@ async function asaasFetch(endpoint: string, method: string = 'GET', body?: any) 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     'User-Agent': 'GestaoESalao/1.0',
-    'access_token': ASAAS_API_KEY
+    'access_token': `${ASAAS_API_KEY}`
   }
 
   const options: RequestInit = { method, headers, cache: 'no-store' }
