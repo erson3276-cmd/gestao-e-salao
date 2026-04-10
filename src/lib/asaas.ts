@@ -1,9 +1,6 @@
 let ASAAS_API_URL = process.env.ASAAS_API_URL || 'https://api.asaas.com/v3'
 const ASAAS_API_KEY = process.env.ASAAS_API_KEY || ''
 
-console.log('ASAAS_API_KEY present:', !!ASAAS_API_KEY, 'length:', ASAAS_API_KEY?.length)
-console.log('ASAAS_API_URL:', ASAAS_API_URL)
-
 // Fix base64 encoded URLs
 if (ASAAS_API_URL.includes('aHR0c') || ASAAS_API_URL.includes('base64')) {
   try {
@@ -14,7 +11,9 @@ if (ASAAS_API_URL.includes('aHR0c') || ASAAS_API_URL.includes('base64')) {
 }
 
 async function asaasFetch(endpoint: string, method: string = 'GET', body?: any) {
-  console.log('asaasFetch called:', method, endpoint, 'API_KEY exists:', !!ASAAS_API_KEY)
+  if (!ASAAS_API_KEY) {
+    throw new Error('ASAAS_API_KEY não configurada')
+  }
   
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -24,14 +23,14 @@ async function asaasFetch(endpoint: string, method: string = 'GET', body?: any) 
   const options: RequestInit = { method, headers, cache: 'no-store' }
   if (body) options.body = JSON.stringify(body)
 
-  console.log('Fetching:', ASAAS_API_URL + endpoint)
+  const url = `${ASAAS_API_URL}${endpoint}`
+  console.log('Asaas request:', method, url)
   
-  const res = await fetch(`${ASAAS_API_URL}${endpoint}`, options)
-  console.log('Response status:', res.status)
+  const res = await fetch(url, options)
   
   if (!res.ok) {
     const text = await res.text()
-    console.log('Error response:', text)
+    console.error('Asaas error:', res.status, text)
     throw new Error(`Asaas API ${res.status}: ${text}`)
   }
   const ct = res.headers.get('content-type')

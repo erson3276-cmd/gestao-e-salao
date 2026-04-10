@@ -10,6 +10,7 @@ import {
   Package, 
   BarChart3, 
   MessageSquare, 
+  MessageCircle,
   DollarSign, 
   Settings, 
   Menu, 
@@ -38,7 +39,7 @@ const sidebarItems = [
   { name: 'Clientes', icon: Users, path: '/admin/clientes' },
   { name: 'Serviços', icon: Package, path: '/admin/servicos' },
   { name: 'Despesas', icon: DollarSign, path: '/admin/despesas' },
-  // WhatsApp removido temporariamente - adicionar quando tiver orçamento
+  { name: 'WhatsApp', icon: MessageCircle, path: '/admin/whatsapp' },
   { name: 'Relatórios', icon: BarChart3, path: '/admin/relatorios' },
   { name: 'Comissão', icon: Calculator, path: '/admin/comissao' },
   { name: 'Gestão do salão', icon: Settings, path: '/admin/gestao' },
