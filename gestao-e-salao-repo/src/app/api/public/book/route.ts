@@ -13,8 +13,37 @@ export async function POST(request: Request) {
 
     const cleanWhatsapp = whatsapp.replace(/\D/g, '')
 
+    // Check if salon only allows registered clients
+    const { data: salon } = await supabaseAdmin
+      .from('salons')
+      .select('only_registered_clients')
+      .eq('id', salonId)
+      .single()
+
+    // Check if customer exists
+    let { data: customer } = await supabaseAdmin
+      .from('customers')
+      .select('id, active')
+      .eq('salon_id', salonId)
+      .eq('whatsapp', cleanWhatsapp)
+      .single()
+
+    if (salon?.only_registered_clients) {
+      if (!customer) {
+        return NextResponse.json({ 
+          success: false, 
+          error: 'Este salão só aceita agendamentos de clientes cadastrados. Por favor, entre em contato com o salão.' 
+        }, { status: 403 })
+      }
+      if (!customer.active) {
+        return NextResponse.json({ 
+          success: false, 
+          error: 'Seu cadastro está inativo. Por favor, entre em contato com o salão.' 
+        }, { status: 403 })
+      }
+    }
+
     // Parse the incoming date and convert to UTC for storage
-    // The frontend sends -03:00 timezone, we need to store in UTC
     const startDate = new Date(startTime)
     const endDate = new Date(endTime)
     
@@ -24,14 +53,7 @@ export async function POST(request: Request) {
     const startTimeUTC = startDate.toISOString()
     const endTimeUTC = endDate.toISOString()
 
-    // Check if customer exists, create if not
-    let { data: customer } = await supabaseAdmin
-      .from('customers')
-      .select('id')
-      .eq('salon_id', salonId)
-      .eq('whatsapp', cleanWhatsapp)
-      .single()
-
+    // Create customer if not exists (when not restricted)
     if (!customer) {
       const { data: newCustomer, error: createError } = await supabaseAdmin
         .from('customers')
