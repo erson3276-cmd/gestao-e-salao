@@ -107,9 +107,17 @@ export default function AdminLayout({
         {/* Header da Sidebar */}
         <div className="p-6 flex items-center justify-between border-b border-white/5">
            <Link href="/admin" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-              <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-[#5E41FF] to-[#3a28a3] flex items-center justify-center font-black italic text-white shadow-lg shadow-[#5E41FF]/20 border border-white/10">
-                {(salonSession?.salonName || 'M').charAt(0).toUpperCase()}
-              </div>
+              {salonSession?.imageUrl ? (
+                <img 
+                  src={salonSession.imageUrl} 
+                  alt={salonSession.salonName}
+                  className="w-9 h-9 rounded-2xl object-cover border border-white/10"
+                />
+              ) : (
+                <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-[#5E41FF] to-[#3a28a3] flex items-center justify-center font-black italic text-white shadow-lg shadow-[#5E41FF]/20 border border-white/10">
+                  {(salonSession?.salonName || 'M').charAt(0).toUpperCase()}
+                </div>
+              )}
               <div className="flex flex-col">
                 <span className="text-sm font-black tracking-tight leading-none uppercase italic">{salonSession?.salonName || 'Gestão E Salão'}</span>
                 <span className="text-[9px] text-[#5E41FF] uppercase font-black tracking-[0.2em] mt-1.5">{salonSession?.plan === 'premium' ? 'Premium' : salonSession?.plan === 'profissional' ? 'Profissional' : 'Enterprise'}</span>

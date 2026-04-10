@@ -156,6 +156,12 @@ export default function GestaoPage() {
       
       if (data.success && data.url) {
         setProfile({ ...profile, image_url: data.url })
+        
+        await fetch('/api/gestao/profile', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ image_url: data.url })
+        })
       } else {
         alert('Erro ao fazer upload: ' + (data.error || 'Erro desconhecido'))
       }

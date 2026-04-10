@@ -17,7 +17,18 @@ export async function GET() {
   if (salonCookie) {
     try {
       const session = JSON.parse(salonCookie.value)
-      return NextResponse.json({ role: 'salon', ...session })
+      
+      const { data: salon } = await supabaseAdmin
+        .from('salons')
+        .select('image_url')
+        .eq('id', session.salonId)
+        .single()
+      
+      return NextResponse.json({ 
+        role: 'salon', 
+        ...session,
+        imageUrl: salon?.image_url || null
+      })
     } catch {
       return NextResponse.json({ role: null }, { status: 401 })
     }
