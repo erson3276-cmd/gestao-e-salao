@@ -1,112 +1,81 @@
-const API_URL = process.env.BAILEYS_API_URL || 'http://167.234.248.199:8082'
-const API_KEY = process.env.BAILEYS_API_KEY || 'salao2024'
+const API_URL = process.env.WHATSAPP_API_URL || 'http://167.234.248.199:8083'
 
-async function evolutionFetch(endpoint: string, method: string = 'GET', body?: any) {
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    'apikey': process.env.BAILEYS_API_KEY || API_KEY
-  }
-
+async function apiFetch(endpoint: string, method: string = 'GET', body?: any) {
   const options: RequestInit = {
     method,
-    headers,
-    cache: 'no-store'
+    headers: { 'Content-Type': 'application/json' }
   }
-
-  if (body) {
-    options.body = JSON.stringify(body)
-  }
+  if (body) options.body = JSON.stringify(body)
 
   try {
     const response = await fetch(`${API_URL}${endpoint}`, options)
     const data = await response.json()
     return data
   } catch (error: any) {
-    console.error('Evolution API error:', error)
+    console.error('WhatsApp API error:', error)
     return { error: error.message }
   }
 }
 
 export const baileys = {
-  status: async (instanceName: string) => {
+  status: async (sessionId: string) => {
     try {
-      const res = await evolutionFetch(`/instance/connectionState/${instanceName}`)
-      if (res.instance?.status === 'open' || res.state === 'open') {
-        return { connected: true, state: 'connected', hasSession: true }
+      const res = await apiFetch(`/session/${sessionId}/status`)
+      return { 
+        connected: res.connected || false, 
+        state: res.status || 'disconnected',
+        hasSession: !!res.status
       }
-      return { connected: false, state: res.instance?.status || res.state || 'disconnected', hasSession: false }
     } catch (e: any) {
       return { connected: false, state: 'error', hasSession: false }
     }
   },
   
-  createInstance: async (instanceName: string) => {
+  createInstance: async (sessionId: string) => {
     try {
-      const res = await evolutionFetch('/instance/create', 'POST', {
-        instanceName,
-        integration: 'WHATSAPP-BAILEYS',
-        qrcode: false
-      })
+      const res = await apiFetch(`/session/${sessionId}`, 'POST')
       return res
     } catch (e: any) {
       return { error: e.message }
     }
   },
   
-  connect: async (instanceName: string) => {
+  connect: async (sessionId: string) => {
     try {
-      const res = await evolutionFetch(`/instance/connect/${instanceName}`, 'POST')
+      const res = await apiFetch(`/session/${sessionId}`, 'POST')
       return res
     } catch (e: any) {
       return { message: e.message }
     }
   },
   
-  qr: async (instanceName: string) => {
+  qr: async (sessionId: string) => {
     try {
-      const res = await evolutionFetch(`/instance/connect/${instanceName}`)
-      if (res.qrcode) {
-        return { qr: res.qrcode }
+      const res = await apiFetch(`/session/${sessionId}/status`)
+      if (res.qr) {
+        return { qr: res.qr }
       }
-      if (res.pairingCode) {
-        return { code: res.pairingCode }
+      if (res.status === 'connected') {
+        return { qr: null, message: 'Ja conectado!' }
       }
-      if (res.instance?.status === 'open') {
-        return { qr: null, message: 'Já conectado!' }
-      }
-      return { qr: null, message: res.message || 'Aguardando QR code...' }
+      return { qr: null, message: res.status || 'Aguardando QR code...' }
     } catch (e: any) {
       return { qr: null, message: e.message || 'Erro ao buscar QR code' }
     }
   },
   
-  pairingCode: async (instanceName: string, phone: string) => {
-    try {
-      let cleanPhone = phone.replace(/\D/g, '')
-      if (!cleanPhone.startsWith('55')) cleanPhone = '55' + cleanPhone
-      
-      const res = await evolutionFetch(`/instance/connect/${instanceName}?number=${cleanPhone}`)
-      
-      if (res.pairingCode) {
-        return { code: res.pairingCode }
-      }
-      if (res.code) {
-        return { code: res.code }
-      }
-      return { code: null, message: res.message || 'Erro ao gerar código' }
-    } catch (e: any) {
-      return { code: null, message: e.message || 'Erro ao gerar código' }
-    }
+  pairingCode: async (sessionId: string, phone: string) => {
+    return { code: null, message: 'Codigo de pareamento nao suportado' }
   },
   
-  sendText: async (instanceName: string, phone: string, text: string) => {
+  sendText: async (sessionId: string, phone: string, text: string) => {
     try {
       let cleanPhone = phone.replace(/\D/g, '')
-      if (!cleanPhone.startsWith('55')) cleanPhone = '55' + cleanPhone
       
-      const res = await evolutionFetch(`/message/sendText/${instanceName}`, 'POST', {
-        number: cleanPhone,
-        text: text
+      const res = await apiFetch('/send', 'POST', {
+        sessionId,
+        phone: cleanPhone,
+        message: text
       })
       return res
     } catch (error: any) {
@@ -115,9 +84,9 @@ export const baileys = {
     }
   },
 
-  disconnect: async (instanceName: string) => {
+  disconnect: async (sessionId: string) => {
     try {
-      const res = await evolutionFetch(`/instance/logout/${instanceName}`, 'DELETE')
+      const res = await apiFetch(`/session/${sessionId}`, 'DELETE')
       return res
     } catch (e: any) {
       return { message: e.message }
@@ -125,14 +94,14 @@ export const baileys = {
   }
 }
 
-export async function sendWhatsAppMessage(instanceName: string, phone: string, message: string) {
-  return baileys.sendText(instanceName, phone, message)
+export async function sendWhatsAppMessage(sessionId: string, phone: string, message: string) {
+  return baileys.sendText(sessionId, phone, message)
 }
 
-export async function getWhatsAppStatus(instanceName: string) {
-  return baileys.status(instanceName)
+export async function getWhatsAppStatus(sessionId: string) {
+  return baileys.status(sessionId)
 }
 
-export async function getWhatsAppQR(instanceName: string) {
-  return baileys.qr(instanceName)
+export async function getWhatsAppQR(sessionId: string) {
+  return baileys.qr(sessionId)
 }
