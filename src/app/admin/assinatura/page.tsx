@@ -23,9 +23,11 @@ export default function SubscriptionPage() {
   const [loading, setLoading] = useState(true)
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null)
   const [billingType, setBillingType] = useState<'PIX' | 'CREDIT_CARD' | 'BOLETO'>('PIX')
+  const [cpf, setCpf] = useState('')
   const [paymentLoading, setPaymentLoading] = useState(false)
   const [payment, setPayment] = useState<any>(null)
   const [copied, setCopied] = useState(false)
+  const [cpfError, setCpfError] = useState('')
   const [showCardModal, setShowCardModal] = useState(false)
   const [cardForm, setCardForm] = useState<CreditCardForm>({
     holderName: '',
@@ -55,6 +57,13 @@ export default function SubscriptionPage() {
 
   async function createPayment() {
     if (!selectedPlan || !session?.salonId) return
+    
+    if ((billingType === 'PIX' || billingType === 'BOLETO') && cpf.replace(/\D/g, '').length !== 11) {
+      setCpfError('CPF inválido')
+      return
+    }
+    
+    setCpfError('')
     setPaymentLoading(true)
     setPayment(null)
     try {
@@ -64,7 +73,8 @@ export default function SubscriptionPage() {
         body: JSON.stringify({
           salonId: session.salonId,
           planId: selectedPlan,
-          billingType
+          billingType,
+          cpf: cpf.replace(/\D/g, '')
         })
       })
       const data = await res.json()
@@ -306,6 +316,26 @@ export default function SubscriptionPage() {
               +{plans.find(p => p.id === selectedPlan)?.days} dias de acesso completo
             </p>
           </div>
+
+          {(billingType === 'PIX' || billingType === 'BOLETO') && (
+            <div>
+              <label className="text-[10px] text-gray-500 uppercase font-black tracking-widest block mb-1">CPF (obrigatório para cobrança)</label>
+              <input
+                type="text"
+                value={cpf}
+                onChange={e => {
+                  const v = e.target.value.replace(/\D/g, '')
+                  if (v.length <= 11) {
+                    setCpf(v.length <= 9 ? v.replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d{1,2})/, '$1-$2') : v.replace(/(\d{3})(\d{3})(\d{3})(\d{1,2})/, '$1.$2.$3-$4'))
+                    setCpfError('')
+                  }
+                }}
+                placeholder="000.000.000-00"
+                className="w-full p-3 bg-black/40 border border-white/10 rounded-xl focus:border-[#5E41FF]/50 outline-none"
+              />
+              {cpfError && <p className="text-red-500 text-xs mt-1">{cpfError}</p>}
+            </div>
+          )}
 
           <button
             onClick={handlePayClick}

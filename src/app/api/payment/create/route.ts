@@ -16,11 +16,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'Não autorizado' }, { status: 401 })
     }
 
-    const { salonId: bodySalonId, planId, billingType } = await request.json()
+    const { salonId: bodySalonId, planId, billingType, cpf } = await request.json()
     const plan = plans[planId as keyof typeof plans]
     
     if (!plan) {
       return NextResponse.json({ success: false, error: 'Plano inválido' }, { status: 400 })
+    }
+    
+    if ((billingType === 'PIX' || billingType === 'BOLETO') && !cpf) {
+      return NextResponse.json({ success: false, error: 'CPF é obrigatório para PIX e Boleto' }, { status: 400 })
     }
 
     const targetSalonId = salonId === 'admin' ? (bodySalonId || salonId) : salonId
@@ -40,19 +44,21 @@ export async function POST(request: Request) {
     let asaasCustomer = await findCustomerByEmail(salon.owner_email)
     console.log('Found customer:', asaasCustomer)
     
+    const ownerCpf = cpf || salon.cpf_cnpj
+    
     if (!asaasCustomer) {
       console.log('Creating new customer for:', salon.owner_email)
       asaasCustomer = await createCustomer(
         salon.owner_name,
         salon.owner_email,
         salon.owner_phone || undefined,
-        salon.cpf_cnpj || undefined
+        ownerCpf || undefined
       )
       console.log('Created customer:', asaasCustomer)
-    } else if (salon.cpf_cnpj && !asaasCustomer.cpfCnpj) {
+    } else if (ownerCpf && !asaasCustomer.cpfCnpj) {
       // Update customer with CPF if not set
-      await updateCustomer(asaasCustomer.id, salon.owner_name, salon.cpf_cnpj)
-      asaasCustomer.cpfCnpj = salon.cpf_cnpj
+      await updateCustomer(asaasCustomer.id, salon.owner_name, ownerCpf)
+      asaasCustomer.cpfCnpj = ownerCpf
     }
 
     if (!asaasCustomer?.id) {
