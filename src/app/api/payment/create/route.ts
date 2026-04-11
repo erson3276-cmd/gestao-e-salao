@@ -4,94 +4,79 @@ import { createCustomer, findCustomerByEmail, createPayment, updateCustomer } fr
 import { getSalonId } from '@/lib/session'
 
 const plans = {
-  monthly: { price: 49.90, days: 30, label: 'Mensal' },
-  semiannual: { price: 249.90, days: 180, label: 'Semestral' },
-  annual: { price: 449.90, days: 365, label: 'Anual' },
+  monthly: { price: 49.90, days: 30, label: 'Plano Mensal' },
+  semiannual: { price: 249.90, days: 180, label: 'Plano Semestral' },
+  annual: { price: 449.90, days: 365, label: 'Plano Anual' },
 }
 
 export async function POST(request: Request) {
   try {
-    const salonId = await getSalonId()
-    if (!salonId) {
-      return NextResponse.json({ success: false, error: 'Não autorizado' }, { status: 401 })
-    }
-
-    const { salonId: bodySalonId, planId, billingType, cpf } = await request.json()
+    const { planId, billingType, customerData } = await request.json()
     const plan = plans[planId as keyof typeof plans]
     
     if (!plan) {
       return NextResponse.json({ success: false, error: 'Plano inválido' }, { status: 400 })
     }
-    
-    if ((billingType === 'PIX' || billingType === 'BOLETO') && !cpf) {
-      return NextResponse.json({ success: false, error: 'CPF é obrigatório para PIX e Boleto' }, { status: 400 })
+
+    if (!customerData?.cpf || customerData.cpf.replace(/\D/g, '').length !== 11) {
+      return NextResponse.json({ success: false, error: 'CPF inválido' }, { status: 400 })
     }
 
-    const targetSalonId = salonId === 'admin' ? (bodySalonId || salonId) : salonId
-
-    const { data: salon, error: salonError } = await supabaseAdmin
-      .from('salons')
-      .select('*')
-      .eq('id', targetSalonId)
-      .single()
-
-    if (salonError || !salon) {
-      return NextResponse.json({ success: false, error: 'Salão não encontrado' }, { status: 404 })
+    if (!customerData?.email || !customerData?.name) {
+      return NextResponse.json({ success: false, error: 'Dados do cliente incompletos' }, { status: 400 })
     }
 
-    // Find or create Asaas customer
-    console.log('Looking for customer:', salon.owner_email)
-    let asaasCustomer = await findCustomerByEmail(salon.owner_email)
-    console.log('Found customer:', asaasCustomer)
-    
-    const ownerCpf = cpf || salon.cpf_cnpj
+    const cpf = customerData.cpf.replace(/\D/g, '')
+
+    // Find or create Asaas customer with complete data
+    let asaasCustomer = await findCustomerByEmail(customerData.email)
     
     if (!asaasCustomer) {
-      console.log('Creating new customer for:', salon.owner_email)
+      // Create new customer with all data
       asaasCustomer = await createCustomer(
-        salon.owner_name,
-        salon.owner_email,
-        salon.owner_phone || undefined,
-        ownerCpf || undefined
+        customerData.name,
+        customerData.email,
+        customerData.phone,
+        cpf
       )
-      console.log('Created customer:', asaasCustomer)
-    } else if (ownerCpf && !asaasCustomer.cpfCnpj) {
-      // Update customer with CPF if not set
-      await updateCustomer(asaasCustomer.id, salon.owner_name, ownerCpf)
-      asaasCustomer.cpfCnpj = ownerCpf
+    } else {
+      // Update existing customer with CPF if missing
+      if (!asaasCustomer.cpfCnpj) {
+        await updateCustomer(asaasCustomer.id, customerData.name, cpf)
+      }
     }
 
     if (!asaasCustomer?.id) {
-      return NextResponse.json({ success: false, error: 'Falha ao criar/obter cliente Asaas' }, { status: 500 })
+      return NextResponse.json({ success: false, error: 'Falha ao criar cliente Asaas' }, { status: 500 })
     }
 
     // Create payment
-    const dueDate = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-    console.log('Creating payment:', { customerId: asaasCustomer.id, billingType: billingType || 'PIX', planPrice: plan.price, dueDate })
+    const dueDate = new Date()
+    dueDate.setDate(dueDate.getDate() + 3)
+    
     const payment = await createPayment(
       asaasCustomer.id,
       plan.price,
-      dueDate,
-      `Gestão E Salão - ${plan.label}`,
+      dueDate.toISOString().split('T')[0],
+      `Gestão E Salão - ${plan.label} - ${customerData.name}`,
       billingType || 'PIX'
     )
-    console.log('Payment created:', payment)
 
     return NextResponse.json({
       success: true,
       payment: {
         id: payment.id,
-        invoiceUrl: payment.invoiceUrl,
+        value: payment.value,
+        dueDate: payment.dueDate,
+        billingType: payment.billingType,
         pixQrCode: payment.pixQrCode,
         pixCopiaECola: payment.pixCopiaECola,
         boletoUrl: payment.boletoUrl,
-        value: payment.value,
-        dueDate: payment.dueDate,
-        billingType: payment.billingType
+        invoiceUrl: payment.invoiceUrl
       }
     })
   } catch (e: any) {
     console.error('Payment error:', e)
-    return NextResponse.json({ success: false, error: e.message, details: e.stack }, { status: 500 })
+    return NextResponse.json({ success: false, error: e.message }, { status: 500 })
   }
 }
