@@ -44,7 +44,7 @@ export async function POST(request: Request) {
   }
 
   if (action === 'connect') {
-    const result = await apiFetch(`/session/${sessionId}`, 'POST')
+    const result = await apiFetch(`/session/${sessionId}`, 'POST', { fetchQR: true })
     return NextResponse.json(result)
   }
 
