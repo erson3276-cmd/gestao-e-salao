@@ -1,5 +1,6 @@
 const ASAAS_API_URL = process.env.ASAAS_API_URL || 'https://api.asaas.com/v3'
-const ASAAS_API_KEY = process.env.ASAAS_KEY_FULL || process.env.ASAAS_API_KEY || ''
+const rawKey = process.env.ASAAS_KEY_FULL || process.env.ASAAS_API_KEY || ''
+const ASAAS_API_KEY = rawKey ? '$' + rawKey : ''
 
 async function asaasFetch(endpoint: string, method: string = 'GET', body?: any) {
   if (!ASAAS_API_KEY) {
