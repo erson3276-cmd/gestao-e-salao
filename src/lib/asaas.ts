@@ -1,3 +1,4 @@
+// Asaas API Configuration
 const ASAAS_API_URL = process.env.ASAAS_API_URL || 'https://api.asaas.com/v3'
 const ASAAS_API_KEY = process.env.ASAAS_KEY_NEW || process.env.ASAAS_API_KEY || ''
 
