@@ -1,5 +1,4 @@
 {
-  "projectId": "prj_TOVyrPqCzW8tmCPUFMTPDSk923Uc",
   "crons": [
     {
       "path": "/api/send-reminders",
