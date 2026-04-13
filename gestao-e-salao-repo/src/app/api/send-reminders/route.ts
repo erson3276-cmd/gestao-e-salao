@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
-import { supabaseAdmin as supabase } from '@/lib/supabaseAdmin'
-import { whatsappManager } from '@/lib/whatsapp-manager'
+import { supabaseAdmin as supabase } from '../../../lib/supabaseAdmin'
+import { whatsappManager } from '../../../lib/whatsapp-manager'
 
 export async function GET() {
   try {

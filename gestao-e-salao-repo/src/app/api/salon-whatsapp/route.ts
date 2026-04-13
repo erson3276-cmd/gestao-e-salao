@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabaseAdmin'
-import { getSalonSession } from '@/app/actions/salon-auth'
-import { whatsappManager } from '@/lib/whatsapp-manager'
+import { supabaseAdmin } from '../../../lib/supabaseAdmin'
+import { getSalonSession } from '../../actions/salon-auth'
+import { whatsappManager } from '../../../lib/whatsapp-manager'
 
 const WHATSAPP_API = process.env.WHATSAPP_API_URL || 'http://167.234.248.199:8083'
 

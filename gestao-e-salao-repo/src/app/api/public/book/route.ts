@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabaseAdmin'
+import { supabaseAdmin } from '../../../../lib/supabaseAdmin'
 
 export async function POST(request: Request) {
   try {
@@ -131,7 +131,7 @@ export async function POST(request: Request) {
     // Try to send via WhatsApp if instance is connected
     if (salonId) {
       try {
-        const { whatsappManager } = await import('@/lib/whatsapp-manager')
+        const { whatsappManager } = await import('../../../../lib/whatsapp-manager')
         await whatsappManager.sendText(salonId, cleanWhatsapp, message)
       } catch {
         // Message is saved, will be sent later

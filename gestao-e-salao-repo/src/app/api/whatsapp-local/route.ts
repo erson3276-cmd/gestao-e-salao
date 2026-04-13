@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getSalonSession } from '@/app/actions/salon-auth'
+import { getSalonSession } from '../../actions/salon-auth'
 
 const WHATSAPP_API = process.env.WHATSAPP_API_URL || 'http://167.234.248.199:8083'
 

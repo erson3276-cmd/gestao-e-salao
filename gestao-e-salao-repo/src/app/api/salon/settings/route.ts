@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
-import { supabaseAdmin as supabase } from '@/lib/supabaseAdmin'
-import { getSalonSession } from '@/app/actions/salon-auth'
+import { supabaseAdmin as supabase } from '../../../../lib/supabaseAdmin'
+import { getSalonSession } from '../../../actions/salon-auth'
 
 export async function GET() {
   const session = await getSalonSession()

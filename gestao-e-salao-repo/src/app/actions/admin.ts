@@ -1,10 +1,10 @@
 'use server'
 
-import { supabaseAdmin as supabase } from '@/lib/supabaseAdmin'
+import { supabaseAdmin as supabase } from '../lib/supabaseAdmin'
 import { revalidatePath } from 'next/cache'
 import { cookies } from 'next/headers'
-import { SALON_COOKIE_NAME, SUPER_ADMIN_COOKIE_NAME } from '@/lib/auth'
-import { getSalonSession, getSuperAdminSession } from '@/app/actions/salon-auth'
+import { SALON_COOKIE_NAME, SUPER_ADMIN_COOKIE_NAME } from '../lib/auth'
+import { getSalonSession, getSuperAdminSession } from './salon-auth'
 
 if (!supabase) {
   throw new Error('Supabase not configured')
@@ -40,7 +40,7 @@ export async function sendWhatsAppMessage(message: string, phone: string) {
       return { success: false, error: 'Salão não identificado' }
     }
     
-    const { whatsappManager } = await import('@/lib/whatsapp-manager')
+    const { whatsappManager } = await import('../lib/whatsapp-manager')
     const result = await whatsappManager.sendText(salonId, phone, message)
     console.log('WhatsApp enviado:', result)
     return { success: !result.error }
@@ -296,7 +296,7 @@ export async function addAppointment(appointmentData: any) {
       
       if (salonId) {
         try {
-          const { whatsappManager } = await import('@/lib/whatsapp-manager')
+          const { whatsappManager } = await import('../lib/whatsapp-manager')
           await whatsappManager.sendText(salonId, customer.whatsapp.replace(/\D/g, ''), message)
         } catch (sendError) {
           console.error('Erro ao enviar WhatsApp:', sendError)
