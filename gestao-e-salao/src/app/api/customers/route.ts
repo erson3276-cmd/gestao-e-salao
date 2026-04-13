@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
-import { supabaseAdmin } from '../../../../lib/supabaseAdmin'
+import { supabaseAdmin } from '@/lib/supabaseAdmin'
 import { cookies } from 'next/headers'
-import { SALON_COOKIE_NAME } from '../../../../lib/auth'
+import { SALON_COOKIE_NAME } from '@/lib/auth'
 
 async function getSalonId() {
   const cookieStore = await cookies()

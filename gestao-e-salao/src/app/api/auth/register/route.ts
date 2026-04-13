@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
-import { hashPassword, SALON_COOKIE_NAME, type SalonSession } from '../../../../lib/auth'
+import { hashPassword, SALON_COOKIE_NAME, type SalonSession } from '@/lib/auth'
 
 export async function POST(request: Request) {
   try {
     const { salonName, ownerName, ownerEmail, ownerPassword, ownerPhone } = await request.json()
-    const { supabaseAdmin } = await import('../../../../lib/supabaseAdmin')
+    const { supabaseAdmin } = await import('@/lib/supabaseAdmin')
 
     if (!supabaseAdmin) {
       return NextResponse.json({ success: false, error: 'Sistema em manutenção' }, { status: 500 })
