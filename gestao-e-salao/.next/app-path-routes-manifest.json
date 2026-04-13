@@ -21,6 +21,7 @@
   "/checkout/page": "/checkout",
   "/checkout/success/page": "/checkout/success",
   "/login/page": "/login",
+  "/page": "/",
   "/recuperar-senha/page": "/recuperar-senha",
   "/register/google-setup/page": "/register/google-setup",
   "/register/page": "/register",
