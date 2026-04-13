@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '../../lib/supabaseAdmin'
+import { supabaseAdmin } from '../../../lib/supabaseAdmin'
 import { startOfMonth, endOfMonth, subMonths, format } from 'date-fns'
 
 function calculateSalesSummary(vendas: any[], despesas: any[], goal: any, prevVendas: any[]) {
