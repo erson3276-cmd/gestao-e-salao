@@ -1,3 +1,0 @@
-module.exports=[54799,(a,b,c)=>{b.exports=a.x("crypto",()=>require("crypto"))},37102,a=>{"use strict";var b=a.i(64886);a.s([],64447),a.i(64447),a.s(["005b75740979c7074b809acaaef5873ebd86f5d337",()=>b.salonLogout],37102)},9864,a=>{a.v(b=>Promise.all(["server/chunks/ssr/gestao-e-salao_src_lib_supabaseAdmin_ts_05c380f._.js"].map(b=>a.l(b))).then(()=>b(66445)))}];
-
-//# sourceMappingURL=%5Broot-of-the-server%5D__0pfz_5m._.js.map
