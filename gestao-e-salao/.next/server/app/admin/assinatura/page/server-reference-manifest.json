@@ -1,0 +1,17 @@
+{
+  "node": {
+    "00f5bd89107202d990592e86a9d3657f8d4f9e6f29": {
+      "workers": {
+        "app/admin/assinatura/page": {
+          "moduleId": 99054,
+          "async": false,
+          "exportedName": "adminLogout",
+          "filename": "gestao-e-salao/src/app/actions/admin.ts"
+        }
+      },
+      "exportedName": "adminLogout",
+      "filename": "gestao-e-salao/src/app/actions/admin.ts"
+    }
+  },
+  "edge": {}
+}

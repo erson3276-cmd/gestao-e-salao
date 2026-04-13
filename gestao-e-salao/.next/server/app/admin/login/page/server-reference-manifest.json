@@ -1,0 +1,29 @@
+{
+  "node": {
+    "00f5bd89107202d990592e86a9d3657f8d4f9e6f29": {
+      "workers": {
+        "app/admin/login/page": {
+          "moduleId": 38959,
+          "async": false,
+          "exportedName": "adminLogout",
+          "filename": "gestao-e-salao/src/app/actions/admin.ts"
+        }
+      },
+      "exportedName": "adminLogout",
+      "filename": "gestao-e-salao/src/app/actions/admin.ts"
+    },
+    "4073c2d08bf38ac3babf8a219e446621e4f575eb10": {
+      "workers": {
+        "app/admin/login/page": {
+          "moduleId": 38959,
+          "async": false,
+          "exportedName": "adminLogin",
+          "filename": "gestao-e-salao/src/app/actions/admin.ts"
+        }
+      },
+      "exportedName": "adminLogin",
+      "filename": "gestao-e-salao/src/app/actions/admin.ts"
+    }
+  },
+  "edge": {}
+}

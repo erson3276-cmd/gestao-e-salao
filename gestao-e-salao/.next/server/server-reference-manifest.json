@@ -1,0 +1,180 @@
+{
+  "node": {
+    "00f5bd89107202d990592e86a9d3657f8d4f9e6f29": {
+      "workers": {
+        "app/admin/agenda/page": {
+          "moduleId": 14376,
+          "async": false,
+          "exportedName": "adminLogout",
+          "filename": "gestao-e-salao/src/app/actions/admin.ts"
+        },
+        "app/admin/assinatura/page": {
+          "moduleId": 99054,
+          "async": false,
+          "exportedName": "adminLogout",
+          "filename": "gestao-e-salao/src/app/actions/admin.ts"
+        },
+        "app/admin/clientes/page": {
+          "moduleId": 16966,
+          "async": false,
+          "exportedName": "adminLogout",
+          "filename": "gestao-e-salao/src/app/actions/admin.ts"
+        },
+        "app/admin/comissao/page": {
+          "moduleId": 30777,
+          "async": false,
+          "exportedName": "adminLogout",
+          "filename": "gestao-e-salao/src/app/actions/admin.ts"
+        },
+        "app/admin/db-test/page": {
+          "moduleId": 71568,
+          "async": false,
+          "exportedName": "adminLogout",
+          "filename": "gestao-e-salao/src/app/actions/admin.ts"
+        },
+        "app/admin/despesas/page": {
+          "moduleId": 59137,
+          "async": false,
+          "exportedName": "adminLogout",
+          "filename": "gestao-e-salao/src/app/actions/admin.ts"
+        },
+        "app/admin/gestao/page": {
+          "moduleId": 40260,
+          "async": false,
+          "exportedName": "adminLogout",
+          "filename": "gestao-e-salao/src/app/actions/admin.ts"
+        },
+        "app/admin/login/page": {
+          "moduleId": 38959,
+          "async": false,
+          "exportedName": "adminLogout",
+          "filename": "gestao-e-salao/src/app/actions/admin.ts"
+        },
+        "app/admin/managertalk/page": {
+          "moduleId": 15473,
+          "async": false,
+          "exportedName": "adminLogout",
+          "filename": "gestao-e-salao/src/app/actions/admin.ts"
+        },
+        "app/admin/page": {
+          "moduleId": 27548,
+          "async": false,
+          "exportedName": "adminLogout",
+          "filename": "gestao-e-salao/src/app/actions/admin.ts"
+        },
+        "app/admin/relatorios/page": {
+          "moduleId": 89066,
+          "async": false,
+          "exportedName": "adminLogout",
+          "filename": "gestao-e-salao/src/app/actions/admin.ts"
+        },
+        "app/admin/servicos/page": {
+          "moduleId": 68951,
+          "async": false,
+          "exportedName": "adminLogout",
+          "filename": "gestao-e-salao/src/app/actions/admin.ts"
+        },
+        "app/admin/vendas/page": {
+          "moduleId": 51488,
+          "async": false,
+          "exportedName": "adminLogout",
+          "filename": "gestao-e-salao/src/app/actions/admin.ts"
+        }
+      },
+      "filename": "gestao-e-salao/src/app/actions/admin.ts",
+      "exportedName": "adminLogout"
+    },
+    "0010d1dc71e6ba449d08537d8b3164a2a3ae047982": {
+      "workers": {
+        "app/admin/page": {
+          "moduleId": 27548,
+          "async": false,
+          "exportedName": "getAppointments",
+          "filename": "gestao-e-salao/src/app/actions/admin.ts"
+        }
+      },
+      "filename": "gestao-e-salao/src/app/actions/admin.ts",
+      "exportedName": "getAppointments"
+    },
+    "0037ee4dc1e14af82ca9e0999a38831e9131834d53": {
+      "workers": {
+        "app/admin/page": {
+          "moduleId": 27548,
+          "async": false,
+          "exportedName": "getSales",
+          "filename": "gestao-e-salao/src/app/actions/admin.ts"
+        }
+      },
+      "filename": "gestao-e-salao/src/app/actions/admin.ts",
+      "exportedName": "getSales"
+    },
+    "00a0bf22e58fd5fce5095d211f3556cbc75ec0571f": {
+      "workers": {
+        "app/admin/page": {
+          "moduleId": 27548,
+          "async": false,
+          "exportedName": "getCustomers",
+          "filename": "gestao-e-salao/src/app/actions/admin.ts"
+        }
+      },
+      "filename": "gestao-e-salao/src/app/actions/admin.ts",
+      "exportedName": "getCustomers"
+    },
+    "7860e6404b0d29c59504b50b1b5de1644add6dfb6c": {
+      "workers": {
+        "app/admin/page": {
+          "moduleId": 27548,
+          "async": false,
+          "exportedName": "getExpenses",
+          "filename": "gestao-e-salao/src/app/actions/admin.ts"
+        }
+      },
+      "filename": "gestao-e-salao/src/app/actions/admin.ts",
+      "exportedName": "getExpenses"
+    },
+    "009b339811d3f567a45c7ed4e4b7207ffff5395445": {
+      "workers": {
+        "app/admin/db-test/page": {
+          "moduleId": 71568,
+          "async": false,
+          "exportedName": "getProfile",
+          "filename": "gestao-e-salao/src/app/actions/admin.ts"
+        }
+      },
+      "filename": "gestao-e-salao/src/app/actions/admin.ts",
+      "exportedName": "getProfile"
+    },
+    "4073c2d08bf38ac3babf8a219e446621e4f575eb10": {
+      "workers": {
+        "app/admin/login/page": {
+          "moduleId": 38959,
+          "async": false,
+          "exportedName": "adminLogin",
+          "filename": "gestao-e-salao/src/app/actions/admin.ts"
+        }
+      },
+      "filename": "gestao-e-salao/src/app/actions/admin.ts",
+      "exportedName": "adminLogin"
+    },
+    "003f44d24d636a482268fae114a4b506ca8816b240": {
+      "workers": {
+        "app/subscription-expired/page": {
+          "moduleId": 37102,
+          "async": false,
+          "exportedName": "salonLogout",
+          "filename": "gestao-e-salao/src/app/actions/salon-auth.ts"
+        },
+        "app/super-admin/page": {
+          "moduleId": 51530,
+          "async": false,
+          "exportedName": "salonLogout",
+          "filename": "gestao-e-salao/src/app/actions/salon-auth.ts"
+        }
+      },
+      "filename": "gestao-e-salao/src/app/actions/salon-auth.ts",
+      "exportedName": "salonLogout"
+    }
+  },
+  "edge": {},
+  "encryptionKey": "i8WQQQjc6BGiPy9hfHx0VEQxcirtchRpSMmu1G2UpPE="
+}

@@ -1,0 +1,13 @@
+var R=require("../../../chunks/ssr/[turbopack]_runtime.js")("server/app/auth/callback/page.js")
+R.c("server/chunks/ssr/[root-of-the-server]__0xv4co_._.js")
+R.c("server/chunks/ssr/node_modules_next_dist_esm_build_templates_app-page_03ll581.js")
+R.c("server/chunks/ssr/[root-of-the-server]__0quwbkd._.js")
+R.c("server/chunks/ssr/[root-of-the-server]__0ja5ekc._.js")
+R.c("server/chunks/ssr/node_modules_next_dist_compiled_@opentelemetry_api_index_0zv0b3p.js")
+R.c("server/chunks/ssr/node_modules_next_dist_client_components_0inhx6q._.js")
+R.c("server/chunks/ssr/node_modules_next_dist_client_components_builtin_forbidden_0ghu-f7.js")
+R.c("server/chunks/ssr/node_modules_next_dist_client_components_builtin_unauthorized_0cjv-23.js")
+R.c("server/chunks/ssr/node_modules_next_dist_client_components_builtin_global-error_0lgvd_..js")
+R.c("server/chunks/ssr/gestao-e-salao__next-internal_server_app_auth_callback_page_actions_0-l3g3m.js")
+R.m(87808)
+module.exports=R.m(87808).exports
