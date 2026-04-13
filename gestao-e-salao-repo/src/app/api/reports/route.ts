@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '../../../lib/supabaseAdmin'
+import { supabaseAdmin } from '../../lib/supabaseAdmin'
 import { startOfMonth, endOfMonth, subMonths, format } from 'date-fns'
 
 function calculateSalesSummary(vendas: any[], despesas: any[], goal: any, prevVendas: any[]) {
-  const grossRevenue = vendas.reduce((sum, v) => sum + (v.total_amount || v.amount || 0), 0)
-  const expenses = despesas.reduce((sum, d) => sum + (d.amount || 0), 0)
+  const grossRevenue = vendas.reduce((sum: number, v: any) => sum + (v.total_amount || v.amount || 0), 0)
+  const expenses = despesas.reduce((sum: number, d: any) => sum + (d.amount || 0), 0)
   const netRevenue = grossRevenue - expenses
-  const previousMonthRevenue = prevVendas.reduce((sum, v) => sum + (v.total_amount || v.amount || 0), 0)
+  const previousMonthRevenue = prevVendas.reduce((sum: number, v: any) => sum + (v.total_amount || v.amount || 0), 0)
   const momVariation = previousMonthRevenue > 0 ? ((grossRevenue - previousMonthRevenue) / previousMonthRevenue) * 100 : 0
   const goalProgress = goal?.target_amount && goal.target_amount > 0 ? (grossRevenue / goal.target_amount) * 100 : 0
 
@@ -25,7 +25,7 @@ function calculateChannelData(vendas: any[]) {
   const total = vendas.length || 1
   const channelMap = new Map<string, { count: number; amount: number }>()
   
-  vendas.forEach(v => {
+  vendas.forEach((v: any) => {
     const channel = v.channel || 'manual'
     const existing = channelMap.get(channel) || { count: 0, amount: 0 }
     existing.count++
@@ -49,10 +49,10 @@ function calculateChannelData(vendas: any[]) {
 }
 
 function calculatePaymentMethodData(vendas: any[]) {
-  const total = vendas.reduce((sum, v) => sum + (v.total_amount || v.amount || 0), 0) || 1
+  const total = vendas.reduce((sum: number, v: any) => sum + (v.total_amount || v.amount || 0), 0) || 1
   const methodMap = new Map<string, { count: number; amount: number }>()
   
-  vendas.forEach(v => {
+  vendas.forEach((v: any) => {
     const method = v.payment_method || 'pix'
     const existing = methodMap.get(method) || { count: 0, amount: 0 }
     existing.count++
@@ -77,10 +77,10 @@ function calculatePaymentMethodData(vendas: any[]) {
 }
 
 function calculateServiceData(vendas: any[], services: any[]) {
-  const total = vendas.reduce((sum, v) => sum + (v.total_amount || v.amount || 0), 0) || 1
+  const total = vendas.reduce((sum: number, v: any) => sum + (v.total_amount || v.amount || 0), 0) || 1
   const serviceMap = new Map<string, { count: number; amount: number }>()
   
-  vendas.forEach(v => {
+  vendas.forEach((v: any) => {
     if (v.service_id) {
       const existing = serviceMap.get(v.service_id) || { count: 0, amount: 0 }
       existing.count++

@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
         total_visits: data.total_visits,
         total_spent: data.total_spent
       }))
-      .sort((a, b) => b.total_spent - a.total_spent)
+      .sort((a: any, b: any) => b.total_spent - a.total_spent)
       .slice(0, 10)
 
     return NextResponse.json({ data: topCustomers })
