@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
-import { hashPassword, SALON_COOKIE_NAME, type SalonSession } from '../../lib/auth'
+import { hashPassword, SALON_COOKIE_NAME, type SalonSession } from '../../../lib/auth'
 
 export async function POST(request: Request) {
   try {
