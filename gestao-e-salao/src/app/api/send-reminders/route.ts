@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
-import { supabaseAdmin as supabase } from '../../../lib/supabaseAdmin'
-import { whatsappManager } from '../../../lib/whatsapp-manager'
+import { supabaseAdmin as supabase } from '@/lib/supabaseAdmin'
 
 export async function GET() {
   try {
@@ -46,7 +45,7 @@ export async function GET() {
         const serviceName = service?.name || 'Serviço'
         const salonName = 'Gestão E Salão'
         
-        const message = `Olá, *${customer.name}*!\n\nLembrete: Você tem *${serviceName}* hoje às *${timeStr}*.\n\nAguardo você!`
+        const message = `Bom dia, *${customer.name}*! ☀️\n\nLembrete: Você tem *${serviceName}* hoje no *${salonName}* às *${timeStr}*! 💅\n\nTe esperamos! 🌸`
         
         await supabase
           .from('whatsapp_messages')
@@ -57,17 +56,7 @@ export async function GET() {
             salon_id: appt.salon_id
           })
         
-        if (appt.salon_id) {
-          try {
-            const phoneClean = customer.whatsapp.replace(/\D/g, '')
-            await whatsappManager.sendText(appt.salon_id, phoneClean, message)
-            results.push({ appointmentId: appt.id, phone: customer.whatsapp, status: 'sent' })
-          } catch (sendError: any) {
-            results.push({ appointmentId: appt.id, phone: customer.whatsapp, status: 'queued', error: sendError.message })
-          }
-        } else {
-          results.push({ appointmentId: appt.id, phone: customer.whatsapp, status: 'queued' })
-        }
+        results.push({ appointmentId: appt.id, phone: customer.whatsapp, status: 'queued' })
       } catch (err: any) {
         results.push({ appointmentId: appt.id, status: 'error', error: err.message })
       }

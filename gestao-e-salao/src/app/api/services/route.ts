@@ -1,77 +1,94 @@
 import { NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabaseAdmin'
-import { cookies } from 'next/headers'
-import { SALON_COOKIE_NAME } from '@/lib/auth'
-
-async function getSalonId() {
-  const cookieStore = await cookies()
-  const session = cookieStore.get(SALON_COOKIE_NAME)
-  if (session?.value) {
-    try {
-      const data = JSON.parse(session.value)
-      return data.salonId
-    } catch { return null }
-  }
-  return null
-}
+import { supabaseAdmin as supabase } from '@/lib/supabaseAdmin'
+import { getSalonId } from '@/lib/session'
 
 export async function GET() {
+  const salonId = await getSalonId()
+  if (!salonId) return NextResponse.json({ data: [], success: true })
+
   try {
-    const salonId = await getSalonId()
-    let query = supabaseAdmin.from('services').select('*').order('name')
-    if (salonId) query = query.eq('salon_id', salonId)
+    let query = supabase.from('services').select('*').order('name', { ascending: true })
+    if (salonId !== 'admin') query = query.eq('salon_id', salonId)
+    
     const { data, error } = await query
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-    return NextResponse.json({ data: data || [] })
-  } catch (e) {
-    return NextResponse.json({ error: 'Erro ao buscar serviços' }, { status: 500 })
+    if (error) throw error
+    return NextResponse.json({ data: data || [], success: true })
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }
 
 export async function POST(request: Request) {
+  const salonId = await getSalonId()
+  if (!salonId) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
+
   try {
-    const salonId = await getSalonId()
     const body = await request.json()
-    const insertData = salonId ? { ...body, salon_id: salonId } : body
-    const { data, error } = await supabaseAdmin
-      .from('services')
-      .insert([insertData])
-      .select()
-      .single()
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-    return NextResponse.json({ data })
-  } catch (e) {
-    return NextResponse.json({ error: 'Erro ao criar serviço' }, { status: 500 })
+    const { name, price, duration_minutes, description, category } = body
+    if (!name || name.trim() === '') return NextResponse.json({ error: 'Nome é obrigatório' }, { status: 400 })
+    if (price === undefined || price === null || Number(price) < 0) return NextResponse.json({ error: 'Preço inválido' }, { status: 400 })
+    
+    const { data, error } = await supabase.from('services').insert([{ 
+      name: name.trim(), price: Number(price), duration_minutes: duration_minutes || 60,
+      description: description || null, category: category || null, active: true,
+      salon_id: salonId === 'admin' ? null : salonId
+    }]).select().single()
+    
+    if (error) throw error
+    return NextResponse.json({ data, success: true })
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }
 
 export async function PUT(request: Request) {
+  const salonId = await getSalonId()
+  if (!salonId) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
+
   try {
     const body = await request.json()
-    const { id, ...updateData } = body
-    const salonId = await getSalonId()
-    let query = supabaseAdmin.from('services').update(updateData).eq('id', id)
-    if (salonId) query = query.eq('salon_id', salonId)
+    const { id, name, price, duration_minutes, description, category, active } = body
+    if (!id) return NextResponse.json({ error: 'ID é obrigatório' }, { status: 400 })
+    
+    const updateData: any = {}
+    if (name !== undefined) {
+      if (!name || name.trim() === '') return NextResponse.json({ error: 'Nome não pode ser vazio' }, { status: 400 })
+      updateData.name = name.trim()
+    }
+    if (price !== undefined) updateData.price = Number(price)
+    if (duration_minutes !== undefined) updateData.duration_minutes = duration_minutes
+    if (description !== undefined) updateData.description = description || null
+    if (category !== undefined) updateData.category = category || null
+    if (active !== undefined) updateData.active = active
+    updateData.updated_at = new Date().toISOString()
+    
+    let query = supabase.from('services').update(updateData).eq('id', id)
+    if (salonId !== 'admin') query = query.eq('salon_id', salonId)
+    
     const { data, error } = await query.select().single()
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-    return NextResponse.json({ data })
-  } catch (e) {
-    return NextResponse.json({ error: 'Erro ao atualizar serviço' }, { status: 500 })
+    if (error) throw error
+    return NextResponse.json({ data, success: true })
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }
 
 export async function DELETE(request: Request) {
+  const salonId = await getSalonId()
+  if (!salonId) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
+
   try {
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')
-    if (!id) return NextResponse.json({ error: 'ID necessário' }, { status: 400 })
-    const salonId = await getSalonId()
-    let query = supabaseAdmin.from('services').delete().eq('id', id)
-    if (salonId) query = query.eq('salon_id', salonId)
+    if (!id) return NextResponse.json({ error: 'ID é obrigatório' }, { status: 400 })
+    
+    let query = supabase.from('services').delete().eq('id', id)
+    if (salonId !== 'admin') query = query.eq('salon_id', salonId)
+    
     const { error } = await query
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    if (error) throw error
     return NextResponse.json({ success: true })
-  } catch (e) {
-    return NextResponse.json({ error: 'Erro ao excluir serviço' }, { status: 500 })
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }

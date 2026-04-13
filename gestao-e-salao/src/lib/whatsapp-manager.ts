@@ -27,11 +27,13 @@ async function apiFetch(endpoint: string, method: string = 'GET', body?: any) {
 }
 
 export const whatsappManager = {
+  // Criar/obter sessão para um salão
   createSession: async (salonId: string) => {
     const res = await apiFetch(`/session/${salonId}`, 'POST')
     return res
   },
 
+  // Status da sessão
   status: async (salonId: string) => {
     const res = await apiFetch(`/session/${salonId}/status`)
     return {
@@ -41,11 +43,13 @@ export const whatsappManager = {
     }
   },
 
+  // QR Code
   qr: async (salonId: string) => {
     const res = await apiFetch(`/session/${salonId}/status`)
     return res
   },
 
+  // Enviar mensagem
   sendText: async (salonId: string, phone: string, text: string) => {
     let cleanPhone = phone.replace(/\D/g, '')
     
@@ -57,10 +61,12 @@ export const whatsappManager = {
     return res
   },
 
+  // Desconectar
   disconnect: async (salonId: string) => {
     return await apiFetch(`/session/${salonId}`, 'DELETE')
   },
 
+  // Health check
   health: async () => {
     const res = await apiFetch('/health')
     return { 

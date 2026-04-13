@@ -277,6 +277,7 @@ export default function RelatoriosPage() {
         </div>
       ) : (
         <>
+          {/* KPI: Faturamento & Meta */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="bg-[#121021] border border-white/5 p-6 rounded-3xl">
               <div className="flex items-center justify-between mb-4">
@@ -322,6 +323,7 @@ export default function RelatoriosPage() {
               </div>
             </div>
 
+            {/* Gráfico Semanal */}
             <div className="bg-[#121021] border border-white/5 p-6 rounded-3xl">
               <h3 className="text-sm font-black uppercase tracking-widest text-gray-500 mb-6">Desempenho Semanal</h3>
               
@@ -361,6 +363,7 @@ export default function RelatoriosPage() {
             </div>
           </div>
 
+          {/* KPIs: Receita Líquida */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-[#121021] border border-white/5 p-6 rounded-3xl">
               <div className="flex items-center gap-3 mb-2">
@@ -393,7 +396,9 @@ export default function RelatoriosPage() {
             </div>
           </div>
 
+          {/* Análise por Canal & Pagamento */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Canal */}
             <div className="bg-[#121021] border border-white/5 p-6 rounded-3xl">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-sm font-black uppercase tracking-widest text-gray-400 flex items-center gap-2">
@@ -452,6 +457,7 @@ export default function RelatoriosPage() {
               </div>
             </div>
 
+            {/* Pagamento */}
             <div className="bg-[#121021] border border-white/5 p-6 rounded-3xl">
               <h3 className="text-sm font-black uppercase tracking-widest text-gray-400 mb-6 flex items-center gap-2">
                 <CreditCard size={16} /> Forma de Pagamento
@@ -483,7 +489,9 @@ export default function RelatoriosPage() {
             </div>
           </div>
 
+          {/* Serviços & Clientes */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Serviços */}
             <div className="bg-[#121021] border border-white/5 p-6 rounded-3xl">
               <h3 className="text-sm font-black uppercase tracking-widest text-gray-400 mb-6 flex items-center gap-2">
                 <Scissors size={16} /> Serviços Mais Rentáveis
@@ -525,6 +533,7 @@ export default function RelatoriosPage() {
               </div>
             </div>
 
+            {/* Clientes Top 10 */}
             <div className="bg-[#121021] border border-white/5 p-6 rounded-3xl">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-sm font-black uppercase tracking-widest text-gray-400 flex items-center gap-2">
@@ -572,6 +581,7 @@ export default function RelatoriosPage() {
         </>
       )}
 
+      {/* Modal Editar Meta */}
       {showGoalModal && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
           <div className="bg-[#121021] border border-white/10 p-6 rounded-3xl w-full max-w-md">

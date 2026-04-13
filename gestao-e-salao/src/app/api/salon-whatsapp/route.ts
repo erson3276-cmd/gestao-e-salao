@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server'
-import { supabaseAdmin } from '../../../lib/supabaseAdmin'
-import { getSalonSession } from '../../actions/salon-auth'
-import { whatsappManager } from '../../../lib/whatsapp-manager'
+import { supabaseAdmin } from '@/lib/supabaseAdmin'
+import { getSalonSession } from '@/app/actions/salon-auth'
 
 const WHATSAPP_API = process.env.WHATSAPP_API_URL || 'http://167.234.248.199:8083'
 
@@ -36,12 +35,24 @@ export async function GET() {
     .single()
 
   const sessionId = salon?.whatsapp_instance_id || getSessionId(session.salonId)
-  const status = await whatsappManager.status(sessionId)
   
-  return NextResponse.json({ 
-    instanceId: sessionId,
-    connected: status.connected
-  })
+  try {
+    const res = await fetch(`${WHATSAPP_API}/session/${sessionId}/status`)
+    const data = await res.json()
+    
+    return NextResponse.json({ 
+      instanceId: sessionId,
+      connected: data.connected || false,
+      status: data.status,
+      qr: data.qr
+    })
+  } catch (e: any) {
+    return NextResponse.json({ 
+      instanceId: sessionId,
+      connected: false,
+      error: e.message
+    })
+  }
 }
 
 export async function POST(request: Request) {
@@ -71,18 +82,29 @@ export async function POST(request: Request) {
     }
 
     try {
-      const result = await whatsappManager.createSession(sessionId)
+      // Create session via WhatsApp server with fetchQR
+      const createRes = await fetch(`${WHATSAPP_API}/session/${sessionId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fetchQR: true })
+      })
+      const createData = await createRes.json()
       
+      // Save session ID to database
       await supabaseAdmin
         .from('salons')
         .update({ whatsapp_instance_id: sessionId })
         .eq('id', salonId)
 
-      if (result.qr) {
-        return NextResponse.json({ success: true, qr: result.qr })
-      }
-      
-      return NextResponse.json({ success: true, status: result.status })
+      // Get QR code
+      const statusRes = await fetch(`${WHATSAPP_API}/session/${sessionId}/status`)
+      const statusData = await statusRes.json()
+
+      return NextResponse.json({ 
+        success: true, 
+        qr: statusData.qr,
+        status: statusData.status
+      })
     } catch (e: any) {
       return NextResponse.json({ success: false, error: e.message }, { status: 500 })
     }
@@ -94,7 +116,17 @@ export async function POST(request: Request) {
     }
 
     try {
-      const result = await whatsappManager.sendText(sessionId, phone, message)
+      const cleanPhone = phone.replace(/\D/g, '')
+      const res = await fetch(`${WHATSAPP_API}/send`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId: sessionId,
+          phone: cleanPhone,
+          message: message
+        })
+      })
+      const result = await res.json()
       return NextResponse.json({ success: !result.error, ...result })
     } catch (e: any) {
       return NextResponse.json({ success: false, error: e.message }, { status: 500 })
@@ -103,7 +135,9 @@ export async function POST(request: Request) {
 
   if (action === 'disconnect') {
     try {
-      await whatsappManager.disconnect(sessionId)
+      await fetch(`${WHATSAPP_API}/session/${sessionId}`, {
+        method: 'DELETE'
+      })
       await supabaseAdmin
         .from('salons')
         .update({ whatsapp_instance_id: null })
@@ -116,10 +150,36 @@ export async function POST(request: Request) {
 
   if (action === 'getQR') {
     try {
-      const result = await whatsappManager.qr(sessionId)
-      return NextResponse.json(result)
+      const res = await fetch(`${WHATSAPP_API}/session/${sessionId}/status`)
+      const data = await res.json()
+      return NextResponse.json({
+        qr: data.qr,
+        status: data.status,
+        connected: data.connected
+      })
     } catch (e: any) {
       return NextResponse.json({ error: e.message }, { status: 500 })
+    }
+  }
+
+  if (action === 'pairingCode') {
+    // Try to generate pairing code for devices that support it
+    try {
+      const res = await fetch(`${WHATSAPP_API}/pairing/${sessionId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: phone || '' })
+      })
+      const result = await res.json()
+      
+      await supabaseAdmin
+        .from('salons')
+        .update({ whatsapp_instance_id: sessionId })
+        .eq('id', salonId)
+
+      return NextResponse.json(result)
+    } catch (e: any) {
+      return NextResponse.json({ success: false, error: e.message }, { status: 500 })
     }
   }
 

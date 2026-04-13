@@ -1,10 +1,10 @@
 'use server'
 
-import { supabaseAdmin as supabase } from '../lib/supabaseAdmin'
+import { supabaseAdmin as supabase } from '@/lib/supabaseAdmin'
 import { revalidatePath } from 'next/cache'
 import { cookies } from 'next/headers'
-import { SALON_COOKIE_NAME, SUPER_ADMIN_COOKIE_NAME } from '../lib/auth'
-import { getSalonSession, getSuperAdminSession } from './salon-auth'
+import { SALON_COOKIE_NAME, SUPER_ADMIN_COOKIE_NAME } from '@/lib/auth'
+import { getSalonSession, getSuperAdminSession } from '@/app/actions/salon-auth'
 
 if (!supabase) {
   throw new Error('Supabase not configured')
@@ -35,15 +35,25 @@ async function revalidateAdmin() {
 export async function sendWhatsAppMessage(message: string, phone: string) {
   try {
     const salonId = await getSalonId()
+    let instanceId: string | null = null
     
-    if (!salonId) {
-      return { success: false, error: 'Salão não identificado' }
+    if (salonId) {
+      const { data: salon } = await supabaseClient
+        .from('salons')
+        .select('whatsapp_instance_id')
+        .eq('id', salonId)
+        .single()
+      instanceId = salon?.whatsapp_instance_id || null
     }
     
-    const { whatsappManager } = await import('../lib/whatsapp-manager')
-    const result = await whatsappManager.sendText(salonId, phone, message)
+    if (!instanceId) {
+      return { success: false, error: 'WhatsApp não configurado para este salão' }
+    }
+    
+    const { baileys } = await import('@/lib/baileys')
+    const result = await baileys.sendText(instanceId, phone, message)
     console.log('WhatsApp enviado:', result)
-    return { success: !result.error }
+    return { success: true }
   } catch (error) {
     console.error('Erro ao enviar WhatsApp:', error)
     return { success: false, error }
@@ -72,6 +82,8 @@ async function callBaileysAPI(endpoint: string, method: string = 'GET', body?: a
   const res = await fetch(url, options)
   return res.json()
 }
+
+// ============== LOGIN ==============
 
 export async function adminLogin(password: string) {
   const expectedPassword = process.env.ADMIN_PASSWORD || 'moca2024'
@@ -103,6 +115,8 @@ export async function checkAdminAuth() {
   const superAdminSession = cookieStore.get(SUPER_ADMIN_COOKIE_NAME)
   return auth?.value === 'authenticated' || !!salonSession || !!superAdminSession
 }
+
+// ============== PROFILE ==============
 
 export async function getProfile() {
   const salonId = await getSalonId()
@@ -190,10 +204,14 @@ export async function validateVIP(whatsapp: string) {
   }
 }
 
+// ============== MANAGER TALK ==============
+
 export async function sendManagerTalkMessage(phone: string, message: string) {
   console.log(`Enviando mensagem para ${phone}: ${message}`)
   return { success: true }
 }
+
+// ============== AGENDA ==============
 
 export async function getAppointments() {
   const salonId = await getSalonId()
@@ -275,7 +293,7 @@ export async function addAppointment(appointmentData: any) {
       const dateStr = new Date(appointmentData.start_time).toLocaleDateString('pt-BR')
       const timeStr = new Date(appointmentData.start_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
       
-      const message = `Olá *${customer.name}*!\n\nSeu agendamento de *${serviceName}* foi confirmado! ✅\n\n📅 *Data:* ${dateStr}\n🕒 *Horário:* ${timeStr}\n\nAguardo você!`
+      const message = `Olá *${customer.name}*! ✨\n\nSeu agendamento de *${serviceName}* no *${salonName}* foi confirmado! ✅\n\n🗓️ *Data:* ${dateStr}\n🕒 *Horário:* ${timeStr}\n\nTe esperamos! 🌸`
       
       await supabaseClient
         .from('whatsapp_messages')
@@ -286,10 +304,10 @@ export async function addAppointment(appointmentData: any) {
           salon_id: salonId || null
         })
       
-      if (salonId) {
+      if (instanceId) {
         try {
-          const { whatsappManager } = await import('../lib/whatsapp-manager')
-          await whatsappManager.sendText(salonId, customer.whatsapp.replace(/\D/g, ''), message)
+          const { baileys } = await import('@/lib/baileys')
+          await baileys.sendText(instanceId, customer.whatsapp.replace(/\D/g, ''), message)
         } catch (sendError) {
           console.error('Erro ao enviar WhatsApp:', sendError)
         }
@@ -343,6 +361,8 @@ export async function completeAppointmentCheckout(appointmentId: string, saleDat
   revalidatePath('/admin/agenda')
   return { success: true }
 }
+
+// ============== CLIENTES ==============
 
 export async function getCustomers() {
   const salonId = await getSalonId()
@@ -410,6 +430,8 @@ export async function toggleBlockCustomer(id: string, blocked: boolean) {
   return { success: true }
 }
 
+// ============== SERVIÇOS ==============
+
 export async function getServices() {
   const salonId = await getSalonId()
   const baseQuery = supabaseClient.from('services').select('*').order('name', { ascending: true })
@@ -462,6 +484,8 @@ export async function deleteService(id: string) {
   revalidatePath('/admin/servicos')
   return { success: true }
 }
+
+// ============== DESPESAS ==============
 
 export async function getExpenses(month?: number, year?: number, category?: string, paid?: boolean) {
   const salonId = await getSalonId()
@@ -568,6 +592,8 @@ export async function toggleExpensePaid(id: string, paid: boolean) {
   revalidatePath('/admin/despesas')
   return { success: true }
 }
+
+// ============== VENDAS ==============
 
 export async function getSales() {
   const salonId = await getSalonId()

@@ -1,11 +1,11 @@
 'use server'
 
 import { cookies } from 'next/headers'
-import { SALON_COOKIE_NAME, SUPER_ADMIN_COOKIE_NAME, SUPER_ADMIN_EMAIL, SUPER_ADMIN_PASSWORD, hashPassword, verifyPassword, type SalonSession } from '../../lib/auth'
+import { SALON_COOKIE_NAME, SUPER_ADMIN_COOKIE_NAME, SUPER_ADMIN_EMAIL, SUPER_ADMIN_PASSWORD, hashPassword, verifyPassword, type SalonSession } from '@/lib/auth'
 
 export async function salonLogin(email: string, password: string) {
   try {
-    const { supabaseAdmin } = await import('../../lib/supabaseAdmin')
+    const { supabaseAdmin } = await import('@/lib/supabaseAdmin')
     if (!supabaseAdmin) {
       return { success: false, error: 'Sistema em manutencao. Tente novamente mais tarde.' }
     }
@@ -76,7 +76,7 @@ export async function salonRegister(data: {
   ownerPhone?: string
 }) {
   try {
-    const { supabaseAdmin } = await import('../../lib/supabaseAdmin')
+    const { supabaseAdmin } = await import('@/lib/supabaseAdmin')
     if (!supabaseAdmin) {
       return { success: false, error: 'Sistema em manutencao. Tente novamente mais tarde.' }
     }

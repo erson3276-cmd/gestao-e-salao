@@ -64,7 +64,6 @@ export default function ClientesPage() {
   })
   
   const [message, setMessage] = useState<{type: 'success' | 'error', text: string} | null>(null)
-  const [onlyRegisteredClients, setOnlyRegisteredClients] = useState(false)
 
   const showMessage = (type: 'success' | 'error', text: string) => {
     setMessage({ type, text })
@@ -89,41 +88,7 @@ export default function ClientesPage() {
 
   useEffect(() => {
     fetchCustomers()
-    fetchSalonSettings()
   }, [fetchCustomers])
-
-  const fetchSalonSettings = async () => {
-    try {
-      const response = await fetch('/api/salon/settings')
-      if (response.ok) {
-        const data = await response.json()
-        if (data.only_registered_clients !== undefined) {
-          setOnlyRegisteredClients(data.only_registered_clients)
-        }
-      }
-    } catch (error) {
-      console.error('Erro ao carregar configurações:', error)
-    }
-  }
-
-  const handleToggleRegisteredClients = async () => {
-    try {
-      const response = await fetch('/api/salon/settings', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          only_registered_clients: !onlyRegisteredClients
-        })
-      })
-      
-      if (response.ok) {
-        setOnlyRegisteredClients(!onlyRegisteredClients)
-        showMessage('success', !onlyRegisteredClients ? 'Agendamento agora é só para clientes cadastrados!' : 'Qualquer pessoa pode agendar!')
-      }
-    } catch (error) {
-      showMessage('error', 'Erro ao salvar configuração')
-    }
-  }
 
   const filteredCustomers = customers.filter(c => {
     const matchesSearch = !search || 
@@ -268,6 +233,7 @@ export default function ClientesPage() {
   return (
     <div className="min-h-screen bg-[#0A0A0A] text-white p-6">
       
+      {/* Header */}
       <div className="max-w-7xl mx-auto mb-8">
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center gap-4">
@@ -292,21 +258,6 @@ export default function ClientesPage() {
             >
               {showBlocked ? <ShieldAlert size={20} /> : <ShieldCheck size={20} />}
             </button>
-
-            <button
-              onClick={handleToggleRegisteredClients}
-              className={`p-3 rounded-xl transition-all flex items-center gap-2 ${
-                onlyRegisteredClients 
-                  ? 'bg-amber-500/20 text-amber-400' 
-                  : 'bg-[#1a1a2e] text-gray-400 hover:text-white'
-              }`}
-              title={onlyRegisteredClients ? 'Clientes cadastrados: ATIVADO' : 'Clientes cadastrados: DESATIVADO'}
-            >
-              <ShieldCheck size={20} />
-              <span className="text-xs font-medium hidden md:inline">
-                {onlyRegisteredClients ? 'Apenas Cadastrados' : 'Todos'}
-              </span>
-            </button>
             
             <button
               onClick={() => { setEditingCustomer(null); setFormData({ name: '', whatsapp: '', phone: '', email: '', notes: '' }); setIsModalOpen(true); }}
@@ -319,12 +270,14 @@ export default function ClientesPage() {
         </div>
       </div>
 
+      {/* Mensagem */}
       {message && (
         <div className={`max-w-7xl mx-auto mb-4 p-4 rounded-xl ${message.type === 'success' ? 'bg-green-600/20 text-green-400 border border-green-600/30' : 'bg-red-600/20 text-red-400 border border-red-600/30'}`}>
           {message.text}
         </div>
       )}
 
+      {/* Cards de resumo */}
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         <div className="bg-[#121021] rounded-2xl p-6 border border-white/10">
           <div className="flex items-center gap-3 mb-2">
@@ -351,6 +304,7 @@ export default function ClientesPage() {
         </div>
       </div>
 
+      {/* Busca */}
       <div className="max-w-7xl mx-auto mb-6">
         <div className="bg-[#121021] rounded-2xl p-4 border border-white/10">
           <div className="relative">
@@ -366,6 +320,7 @@ export default function ClientesPage() {
         </div>
       </div>
 
+      {/* Tabela de clientes */}
       <div className="max-w-7xl mx-auto bg-[#121021] rounded-2xl border border-white/10 overflow-hidden">
         {loading ? (
           <div className="p-8 text-center text-gray-500">
@@ -491,6 +446,7 @@ export default function ClientesPage() {
           </div>
         )}
         
+        {/* Paginação */}
         {totalPages > 1 && (
           <div className="flex items-center justify-between p-4 border-t border-white/10">
             <p className="text-sm text-gray-400">
@@ -519,6 +475,7 @@ export default function ClientesPage() {
         )}
       </div>
 
+      {/* Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80" onClick={() => setIsModalOpen(false)}>
           <div className="bg-[#121021] rounded-3xl w-full max-w-md p-8" onClick={e => e.stopPropagation()}>
@@ -532,6 +489,7 @@ export default function ClientesPage() {
             </div>
             
             <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Nome */}
               <div>
                 <label className="block text-sm font-medium text-gray-400 mb-2">Nome *</label>
                 <div className="relative">
@@ -547,6 +505,7 @@ export default function ClientesPage() {
                 </div>
               </div>
               
+              {/* WhatsApp */}
               <div>
                 <label className="block text-sm font-medium text-gray-400 mb-2">WhatsApp</label>
                 <div className="relative">
@@ -562,6 +521,7 @@ export default function ClientesPage() {
                 </div>
               </div>
               
+              {/* Telefone */}
               <div>
                 <label className="block text-sm font-medium text-gray-400 mb-2">Telefone</label>
                 <div className="relative">
@@ -576,6 +536,7 @@ export default function ClientesPage() {
                 </div>
               </div>
               
+              {/* E-mail */}
               <div>
                 <label className="block text-sm font-medium text-gray-400 mb-2">E-mail</label>
                 <div className="relative">
@@ -590,6 +551,7 @@ export default function ClientesPage() {
                 </div>
               </div>
               
+              {/* Observações */}
               <div>
                 <label className="block text-sm font-medium text-gray-400 mb-2">Observações</label>
                 <textarea
@@ -601,6 +563,7 @@ export default function ClientesPage() {
                 />
               </div>
               
+              {/* Botão */}
               <button
                 type="submit"
                 disabled={saving || !formData.name}

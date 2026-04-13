@@ -1,149 +1,398 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { Users, Calendar, Scissors, ShoppingBag, TrendingUp, DollarSign, Clock, CheckCircle } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { Save, Loader2, Copy, Check, Clock, Plus, Trash2, Upload, Users, X } from 'lucide-react'
 
-interface Stats {
-  totalClients: number
-  todayAppointments: number
-  monthlyRevenue: number
-  servicesCount: number
+const dayNames = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado']
+
+interface WorkingHour {
+  id?: string
+  day_of_week: number
+  start_time: string
+  end_time: string
+  is_active: boolean
+}
+
+interface Professional {
+  id?: string
+  name: string
+  commission_percent: number
+  whatsapp?: string
 }
 
 export default function GestaoPage() {
-  const [stats, setStats] = useState<Stats>({
-    totalClients: 0,
-    todayAppointments: 0,
-    monthlyRevenue: 0,
-    servicesCount: 0
-  })
   const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  
+  const [salonId, setSalonId] = useState<string | null>(null)
+  const [salonName, setSalonName] = useState<string>('')
+  const [profile, setProfile] = useState<any>({
+    name: '',
+    professional_name: '',
+    whatsapp_number: '',
+    address: '',
+    cpf_cnpj: '',
+    opening_time: '09:00',
+    closing_time: '18:00',
+    slot_interval: 30,
+    image_url: ''
+  })
+
+  const [copied, setCopied] = useState(false)
+
+  const [workingHours, setWorkingHours] = useState<WorkingHour[]>([
+    { day_of_week: 0, start_time: '09:00', end_time: '12:00', is_active: false },
+    { day_of_week: 1, start_time: '09:00', end_time: '18:00', is_active: true },
+    { day_of_week: 2, start_time: '09:00', end_time: '18:00', is_active: true },
+    { day_of_week: 3, start_time: '09:00', end_time: '18:00', is_active: true },
+    { day_of_week: 4, start_time: '09:00', end_time: '18:00', is_active: true },
+    { day_of_week: 5, start_time: '09:00', end_time: '18:00', is_active: true },
+    { day_of_week: 6, start_time: '09:00', end_time: '14:00', is_active: true },
+  ])
+
+  const [professionals, setProfessionals] = useState<Professional[]>([])
+  const [isProfModalOpen, setIsProfModalOpen] = useState(false)
+  const [profForm, setProfForm] = useState<Professional>({ name: '', commission_percent: 50, whatsapp: '' })
+  const [editingProfId, setEditingProfId] = useState<string | null>(null)
 
   useEffect(() => {
-    fetchDashboard()
+    loadSession()
+    loadProfile()
+    loadWorkingHours()
+    loadProfessionals()
   }, [])
 
-  async function fetchDashboard() {
+  async function loadSession() {
     try {
-      const [clientsRes, apptsRes, salesRes, servicesRes] = await Promise.all([
-        fetch('/api/customers'),
-        fetch('/api/appointments'),
-        fetch('/api/vendas'),
-        fetch('/api/services')
-      ])
-
-      const clients = await clientsRes.json()
-      const appointments = await apptsRes.json()
-      const sales = await salesRes.json()
-      const services = await servicesRes.json()
-
-      const today = new Date().toISOString().split('T')[0]
-      const todayAppts = (appointments.data || []).filter((a: any) => 
-        a.start_time?.startsWith(today) && a.status !== 'cancelado'
-      )
-
-      const monthStart = new Date()
-      monthStart.setDate(1)
-      const monthlySales = (sales.data || []).filter((s: any) => {
-        const saleDate = new Date(s.created_at || s.date)
-        return saleDate >= monthStart
-      })
-      const monthlyRevenue = monthlySales.reduce((sum: number, s: any) => sum + (Number(s.total_amount) || Number(s.amount) || 0), 0)
-
-      setStats({
-        totalClients: (clients.data || []).length,
-        todayAppointments: todayAppts.length,
-        monthlyRevenue,
-        servicesCount: (services.data || []).length
-      })
+      const res = await fetch('/api/session')
+      if (res.ok) {
+        const data = await res.json()
+        if (data.salonId) {
+          setSalonId(data.salonId)
+          setSalonName(data.salonName || '')
+        }
+      }
     } catch (e) {
-      console.error('Erro ao carregar dados:', e)
+      console.error('Error loading session:', e)
     }
+  }
+
+  async function loadProfile() {
+    try {
+      const res = await fetch('/api/gestao/profile')
+      const data = await res.json()
+      if (data && data.profile) {
+        setProfile(data.profile)
+      }
+    } catch (e) { console.error(e) }
     setLoading(false)
   }
 
-  const cards = [
-    {
-      title: 'Total de Clientes',
-      value: stats.totalClients,
-      icon: Users,
-      color: '#5E41FF',
-      bg: 'bg-[#5E41FF]/10'
-    },
-    {
-      title: 'Agendamentos Hoje',
-      value: stats.todayAppointments,
-      icon: Calendar,
-      color: '#10b981',
-      bg: 'bg-emerald-500/10'
-    },
-    {
-      title: 'Faturamento Mensal',
-      value: new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(stats.monthlyRevenue),
-      icon: TrendingUp,
-      color: '#f59e0b',
-      bg: 'bg-amber-500/10'
-    },
-    {
-      title: 'Serviços Cadastrados',
-      value: stats.servicesCount,
-      icon: Scissors,
-      color: '#ec4899',
-      bg: 'bg-pink-500/10'
+  async function loadWorkingHours() {
+    try {
+      const res = await fetch('/api/working-hours')
+      const data = await res.json()
+      if (data.success && data.data?.length > 0) {
+        const existing = data.data
+        const allDays: WorkingHour[] = []
+        for (let i = 0; i < 7; i++) {
+          const found = existing.find((w: WorkingHour) => w.day_of_week === i)
+          allDays.push(found || { day_of_week: i, start_time: '09:00', end_time: '18:00', is_active: i !== 0 })
+        }
+        setWorkingHours(allDays)
+      }
+    } catch (e) { console.error(e) }
+  }
+
+  async function loadProfessionals() {
+    try {
+      const res = await fetch('/api/professionals')
+      const data = await res.json()
+      if (data.professionals) setProfessionals(data.professionals)
+    } catch (e) { console.error(e) }
+  }
+
+  async function handleSave() {
+    setSaving(true)
+    try {
+      const res = await fetch('/api/gestao/profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(profile)
+      })
+      const data = await res.json()
+      if (!res.ok || data.error) {
+        alert('Erro ao salvar: ' + (data.error || 'Erro desconhecido'))
+        setSaving(false)
+        return
+      }
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2000)
+      // Reload profile to confirm save
+      const reloadRes = await fetch('/api/gestao/profile')
+      const reloadData = await reloadRes.json()
+      if (reloadData.profile) setProfile(reloadData.profile)
+    } catch (e: any) {
+      alert('Erro ao salvar: ' + e.message)
     }
-  ]
+    setSaving(false)
+  }
+
+  async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData
+      })
+      const data = await res.json()
+      
+      if (data.success && data.url) {
+        setProfile({ ...profile, image_url: data.url })
+        
+        await fetch('/api/gestao/profile', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ image_url: data.url })
+        })
+      } else {
+        alert('Erro ao fazer upload: ' + (data.error || 'Erro desconhecido'))
+      }
+    } catch (err: any) {
+      alert('Erro ao fazer upload: ' + err.message)
+    }
+  }
+
+  async function saveProfessional() {
+    if (!profForm.name) return alert('Nome é obrigatório')
+    
+    try {
+      const method = editingProfId ? 'PATCH' : 'POST'
+      await fetch('/api/professionals', {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(editingProfId ? { ...profForm, id: editingProfId } : profForm)
+      })
+      setIsProfModalOpen(false)
+      setProfForm({ name: '', commission_percent: 50, whatsapp: '' })
+      setEditingProfId(null)
+      loadProfessionals()
+    } catch (e) { alert('Erro ao salvar profissional') }
+  }
+
+  async function deleteProfessional(id: string) {
+    if (!confirm('Excluir este profissional?')) return
+    try {
+      await fetch(`/api/professionals?id=${id}`, {
+        method: 'DELETE'
+      })
+      loadProfessionals()
+    } catch (e) { alert('Erro ao excluir') }
+  }
+
+  function editProfessional(prof: Professional) {
+    setProfForm(prof)
+    setEditingProfId(prof.id || null)
+    setIsProfModalOpen(true)
+  }
+
+  function generateSlug(name: string): string {
+    return name
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '')
+      .substring(0, 50)
+  }
+
+  function copyLink() {
+    const name = salonName || profile?.name || 'salao'
+    const slug = generateSlug(name)
+    const bookingUrl = `${window.location.origin}/b/${slug}`
+    navigator.clipboard.writeText(bookingUrl)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  function updateWorkingHours(dayOfWeek: number, field: keyof WorkingHour, value: string | boolean) {
+    setWorkingHours(prev => prev.map(wh => 
+      wh.day_of_week === dayOfWeek ? { ...wh, [field]: value } : wh
+    ))
+  }
+
+  if (loading) return <div className="p-10 text-center text-white">Carregando...</div>
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-black italic text-white">Dashboard</h1>
-        <p className="text-gray-500 text-sm mt-1">Visão geral do seu salão</p>
+    <div className="max-w-2xl mx-auto pb-24">
+      <h1 className="text-2xl font-bold mb-6">Gestão do Salão</h1>
+
+      {/* Dados do Salão */}
+      <div className="bg-gray-900 rounded-2xl p-5 mb-5">
+        <h2 className="font-bold mb-4">Dados do Salão</h2>
+        
+        {/* Foto do Salão */}
+        <div className="flex items-center gap-4 mb-4">
+          <div className="w-20 h-20 rounded-xl bg-gray-800 border border-white/10 overflow-hidden flex items-center justify-center">
+            {profile.image_url ? (
+              <img src={profile.image_url} alt="Foto" className="w-full h-full object-cover" />
+            ) : (
+              <Users size={24} className="text-gray-600" />
+            )}
+          </div>
+          <div>
+            <p className="text-sm text-gray-400 mb-2">Foto do Salão (aparece no link de agendamento)</p>
+            <input type="file" ref={fileInputRef} onChange={handleImageUpload} accept="image/*" className="hidden" />
+            <button onClick={() => fileInputRef.current?.click()} className="flex items-center gap-2 px-4 py-2 bg-gray-800 rounded-lg text-sm hover:bg-gray-700 transition-all">
+              <Upload size={16} /> {profile.image_url ? 'Trocar Foto' : 'Enviar Foto'}
+            </button>
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          <div>
+            <label className="text-xs text-gray-400">Nome do Salão</label>
+            <input value={profile.name} onChange={e => setProfile({...profile, name: e.target.value})} className="w-full p-3 bg-gray-800 rounded-xl mt-1" />
+          </div>
+          <div>
+            <label className="text-xs text-gray-400">Profissional</label>
+            <input value={profile.professional_name} onChange={e => setProfile({...profile, professional_name: e.target.value})} className="w-full p-3 bg-gray-800 rounded-xl mt-1" />
+          </div>
+          <div>
+            <label className="text-xs text-gray-400">WhatsApp</label>
+            <input value={profile.whatsapp_number} onChange={e => setProfile({...profile, whatsapp_number: e.target.value})} className="w-full p-3 bg-gray-800 rounded-xl mt-1" />
+          </div>
+          <div>
+            <label className="text-xs text-gray-400">CPF/CNPJ (para pagamentos)</label>
+            <input value={profile.cpf_cnpj || ''} onChange={e => setProfile({...profile, cpf_cnpj: e.target.value.replace(/\D/g, '')})} placeholder="000.000.000-00" maxLength={18} className="w-full p-3 bg-gray-800 rounded-xl mt-1" />
+          </div>
+          <div>
+            <label className="text-xs text-gray-400">Endereço</label>
+            <input value={profile.address} onChange={e => setProfile({...profile, address: e.target.value})} className="w-full p-3 bg-gray-800 rounded-xl mt-1" />
+          </div>
+        </div>
       </div>
 
-      {loading ? (
-        <div className="flex justify-center py-20">
-          <div className="w-8 h-8 border-2 border-[#5E41FF] border-t-transparent rounded-full animate-spin" />
+      {/* Profissionais */}
+      <div className="bg-gray-900 rounded-2xl p-5 mb-5">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="font-bold flex items-center gap-2"><Users size={18} /> Profissionais</h2>
+          <button onClick={() => { setProfForm({ name: '', commission_percent: 50, whatsapp: '' }); setEditingProfId(null); setIsProfModalOpen(true) }} className="flex items-center gap-1 px-3 py-1.5 bg-[#5E41FF] rounded-lg text-xs font-medium">
+            <Plus size={14} /> Adicionar
+          </button>
         </div>
-      ) : (
-        <>
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {cards.map((card, i) => (
-              <div key={i} className="bg-[#121021] border border-white/5 p-6 rounded-3xl">
-                <div className="flex items-center justify-between mb-4">
-                  <div className={`w-12 h-12 rounded-2xl ${card.bg} flex items-center justify-center`}>
-                    <card.icon size={24} style={{ color: card.color }} />
-                  </div>
+        
+        {professionals.length === 0 ? (
+          <p className="text-sm text-gray-500 text-center py-4">Nenhum profissional cadastrado</p>
+        ) : (
+          <div className="space-y-2">
+            {professionals.map(prof => (
+              <div key={prof.id} className="flex items-center justify-between p-3 bg-gray-800 rounded-xl">
+                <div>
+                  <p className="text-sm font-medium text-white">{prof.name}</p>
+                  <p className="text-xs text-gray-400">Comissão: {prof.commission_percent}% {prof.whatsapp && `• ${prof.whatsapp}`}</p>
                 </div>
-                <p className="text-xs font-black uppercase tracking-widest text-gray-500">{card.title}</p>
-                <p className="text-3xl font-black text-white mt-2">{card.value}</p>
+                <div className="flex gap-1">
+                  <button onClick={() => editProfessional(prof)} className="p-2 bg-gray-700 rounded-lg hover:bg-gray-600 transition-all"><Users size={14} /></button>
+                  <button onClick={() => deleteProfessional(prof.id!)} className="p-2 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 transition-all"><Trash2 size={14} /></button>
+                </div>
               </div>
             ))}
           </div>
+        )}
+      </div>
 
-          {/* Quick Actions */}
-          <div className="bg-[#121021] border border-white/5 p-8 rounded-3xl">
-            <h2 className="text-lg font-black text-white mb-6">Ações Rápidas</h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <a href="/admin/agenda" className="flex flex-col items-center gap-3 p-6 bg-white/5 rounded-2xl hover:bg-white/10 transition-all">
-                <Calendar size={32} className="text-[#5E41FF]" />
-                <span className="text-sm font-medium text-gray-300">Novo Agendamento</span>
-              </a>
-              <a href="/admin/clientes" className="flex flex-col items-center gap-3 p-6 bg-white/5 rounded-2xl hover:bg-white/10 transition-all">
-                <Users size={32} className="text-emerald-500" />
-                <span className="text-sm font-medium text-gray-300">Cadastrar Cliente</span>
-              </a>
-              <a href="/admin/vendas" className="flex flex-col items-center gap-3 p-6 bg-white/5 rounded-2xl hover:bg-white/10 transition-all">
-                <ShoppingBag size={32} className="text-amber-500" />
-                <span className="text-sm font-medium text-gray-300">Registrar Venda</span>
-              </a>
-              <a href="/admin/despesas" className="flex flex-col items-center gap-3 p-6 bg-white/5 rounded-2xl hover:bg-white/10 transition-all">
-                <DollarSign size={32} className="text-red-500" />
-                <span className="text-sm font-medium text-gray-300">Nova Despesa</span>
-              </a>
+      {/* Horários por dia da semana */}
+      <div className="bg-gray-900 rounded-2xl p-5 mb-5">
+        <h2 className="font-bold mb-4 flex items-center gap-2"><Clock size={18} /> Horários por Dia</h2>
+        <div className="space-y-3">
+          {workingHours.map(wh => (
+            <div key={wh.day_of_week} className={`p-3 rounded-xl ${wh.is_active ? 'bg-gray-800' : 'bg-gray-800/50 opacity-60'}`}>
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <input type="checkbox" checked={wh.is_active} onChange={e => updateWorkingHours(wh.day_of_week, 'is_active', e.target.checked)} className="w-4 h-4 rounded" />
+                  <span className="text-sm font-medium text-white">{dayNames[wh.day_of_week]}</span>
+                </div>
+                {wh.is_active && <span className="text-xs text-emerald-400">{wh.start_time} - {wh.end_time}</span>}
+              </div>
+              {wh.is_active && (
+                <div className="grid grid-cols-2 gap-2 ml-6">
+                  <div>
+                    <label className="text-[10px] text-gray-500">Abertura</label>
+                    <input type="time" value={wh.start_time} onChange={e => updateWorkingHours(wh.day_of_week, 'start_time', e.target.value)} className="w-full p-2 bg-gray-700 rounded-lg text-sm mt-0.5" />
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-gray-500">Fechamento</label>
+                    <input type="time" value={wh.end_time} onChange={e => updateWorkingHours(wh.day_of_week, 'end_time', e.target.value)} className="w-full p-2 bg-gray-700 rounded-lg text-sm mt-0.5" />
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Link */}
+      <div className="bg-gray-900 rounded-2xl p-5 mb-5">
+        <h2 className="font-bold mb-4">Link de Agendamento</h2>
+        {(salonId || profile?.id) ? (
+          <div className="flex items-center gap-2">
+            <input readOnly value={`${window.location.origin}/b/${generateSlug(salonName || profile?.name || 'salao')}`} className="flex-1 p-3 bg-gray-800 rounded-xl text-sm" />
+            <button onClick={copyLink} className="p-3 bg-yellow-500 rounded-xl">
+              {copied ? <Check size={20} /> : <Copy size={20} />}
+            </button>
+          </div>
+        ) : (
+          <div className="p-3 bg-gray-800 rounded-xl text-sm text-gray-500">Carregando link...</div>
+        )}
+      </div>
+
+      {/* Salvar */}
+      <div className="fixed bottom-4 left-4 right-4">
+        <button onClick={handleSave} disabled={saving} className="w-full p-4 bg-yellow-500 text-black font-bold rounded-xl flex items-center justify-center gap-2">
+          {saving ? <Loader2 size={20} className="animate-spin" /> : <Save size={20} />} SALVAR
+        </button>
+        {saved && (
+          <div className="absolute -top-10 left-0 right-0 text-center">
+            <span className="bg-green-500 text-white px-4 py-2 rounded-xl text-sm">Salvo!</span>
+          </div>
+        )}
+      </div>
+
+      {/* Modal Profissional */}
+      {isProfModalOpen && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4" onClick={() => setIsProfModalOpen(false)}>
+          <div className="bg-gray-900 rounded-2xl p-6 w-full max-w-sm" onClick={e => e.stopPropagation()}>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-bold">{editingProfId ? 'Editar' : 'Novo'} Profissional</h3>
+              <button onClick={() => setIsProfModalOpen(false)} className="p-2 hover:bg-white/10 rounded-lg"><X size={20} /></button>
+            </div>
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs text-gray-400">Nome</label>
+                <input value={profForm.name} onChange={e => setProfForm({...profForm, name: e.target.value})} className="w-full p-3 bg-gray-800 rounded-xl mt-1" placeholder="Nome do profissional" />
+              </div>
+              <div>
+                <label className="text-xs text-gray-400">WhatsApp</label>
+                <input value={profForm.whatsapp} onChange={e => setProfForm({...profForm, whatsapp: e.target.value})} className="w-full p-3 bg-gray-800 rounded-xl mt-1" placeholder="11999999999" />
+              </div>
+              <div>
+                <label className="text-xs text-gray-400">Comissão (%)</label>
+                <input type="number" value={profForm.commission_percent} onChange={e => setProfForm({...profForm, commission_percent: parseInt(e.target.value) || 0})} className="w-full p-3 bg-gray-800 rounded-xl mt-1" />
+              </div>
+              <button onClick={saveProfessional} className="w-full p-3 bg-[#5E41FF] rounded-xl font-bold mt-2">
+                {editingProfId ? 'Atualizar' : 'Adicionar'}
+              </button>
             </div>
           </div>
-        </>
+        </div>
       )}
     </div>
   )

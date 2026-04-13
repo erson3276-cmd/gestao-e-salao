@@ -1,0 +1,436 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import { useParams, useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { format, addDays, startOfToday, isSameDay, eachDayOfInterval } from 'date-fns'
+import { ptBR } from 'date-fns/locale'
+import { ChevronRight, ChevronLeft, CheckCircle2, User, MapPin, Clock, ArrowLeft, Loader2 } from 'lucide-react'
+
+interface Salon {
+  id: string
+  name: string
+  slug: string
+  image_url: string | null
+  address: string | null
+  whatsapp_number: string | null
+}
+
+interface Service {
+  id: string
+  name: string
+  category: string
+  price: number
+  duration_minutes: number
+}
+
+interface WorkingHour {
+  day_of_week: number
+  start_time: string
+  end_time: string
+  is_active: boolean
+}
+
+export default function BookingPage() {
+  const params = useParams()
+  const router = useRouter()
+  const slug = params.slug as string
+
+  const [salon, setSalon] = useState<Salon | null>(null)
+  const [services, setServices] = useState<Service[]>([])
+  const [workingHours, setWorkingHours] = useState<WorkingHour[]>([])
+  const [loading, setLoading] = useState(true)
+
+  const [step, setStep] = useState(1)
+  const [selectedService, setSelectedService] = useState<Service | null>(null)
+  const [selectedDate, setSelectedDate] = useState(addDays(startOfToday(), 1))
+  const [selectedTime, setSelectedTime] = useState<string | null>(null)
+  const [occupiedSlots, setOccupiedSlots] = useState<string[]>([])
+  const [name, setName] = useState('')
+  const [whatsapp, setWhatsapp] = useState('')
+  const [bookingLoading, setBookingLoading] = useState(false)
+
+  const dateList = eachDayOfInterval({
+    start: startOfToday(),
+    end: addDays(startOfToday(), 14)
+  })
+
+  const categories = ['Todos', ...Array.from(new Set(services.map(s => s.category)))]
+  const [selectedCategory, setSelectedCategory] = useState('Todos')
+
+  useEffect(() => {
+    if (!slug) return
+    loadData()
+  }, [slug])
+
+  async function loadData() {
+    try {
+      const [salonRes, servicesRes, whRes, occupiedRes] = await Promise.all([
+        fetch(`/api/public/salon-by-slug/${slug}`),
+        fetch(`/api/public/services-by-slug/${slug}`),
+        fetch(`/api/public/working-hours-by-slug/${slug}`),
+        fetch(`/api/public/occupied-slots?slug=${slug}&date=${format(selectedDate, 'yyyy-MM-dd')}`)
+      ])
+
+      const salonData = await salonRes.json()
+      const servicesData = await servicesRes.json()
+      const whData = await whRes.json()
+      const occupiedData = await occupiedRes.json()
+
+      if (salonData.salon) setSalon(salonData.salon)
+      if (servicesData.services) setServices(servicesData.services)
+      if (whData.workingHours) setWorkingHours(whData.workingHours)
+      if (occupiedData.occupiedSlots) setOccupiedSlots(occupiedData.occupiedSlots)
+    } catch (e) {
+      console.error('Error loading data:', e)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Reload occupied slots when date changes
+  // Also refresh every 30 seconds to keep slots updated
+  useEffect(() => {
+    if (slug && selectedDate) {
+      const fetchSlots = () => {
+        fetch(`/api/public/occupied-slots?slug=${slug}&date=${format(selectedDate, 'yyyy-MM-dd')}`)
+          .then(res => res.json())
+          .then(data => {
+            if (data.occupiedSlots) setOccupiedSlots(data.occupiedSlots)
+          })
+          .catch(console.error)
+      }
+      
+      fetchSlots()
+      const interval = setInterval(fetchSlots, 30000) // Refresh every 30s
+      
+      return () => clearInterval(interval)
+    }
+  }, [slug, selectedDate])
+
+  function getDayWorkingHours(dayOfWeek: number) {
+    const wh = workingHours.find(w => w.day_of_week === dayOfWeek)
+    if (wh) return wh
+    if (workingHours.length === 0) {
+      const defaults: Record<number, WorkingHour> = {
+        0: { day_of_week: 0, start_time: '09:00', end_time: '14:00', is_active: false },
+        1: { day_of_week: 1, start_time: '09:00', end_time: '19:00', is_active: true },
+        2: { day_of_week: 2, start_time: '09:00', end_time: '19:00', is_active: true },
+        3: { day_of_week: 3, start_time: '09:00', end_time: '19:00', is_active: true },
+        4: { day_of_week: 4, start_time: '09:00', end_time: '19:00', is_active: true },
+        5: { day_of_week: 5, start_time: '09:00', end_time: '19:00', is_active: true },
+        6: { day_of_week: 6, start_time: '09:00', end_time: '17:00', is_active: true },
+      }
+      return defaults[dayOfWeek]
+    }
+    return undefined
+  }
+
+  function generateTimeSlots(dayOfWeek: number) {
+    const wh = getDayWorkingHours(dayOfWeek)
+    if (!wh || !wh.is_active) return []
+
+    const [startH, startM] = wh.start_time.split(':').map(Number)
+    const [endH, endM] = wh.end_time.split(':').map(Number)
+    const slots: string[] = []
+
+    let current = startH * 60 + startM
+    const end = endH * 60 + endM
+
+    while (current < end) {
+      const h = Math.floor(current / 60)
+      const m = current % 60
+      slots.push(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`)
+      current += 30
+    }
+
+    return slots
+  }
+
+  async function handleBooking() {
+    if (!name || !whatsapp || !selectedService || !selectedTime || !salon) {
+      alert('Preencha todos os campos')
+      return
+    }
+
+    setBookingLoading(true)
+
+    try {
+      const dateStr = format(selectedDate, 'yyyy-MM-dd')
+      const [timeH, timeM] = selectedTime.split(':').map(Number)
+      
+      // Create date in Brasilia timezone
+      const startDateTime = new Date(`${dateStr}T${String(timeH).padStart(2, '0')}:${String(timeM).padStart(2, '0')}:00-03:00`)
+      const endDateTime = new Date(startDateTime.getTime() + selectedService.duration_minutes * 60000)
+
+      const res = await fetch('/api/public/book', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          salonId: salon.id,
+          name,
+          whatsapp,
+          serviceId: selectedService.id,
+          startTime: startDateTime.toISOString(),
+          endTime: endDateTime.toISOString()
+        })
+      })
+
+      const data = await res.json()
+
+      if (data.success) {
+        setStep(5)
+        // Reload occupied slots after successful booking
+        fetch(`/api/public/occupied-slots?slug=${slug}&date=${format(selectedDate, 'yyyy-MM-dd')}`)
+          .then(res => res.json())
+          .then(data => {
+            if (data.occupiedSlots) setOccupiedSlots(data.occupiedSlots)
+          })
+      } else {
+        alert(data.error || 'Erro ao agendar')
+      }
+    } catch {
+      alert('Erro de conexão')
+    } finally {
+      setBookingLoading(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <main className="min-h-screen bg-[#0A0A0A] flex items-center justify-center text-white">
+        <Loader2 size={32} className="animate-spin text-[#5E41FF]" />
+      </main>
+    )
+  }
+
+  if (!salon) {
+    return (
+      <main className="min-h-screen bg-[#0A0A0A] flex items-center justify-center p-6 text-center">
+        <div>
+          <div className="w-20 h-20 mx-auto bg-red-500/10 border border-red-500/20 rounded-2xl flex items-center justify-center mb-6">
+            <span className="text-4xl">🔍</span>
+          </div>
+          <h1 className="text-xl font-black text-white mb-3">Salão não encontrado</h1>
+          <p className="text-gray-500 text-sm mb-2">Este link pode estar expirado ou o salão foi removido.</p>
+          <p className="text-gray-600 text-xs mb-6">Slug buscado: <code className="bg-white/5 px-2 py-1 rounded">{slug}</code></p>
+          <Link href="/" className="px-6 py-3 bg-[#5E41FF] text-white rounded-xl text-sm font-bold hover:bg-[#4a33cc] transition-all">
+            Voltar ao início
+          </Link>
+        </div>
+      </main>
+    )
+  }
+
+  if (step === 5) {
+    return (
+      <main className="min-h-screen bg-[#0A0A0A] flex flex-col items-center justify-center p-4 text-center">
+        <CheckCircle2 className="w-16 h-16 text-emerald-500 mb-4" />
+        <h2 className="text-xl font-black italic uppercase mb-3">Agendamento Confirmado!</h2>
+        <p className="text-gray-400 text-sm mb-2">Você receberá uma confirmação no WhatsApp.</p>
+        <p className="text-gray-500 text-xs mb-6">
+          {selectedService?.name} • {format(selectedDate, 'dd/MM/yyyy')} às {selectedTime}
+        </p>
+        <button
+          onClick={() => { setStep(1); setName(''); setWhatsapp(''); setSelectedService(null); setSelectedTime(null); }}
+          className="px-6 py-3 bg-[#121021] border border-white/10 rounded-xl text-[#5E41FF] font-bold text-sm"
+        >
+          Novo agendamento
+        </button>
+      </main>
+    )
+  }
+
+  const dayWh = getDayWorkingHours(selectedDate.getDay())
+  const isDayClosed = !dayWh || !dayWh.is_active
+  
+  // Get current time in Brasilia
+  const now = new Date()
+  const nowBrasil = new Date(now.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }))
+  const isToday = selectedDate.toDateString() === nowBrasil.toDateString()
+  
+  const allSlots = isDayClosed ? [] : generateTimeSlots(selectedDate.getDay())
+  
+  // Filter out occupied slots and past hours (for today)
+  const timeSlots = allSlots.filter(slot => {
+    if (occupiedSlots.includes(slot)) return false
+    
+    // If it's today, filter out past hours
+    if (isToday) {
+      const [h, m] = slot.split(':').map(Number)
+      const slotTime = new Date(nowBrasil)
+      slotTime.setHours(h, m, 0, 0)
+      if (slotTime <= nowBrasil) return false
+    }
+    
+    return true
+  })
+
+  return (
+    <main className="min-h-screen bg-[#0A0A0A] text-[#FAFAFA] font-sans pb-8">
+      {/* Header */}
+      <header className="relative w-full px-4 pt-6 pb-8 text-center bg-gradient-to-b from-[#121021] to-[#0A0A0A] border-b border-white/5">
+        <div className="w-16 h-16 mx-auto bg-[#121021] border border-[#5E41FF]/30 rounded-2xl flex items-center justify-center mb-3 overflow-hidden shadow-xl shadow-[#5E41FF]/10">
+          {salon.image_url ? (
+            <img src={salon.image_url} alt="" className="w-full h-full object-cover" />
+          ) : (
+            <User className="w-8 h-8 text-[#5E41FF]" />
+          )}
+        </div>
+        <h1 className="text-xl font-black italic uppercase">{salon.name}</h1>
+        <p className="text-[#5E41FF] text-[10px] font-bold uppercase tracking-wider mt-1">Agendamento Online</p>
+        {salon.address && (
+          <div className="flex items-center justify-center gap-1 mt-2 text-gray-500 text-xs">
+            <MapPin size={12} /> {salon.address}
+          </div>
+        )}
+      </header>
+
+      <div className="px-4 mt-6 max-w-lg mx-auto">
+        {/* Step 1: Services */}
+        {step === 1 && (
+          <div>
+            <h2 className="text-base font-bold mb-4 flex items-center gap-2">
+              <span className="w-7 h-7 rounded-full bg-[#5E41FF] text-white flex items-center justify-center text-sm font-black">1</span>
+              Escolha o Serviço
+            </h2>
+            <div className="flex gap-2 overflow-x-auto pb-3 no-scrollbar mb-4">
+              {categories.map((cat) => (
+                <button key={cat} onClick={() => setSelectedCategory(cat)} className={`px-4 py-2 rounded-full text-sm whitespace-nowrap font-bold transition-all ${selectedCategory === cat ? 'bg-[#5E41FF] text-white' : 'bg-[#121021] text-gray-500 border border-white/5'}`}>
+                  {cat}
+                </button>
+              ))}
+            </div>
+            <div className="space-y-2">
+              {services.filter(s => selectedCategory === 'Todos' || s.category === selectedCategory).length === 0 ? (
+                <div className="text-center py-12">
+                  <div className="w-16 h-16 mx-auto bg-[#5E41FF]/10 rounded-full flex items-center justify-center mb-4">
+                    <Clock className="text-[#5E41FF]" size={24} />
+                  </div>
+                  <p className="text-gray-400 font-bold text-base">Nenhum serviço cadastrado</p>
+                  <p className="text-gray-600 text-sm mt-2">O salão ainda não configurou seus serviços.</p>
+                </div>
+              ) : (
+                services.filter(s => selectedCategory === 'Todos' || s.category === selectedCategory).map((service) => (
+                  <div key={service.id} onClick={() => { setSelectedService(service); setStep(2); }} className="p-4 bg-[#121021] border border-white/5 rounded-2xl flex justify-between items-center cursor-pointer hover:border-[#5E41FF]/30 transition-all">
+                    <div>
+                      <h3 className="text-base font-bold">{service.name}</h3>
+                      <div className="flex items-center gap-3 mt-1">
+                        <span className="text-xs text-gray-500 flex items-center gap-1"><Clock size={12} /> {service.duration_minutes} min</span>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-base font-black text-[#5E41FF]">R$ {service.price}</p>
+                      <ChevronRight className="text-gray-600 w-5 h-5 ml-auto mt-1" />
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Step 2: Date */}
+        {step === 2 && (
+          <div>
+            <button onClick={() => setStep(1)} className="flex items-center gap-2 text-gray-500 mb-4 text-base hover:text-white transition-colors">
+              <ArrowLeft size={18} /> Voltar
+            </button>
+            <h2 className="text-base font-bold mb-4 flex items-center gap-2">
+              <span className="w-7 h-7 rounded-full bg-[#5E41FF] text-white flex items-center justify-center text-sm font-black">2</span>
+              Escolha a Data
+            </h2>
+            <div className="grid grid-cols-4 gap-2">
+              {dateList.map(date => {
+                const wh = getDayWorkingHours(date.getDay())
+                const isClosed = !wh || !wh.is_active
+                return (
+                  <button
+                    key={date.toString()}
+                    onClick={() => { if (!isClosed) { setSelectedDate(date); setStep(3); } }}
+                    disabled={isClosed}
+                    className={`p-4 rounded-xl text-center transition-all ${
+                      isSameDay(date, selectedDate) ? 'bg-[#5E41FF] text-white' :
+                      isClosed ? 'bg-[#121021]/30 text-gray-700 cursor-not-allowed' :
+                      'bg-[#121021] text-gray-400 hover:bg-[#121021]/80'
+                    }`}
+                  >
+                    <p className="text-xs uppercase font-bold">{format(date, 'EEE', { locale: ptBR })}</p>
+                    <p className="text-2xl font-black">{format(date, 'dd')}</p>
+                    {isClosed && <p className="text-[10px] text-red-500 mt-1">Fechado</p>}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Step 3: Time */}
+        {step === 3 && (
+          <div>
+            <button onClick={() => setStep(2)} className="flex items-center gap-2 text-gray-500 mb-4 text-base hover:text-white transition-colors">
+              <ArrowLeft size={18} /> Voltar
+            </button>
+            <h2 className="text-base font-bold mb-4 flex items-center gap-2">
+              <span className="w-7 h-7 rounded-full bg-[#5E41FF] text-white flex items-center justify-center text-sm font-black">3</span>
+              Escolha o Horário
+            </h2>
+            <p className="text-sm text-gray-500 mb-4">{format(selectedDate, "EEEE, dd 'de' MMMM", { locale: ptBR })}</p>
+            {timeSlots.length > 0 ? (
+              <div className="grid grid-cols-3 gap-2">
+                {timeSlots.map(time => (
+                  <button key={time} onClick={() => { setSelectedTime(time); setStep(4); }} className={`p-4 rounded-xl text-base font-bold transition-all ${selectedTime === time ? 'bg-[#5E41FF] text-white' : 'bg-[#121021] text-gray-400 hover:bg-[#121021]/80'}`}>
+                    {time}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12 text-gray-600">
+                <Clock size={32} className="mx-auto mb-3 opacity-50" />
+                <p className="text-base font-bold">Nenhum horário disponível</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Step 4: Info */}
+        {step === 4 && (
+          <div>
+            <button onClick={() => setStep(3)} className="flex items-center gap-2 text-gray-500 mb-4 text-base hover:text-white transition-colors">
+              <ArrowLeft size={18} /> Voltar
+            </button>
+            <h2 className="text-base font-bold mb-4 flex items-center gap-2">
+              <span className="w-7 h-7 rounded-full bg-[#5E41FF] text-white flex items-center justify-center text-sm font-black">4</span>
+              Seus Dados
+            </h2>
+
+            <div className="space-y-3 mb-6">
+              <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Seu nome" className="w-full p-4 bg-[#121021] border border-white/5 rounded-xl text-base outline-none focus:border-[#5E41FF]/50" />
+              <input type="tel" value={whatsapp} onChange={e => setWhatsapp(e.target.value)} placeholder="WhatsApp (com DDD)" className="w-full p-4 bg-[#121021] border border-white/5 rounded-xl text-base outline-none focus:border-[#5E41FF]/50" />
+            </div>
+
+            <div className="p-4 bg-[#121021] border border-white/5 rounded-xl mb-6">
+              <p className="text-xs text-gray-500 uppercase font-bold tracking-widest mb-2">Resumo</p>
+              <p className="text-base font-bold">{selectedService?.name}</p>
+              <p className="text-sm text-gray-500 mt-1">{format(selectedDate, 'dd/MM/yyyy')} às {selectedTime} • R$ {selectedService?.price}</p>
+            </div>
+
+            <button onClick={handleBooking} disabled={bookingLoading || !name || !whatsapp} className="w-full py-4 bg-[#5E41FF] text-white rounded-xl font-black uppercase tracking-widest text-base flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 border-b-4 border-[#3D28B8]">
+              {bookingLoading ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : (
+                <>
+                  Confirmar Agendamento
+                  <CheckCircle2 size={18} />
+                </>
+              )}
+            </button>
+          </div>
+        )}
+      </div>
+
+      <style jsx global>{`
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      `}</style>
+    </main>
+  )
+}

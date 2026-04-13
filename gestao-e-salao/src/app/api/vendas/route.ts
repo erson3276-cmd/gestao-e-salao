@@ -1,80 +1,98 @@
 import { NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabaseAdmin'
-import { cookies } from 'next/headers'
-import { SALON_COOKIE_NAME } from '@/lib/auth'
-
-async function getSalonId() {
-  const cookieStore = await cookies()
-  const session = cookieStore.get(SALON_COOKIE_NAME)
-  if (session?.value) {
-    try {
-      const data = JSON.parse(session.value)
-      return data.salonId
-    } catch { return null }
-  }
-  return null
-}
+import { supabaseAdmin as supabase } from '@/lib/supabaseAdmin'
+import { getSalonId } from '@/lib/session'
 
 export async function GET() {
+  const salonId = await getSalonId()
+  if (!salonId) return NextResponse.json({ data: [], success: true })
+
   try {
-    const salonId = await getSalonId()
-    let query = supabaseAdmin
-      .from('vendas')
-      .select('*, customers:customer_id(name), services:service_id(name)')
-      .order('created_at', { ascending: false })
-    if (salonId) query = query.eq('salon_id', salonId)
+    let query = supabase.from('vendas').select('*, customers:customer_id(id, name), services:service_id(id, name, price)').order('date', { ascending: false })
+    if (salonId !== 'admin') query = query.eq('salon_id', salonId)
+    
     const { data, error } = await query
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-    return NextResponse.json({ data: data || [] })
-  } catch (e) {
-    return NextResponse.json({ error: 'Erro ao buscar vendas' }, { status: 500 })
+    if (error) throw error
+    return NextResponse.json({ data: data || [], success: true })
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }
 
 export async function POST(request: Request) {
+  const salonId = await getSalonId()
+  if (!salonId) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
+
   try {
-    const salonId = await getSalonId()
     const body = await request.json()
-    const insertData = salonId ? { ...body, salon_id: salonId } : body
-    const { data, error } = await supabaseAdmin
-      .from('vendas')
-      .insert([insertData])
-      .select()
-      .single()
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-    return NextResponse.json({ data })
-  } catch (e) {
-    return NextResponse.json({ error: 'Erro ao criar venda' }, { status: 500 })
+    const { customer_id, service_id, appointment_id, amount, payment_method, date } = body
+    
+    let targetSalonId = salonId === 'admin' ? null : salonId
+    
+    if (!targetSalonId) {
+       const { data: salons } = await supabase.from('salons').select('id').eq('status', 'active').limit(1)
+       if (salons && salons.length > 0) targetSalonId = salons[0].id
+    }
+    if (body.salon_id) targetSalonId = body.salon_id
+
+    const { data, error } = await supabase.from('vendas').insert([{ 
+      customer_id, service_id, appointment_id, 
+      amount: Number(amount) || 0,
+      payment_method,
+      date: date || new Date().toISOString(),
+      salon_id: targetSalonId
+    }]).select().single()
+    
+    if (error) throw error
+    return NextResponse.json({ data, success: true })
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }
 
 export async function PUT(request: Request) {
+  const salonId = await getSalonId()
+  if (!salonId) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
+
   try {
     const body = await request.json()
-    const { id, ...updateData } = body
-    const salonId = await getSalonId()
-    let query = supabaseAdmin.from('vendas').update(updateData).eq('id', id)
-    if (salonId) query = query.eq('salon_id', salonId)
+    const { id, customer_id, service_id, appointment_id, amount, payment_method, date } = body
+    if (!id) return NextResponse.json({ error: 'ID é obrigatório' }, { status: 400 })
+    
+    const updateData: any = {}
+    if (customer_id !== undefined) updateData.customer_id = customer_id
+    if (service_id !== undefined) updateData.service_id = service_id
+    if (appointment_id !== undefined) updateData.appointment_id = appointment_id
+    if (amount !== undefined) updateData.amount = Number(amount)
+    if (payment_method !== undefined) updateData.payment_method = payment_method
+    if (date !== undefined) updateData.date = date
+    
+    let query = supabase.from('vendas').update(updateData).eq('id', id)
+    if (salonId !== 'admin') query = query.eq('salon_id', salonId)
+    
     const { data, error } = await query.select().single()
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-    return NextResponse.json({ data })
-  } catch (e) {
-    return NextResponse.json({ error: 'Erro ao atualizar venda' }, { status: 500 })
+    if (error) throw error
+    return NextResponse.json({ data, success: true })
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }
 
 export async function DELETE(request: Request) {
+  const salonId = await getSalonId()
+  if (!salonId) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
+
   try {
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')
-    if (!id) return NextResponse.json({ error: 'ID necessário' }, { status: 400 })
-    const salonId = await getSalonId()
-    let query = supabaseAdmin.from('vendas').delete().eq('id', id)
-    if (salonId) query = query.eq('salon_id', salonId)
+    if (!id) return NextResponse.json({ error: 'ID é obrigatório' }, { status: 400 })
+    
+    let query = supabase.from('vendas').delete().eq('id', id)
+    if (salonId !== 'admin') query = query.eq('salon_id', salonId)
+    
     const { error } = await query
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    if (error) throw error
     return NextResponse.json({ success: true })
-  } catch (e) {
-    return NextResponse.json({ error: 'Erro ao excluir venda' }, { status: 500 })
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }

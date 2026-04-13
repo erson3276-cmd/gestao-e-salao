@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { supabaseAdmin } from '../../../../lib/supabaseAdmin'
+import { supabaseAdmin } from '@/lib/supabaseAdmin'
 
 export async function POST(request: Request) {
   try {
@@ -13,12 +13,14 @@ export async function POST(request: Request) {
 
     const cleanWhatsapp = whatsapp.replace(/\D/g, '')
 
+    // Check if salon only allows registered clients
     const { data: salonSettings } = await supabaseAdmin
       .from('salons')
       .select('only_registered_clients')
       .eq('id', salonId)
       .single()
 
+    // Check if customer exists
     let { data: customer } = await supabaseAdmin
       .from('customers')
       .select('id, active')
@@ -41,14 +43,17 @@ export async function POST(request: Request) {
       }
     }
 
+    // Parse the incoming date and convert to UTC for storage
     const startDate = new Date(startTime)
     const endDate = new Date(endTime)
     
     console.log('Parsed dates:', { startDate: startDate.toISOString(), endDate: endDate.toISOString() })
     
+    // Store as UTC in database
     const startTimeUTC = startDate.toISOString()
     const endTimeUTC = endDate.toISOString()
 
+    // Create customer if not exists (when not restricted)
     if (!customer) {
       const { data: newCustomer, error: createError } = await supabaseAdmin
         .from('customers')
@@ -65,6 +70,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'Cliente inválido' }, { status: 500 })
     }
 
+    // Check conflicts using UTC times
     const { data: conflicts } = await supabaseAdmin
       .from('appointments')
       .select('id')
@@ -78,6 +84,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'Horário indisponível' }, { status: 409 })
     }
 
+    // Create appointment - store in UTC
     const { data: appointment, error } = await supabaseAdmin
       .from('appointments')
       .insert({
@@ -98,6 +105,7 @@ export async function POST(request: Request) {
 
     console.log('Appointment created:', appointment)
 
+    // Get service name for message - show in Brasilia timezone
     const { data: service } = await supabaseAdmin
       .from('services')
       .select('name')
@@ -110,19 +118,23 @@ export async function POST(request: Request) {
       .eq('id', salonId)
       .single()
 
+    // Format date in Brasilia timezone for the message
     const dateStr = new Date(startTimeUTC).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })
     const timeStr = new Date(startTimeUTC).toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit' })
     const message = `Olá *${name}*!\n\nSeu agendamento de *${service?.name}* no *${salon?.name}* foi confirmado! ✅\n\n📅 *Data:* ${dateStr}\n🕒 *Horário:* ${timeStr}\n\nAguardo você!`
 
+    // Save WhatsApp message
     await supabaseAdmin
       .from('whatsapp_messages')
       .insert({ phone: cleanWhatsapp, message, status: 'pending', salon_id: salonId })
 
+    // Try to send via WhatsApp if instance is connected
     if (salonId) {
       try {
-        const { whatsappManager } = await import('../../../../lib/whatsapp-manager')
+        const { whatsappManager } = await import('@/lib/whatsapp-manager')
         await whatsappManager.sendText(salonId, cleanWhatsapp, message)
       } catch {
+        // Message is saved, will be sent later
       }
     }
 

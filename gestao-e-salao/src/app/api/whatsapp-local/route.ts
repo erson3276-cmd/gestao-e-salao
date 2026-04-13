@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getSalonSession } from '../../actions/salon-auth'
+import { getSalonSession } from '@/app/actions/salon-auth'
 
 const WHATSAPP_API = process.env.WHATSAPP_API_URL || 'http://167.234.248.199:8083'
 
@@ -32,11 +32,22 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const session = await getSalonSession()
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  let session
+  try {
+    session = await getSalonSession()
+  } catch (e) {
+    // Allow health check without session
+  }
 
-  const { action, sessionId: sid } = await request.json()
-  const sessionId = sid || `salon-${session.salonId.slice(0, 8)}`
+  let body
+  try {
+    body = await request.json()
+  } catch {
+    body = {}
+  }
+
+  const { action, sessionId: sid } = body
+  const sessionId = sid || (session ? `salon-${session.salonId.slice(0, 8)}` : 'default-salon')
 
   if (action === 'health') {
     const health = await apiFetch('/health')
@@ -44,7 +55,7 @@ export async function POST(request: Request) {
   }
 
   if (action === 'connect') {
-    const result = await apiFetch(`/session/${sessionId}`, 'POST')
+    const result = await apiFetch(`/session/${sessionId}`, 'POST', { fetchQR: true })
     return NextResponse.json(result)
   }
 
@@ -54,7 +65,7 @@ export async function POST(request: Request) {
   }
 
   if (action === 'sendMessage') {
-    const { phone, message } = await request.json()
+    const { phone, message } = body
     const result = await apiFetch('/send', 'POST', {
       sessionId,
       phone,

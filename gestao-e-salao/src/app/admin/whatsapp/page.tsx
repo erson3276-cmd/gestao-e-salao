@@ -32,15 +32,31 @@ export default function WhatsAppPage() {
   async function checkStatus() {
     if (!sessionId) return
     try {
-      const res = await fetch(`/api/whatsapp-local/status?sessionId=${sessionId}`)
-      const data = await res.json()
+      const res = await fetch(`/api/whatsapp-local?sessionId=${sessionId}`)
+      const text = await res.text()
+      
+      if (!res.ok) {
+        setError(`Erro do servidor: ${res.status}`)
+        setLoading(false)
+        return
+      }
+      
+      let data
+      try {
+        data = JSON.parse(text)
+      } catch {
+        setError('Resposta inválida do servidor')
+        setLoading(false)
+        return
+      }
+      
       setStatus(data)
       if (data.qr) {
         setQrCode(data.qr)
       }
       setLoading(false)
     } catch (e: any) {
-      setError(e.message)
+      setError('Erro ao conectar: ' + (e.message || 'Servidor indisponível'))
       setLoading(false)
     }
   }
@@ -49,25 +65,38 @@ export default function WhatsAppPage() {
     setConnecting(true)
     setError('')
     try {
-      const res = await fetch('/api/whatsapp-local/connect', {
+      const res = await fetch('/api/whatsapp-local', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sessionId })
+        body: JSON.stringify({ action: 'connect', sessionId })
       })
-      const data = await res.json()
+      const text = await res.text()
       
-      if (data.success) {
-        if (data.qr) {
-          setQrCode(data.qr)
-          setStatus({ connected: false, status: 'waiting_for_scan' })
-        } else if (data.connected) {
-          setStatus({ connected: true })
-        }
+      if (!res.ok) {
+        setError(`Erro: ${res.status}`)
+        setConnecting(false)
+        return
+      }
+      
+      let data
+      try {
+        data = JSON.parse(text)
+      } catch {
+        setError('Resposta inválida do servidor')
+        setConnecting(false)
+        return
+      }
+      
+      if (data.success || data.status === 'qr_ready' || data.qr) {
+        setQrCode(data.qr)
+        setStatus({ connected: false, status: 'waiting_for_scan' })
+      } else if (data.connected) {
+        setStatus({ connected: true })
       } else {
-        setError(data.error || 'Erro ao conectar')
+        setError(data.error || data.message || 'Erro ao conectar')
       }
     } catch (e: any) {
-      setError(e.message)
+      setError(e.message || 'Erro ao conectar')
     }
     setConnecting(false)
   }
@@ -75,10 +104,10 @@ export default function WhatsAppPage() {
   async function handleDisconnect() {
     setConnecting(true)
     try {
-      await fetch('/api/whatsapp-local/disconnect', {
+      await fetch('/api/whatsapp-local', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sessionId })
+        body: JSON.stringify({ action: 'disconnect', sessionId })
       })
       setStatus({ connected: false })
       setQrCode(null)
@@ -114,6 +143,7 @@ export default function WhatsAppPage() {
         <p className="text-gray-500 text-sm mt-1">Conecte seu WhatsApp para enviar lembretes automáticos aos clientes.</p>
       </div>
 
+      {/* Connection Status */}
       <div className={`p-8 rounded-3xl border ${status?.connected ? 'bg-emerald-500/5 border-emerald-500/20' : 'bg-[#121021] border-white/5'}`}>
         <div className="flex items-center gap-4 mb-6">
           {status?.connected ? (
@@ -193,6 +223,7 @@ export default function WhatsAppPage() {
         )}
       </div>
 
+      {/* Info */}
       <div className="p-6 bg-[#121021]/50 border border-white/5 rounded-3xl">
         <h3 className="font-bold text-white mb-4">Como funciona:</h3>
         <ul className="space-y-3 text-sm text-gray-400">

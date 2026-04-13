@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { supabaseAdmin as supabase } from '../../../lib/supabaseAdmin'
+import { supabaseAdmin as supabase } from '@/lib/supabaseAdmin'
 
 function formatBrasiliaTime(dateStr: string) {
   const date = new Date(dateStr)
@@ -28,6 +28,7 @@ export async function POST(request: Request) {
   try {
     const { name, whatsapp, serviceId, startTime, endTime } = await request.json()
 
+    // 1. Buscar cliente pelo WhatsApp
     const cleanWhatsapp = whatsapp.replace(/\D/g, '')
     console.log('Buscando cliente com WhatsApp:', cleanWhatsapp)
     
@@ -45,6 +46,7 @@ export async function POST(request: Request) {
 
     console.log('Cliente encontrado:', customer)
 
+    // 2. Se cliente não encontrado -> criar automaticamente
     if (!customer) {
       const { data: newCustomer, error: createError } = await supabase
         .from('customers')
@@ -67,6 +69,7 @@ export async function POST(request: Request) {
       customer = newCustomer
     }
 
+    // 3. Se cliente explicitamente inativo/bloqueado -> erro
     if (customer.active === false || customer.active === 'false' || customer.active === 0) {
       return NextResponse.json({ 
         success: false, 
@@ -75,6 +78,7 @@ export async function POST(request: Request) {
       }, { status: 403 })
     }
 
+    // 4. Verificar se está dentro do horário de funcionamento
     const startDateTime = new Date(startTime)
     const dayOfWeek = startDateTime.getDay()
     const timeStr = startDateTime.toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit' })
@@ -106,6 +110,7 @@ export async function POST(request: Request) {
       }, { status: 403 })
     }
 
+    // 5. Verificar se o horário não está bloqueado
     const endDateTime = new Date(endTime)
     const endTimeStr = endDateTime.toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit' })
     
@@ -128,6 +133,7 @@ export async function POST(request: Request) {
       }, { status: 403 })
     }
 
+    // 6. Verificar se horário está livre (sem agendamento)
     const { data: overlaps } = await supabase
       .from('appointments')
       .select('id')
@@ -144,6 +150,7 @@ export async function POST(request: Request) {
       }, { status: 409 })
     }
 
+    // 7. Criar agendamento
     console.log('Criando agendamento para cliente:', customer.id, customer.name, 'com serviço:', serviceId)
     const { data: appointment, error: appointmentError } = await supabase
       .from('appointments')
@@ -168,6 +175,7 @@ export async function POST(request: Request) {
       }, { status: 500 })
     }
 
+    // 8. Buscar dados do serviço para mensagem
     const { data: service } = await supabase
       .from('services')
       .select('name')
@@ -176,10 +184,12 @@ export async function POST(request: Request) {
 
     const serviceName = service?.name || 'Serviço'
     
+    // Usar horário de Brasília
     const dateFormatted = formatBrasiliaDate(startTime)
     const timeFormatted = formatBrasiliaTimeOnly(startTime)
 
-    const message = `Olá *${customer.name}*!\n\nSeu agendamento de *${serviceName}* foi confirmado! ✅\n\n📅 *Data:* ${dateFormatted}\n🕒 *Horário:* ${timeFormatted}\n\nAguardo você!`
+    // 9. Salvar mensagem de confirmação no Supabase para o poller enviar
+    const message = `Olá *${customer.name}*! ✨\n\nSeu agendamento de *${serviceName}* no *Gestão E Salão* foi confirmado! ✅\n\n🗓️ *Data:* ${dateFormatted}\n🕒 *Horário:* ${timeFormatted}\n\nTe esperamos para te deixar ainda mais linda! 🌸`
 
     console.log('Mensagem de confirmação:', message)
 

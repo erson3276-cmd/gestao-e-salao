@@ -1,19 +1,89 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
-:root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 0, 0, 0;
-  --background-end-rgb: 0, 0, 0;
+@theme {
+  --color-background: oklch(0.12 0 0);
+  --color-foreground: oklch(0.95 0 0);
+  
+  --color-card: oklch(0.18 0 0);
+  --color-card-foreground: oklch(0.95 0 0);
+  
+  --color-primary: oklch(0.71 0.12 75); /* Dourado Premium */
+  --color-primary-foreground: oklch(0.1 0 0);
+  
+  --color-secondary: oklch(0.22 0 0);
+  --color-secondary-foreground: oklch(0.95 0 0);
+  
+  --color-muted: oklch(0.22 0 0);
+  --color-muted-foreground: oklch(0.7 0 0);
+  
+  --color-accent: oklch(0.25 0.12 75 / 0.15);
+  --color-accent-foreground: oklch(0.71 0.12 75);
+  
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
 }
 
-body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+@layer base {
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: ui-sans-serif, system-ui, sans-serif;
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  
+  /* Prevenir zoom em inputs no iOS */
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+  
+  /* Suavização de scroll */
+  * {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  /* Evitar seleção de texto acidental */
+  button, a, .no-select {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  
+  /* Scroll suave */
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  /* Suporte a Safe Area para iPhone X+ */
+  .safe-area-top {
+    padding-top: env(safe-area-inset-top);
+  }
+  
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* Animações suaves */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+@layer base {
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: ui-sans-serif, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  * {
+    border-color: oklch(0.25 0 0 / 0.2);
+  }
 }
