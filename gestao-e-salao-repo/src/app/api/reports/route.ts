@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabaseAdmin'
+import { supabaseAdmin } from '../../../lib/supabaseAdmin'
 import { startOfMonth, endOfMonth, subMonths, format } from 'date-fns'
-import { calculateSalesSummary, calculateChannelData, calculatePaymentMethodData, calculateServiceData } from '@/lib/report-services'
+import { calculateSalesSummary, calculateChannelData, calculatePaymentMethodData, calculateServiceData } from '../../../lib/report-services'
 
 export async function GET(request: NextRequest) {
   try {
