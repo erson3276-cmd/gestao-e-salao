@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
 
     const { data: vendas, error } = await supabaseAdmin
       .from('vendas')
-      .select('customer_id, total_amount, amount, customers(name, avatar_url)')
+      .select('customer_id, total_amount, amount')
       .eq('salon_id', salonId || '')
       .gte('created_at', start.toISOString())
       .lte('created_at', end.toISOString())
@@ -30,12 +30,11 @@ export async function GET(request: NextRequest) {
 
     vendas?.forEach((v: any) => {
       if (v.customer_id) {
-        const customer = Array.isArray(v.customers) ? v.customers[0] : v.customers
         const existing = customerMap.get(v.customer_id) || { 
           total_spent: 0, 
           total_visits: 0,
-          name: customer?.name || 'Cliente',
-          avatar_url: customer?.avatar_url || null
+          name: 'Cliente',
+          avatar_url: null
         }
         existing.total_spent += v.total_amount || v.amount || 0
         existing.total_visits++
