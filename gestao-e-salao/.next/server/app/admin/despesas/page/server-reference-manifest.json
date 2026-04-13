@@ -1,0 +1,17 @@
+{
+  "node": {
+    "00e36b79e9e9845030d5c7475a1b5177c7dc003070": {
+      "workers": {
+        "app/admin/despesas/page": {
+          "moduleId": 59137,
+          "async": false,
+          "exportedName": "adminLogout",
+          "filename": "gestao-e-salao/src/app/actions/admin.ts"
+        }
+      },
+      "exportedName": "adminLogout",
+      "filename": "gestao-e-salao/src/app/actions/admin.ts"
+    }
+  },
+  "edge": {}
+}

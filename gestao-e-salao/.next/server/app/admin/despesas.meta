@@ -1,0 +1,16 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/admin/layout,_N_T_/admin/despesas/layout,_N_T_/admin/despesas/page,_N_T_/admin/despesas"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/admin/despesas/__PAGE__",
+    "/admin/despesas",
+    "/admin",
+    "/_index",
+    "/_head"
+  ]
+}

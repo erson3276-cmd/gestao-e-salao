@@ -1,0 +1,65 @@
+{
+  "node": {
+    "00e36b79e9e9845030d5c7475a1b5177c7dc003070": {
+      "workers": {
+        "app/admin/page": {
+          "moduleId": 27548,
+          "async": false,
+          "exportedName": "adminLogout",
+          "filename": "gestao-e-salao/src/app/actions/admin.ts"
+        }
+      },
+      "exportedName": "adminLogout",
+      "filename": "gestao-e-salao/src/app/actions/admin.ts"
+    },
+    "0026bbe0b0c8dd0eff74986a2fafde2c8844bac539": {
+      "workers": {
+        "app/admin/page": {
+          "moduleId": 27548,
+          "async": false,
+          "exportedName": "getAppointments",
+          "filename": "gestao-e-salao/src/app/actions/admin.ts"
+        }
+      },
+      "exportedName": "getAppointments",
+      "filename": "gestao-e-salao/src/app/actions/admin.ts"
+    },
+    "002ce1f2f6d8abd6a5fdb11d18e4e0ff0fb5c03901": {
+      "workers": {
+        "app/admin/page": {
+          "moduleId": 27548,
+          "async": false,
+          "exportedName": "getSales",
+          "filename": "gestao-e-salao/src/app/actions/admin.ts"
+        }
+      },
+      "exportedName": "getSales",
+      "filename": "gestao-e-salao/src/app/actions/admin.ts"
+    },
+    "00af5603ecd29d614a4033981b75ee831b2c53ed73": {
+      "workers": {
+        "app/admin/page": {
+          "moduleId": 27548,
+          "async": false,
+          "exportedName": "getCustomers",
+          "filename": "gestao-e-salao/src/app/actions/admin.ts"
+        }
+      },
+      "exportedName": "getCustomers",
+      "filename": "gestao-e-salao/src/app/actions/admin.ts"
+    },
+    "780a99e75b747ae8d4cb0cee5c3799d6d3a1a8e02b": {
+      "workers": {
+        "app/admin/page": {
+          "moduleId": 27548,
+          "async": false,
+          "exportedName": "getExpenses",
+          "filename": "gestao-e-salao/src/app/actions/admin.ts"
+        }
+      },
+      "exportedName": "getExpenses",
+      "filename": "gestao-e-salao/src/app/actions/admin.ts"
+    }
+  },
+  "edge": {}
+}

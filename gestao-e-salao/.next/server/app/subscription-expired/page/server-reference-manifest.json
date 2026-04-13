@@ -1,0 +1,17 @@
+{
+  "node": {
+    "005b75740979c7074b809acaaef5873ebd86f5d337": {
+      "workers": {
+        "app/subscription-expired/page": {
+          "moduleId": 37102,
+          "async": false,
+          "exportedName": "salonLogout",
+          "filename": "gestao-e-salao/src/app/actions/salon-auth.ts"
+        }
+      },
+      "exportedName": "salonLogout",
+      "filename": "gestao-e-salao/src/app/actions/salon-auth.ts"
+    }
+  },
+  "edge": {}
+}
