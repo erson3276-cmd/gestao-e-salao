@@ -2,8 +2,9 @@ import {
   ReportFilters, 
   Sale,
   Expense,
-  Goal
-} from '../types/report'
+  Goal,
+  CustomerStats
+} from '@/types/report'
 import { 
   startOfMonth, 
   endOfMonth, 
