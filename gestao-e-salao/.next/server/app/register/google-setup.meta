@@ -1,0 +1,16 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/register/layout,_N_T_/register/google-setup/layout,_N_T_/register/google-setup/page,_N_T_/register/google-setup"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/register/google-setup/__PAGE__",
+    "/register/google-setup",
+    "/register",
+    "/_index",
+    "/_head"
+  ]
+}

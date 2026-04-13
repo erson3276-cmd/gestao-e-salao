@@ -1,0 +1,3 @@
+{
+  "/api/public/services/[salonId]/route": "app/api/public/services/[salonId]/route.js"
+}

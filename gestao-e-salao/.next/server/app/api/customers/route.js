@@ -1,0 +1,10 @@
+var R=require("../../../chunks/[turbopack]_runtime.js")("server/app/api/customers/route.js")
+R.c("server/chunks/[root-of-the-server]__00e_mtz._.js")
+R.c("server/chunks/node_modules_next_dist_0npcise._.js")
+R.c("server/chunks/node_modules_next_124cnn1._.js")
+R.c("server/chunks/[root-of-the-server]__0op9af~._.js")
+R.c("server/chunks/gestao-e-salao_src_lib_supabaseAdmin_ts_0qx8onh._.js")
+R.c("server/chunks/node_modules_next_11synfn._.js")
+R.c("server/chunks/gestao-e-salao__next-internal_server_app_api_customers_route_actions_07by1e..js")
+R.m(61809)
+module.exports=R.m(61809).exports
