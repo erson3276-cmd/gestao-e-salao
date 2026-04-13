@@ -3,7 +3,7 @@ import {
   Sale,
   Expense,
   Goal
-} from '@/types/report'
+} from '../types/report'
 import { 
   startOfMonth, 
   endOfMonth, 
