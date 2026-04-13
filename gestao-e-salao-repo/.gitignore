@@ -1,9 +1,0 @@
-.vercel
-.vercelignore
-.next
-node_modules
-.env
-.env.local
-*.log
-
-.vercel
